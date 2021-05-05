@@ -19,7 +19,7 @@ class Preprocessing:
     def process(self, sample_rate, fade_out_len, max_len):
         counter = 0
         for data in self._dataloader:
-            print(data[0].shape)
+            print(data[0].shape, counter)
 
             if data[1] < sample_rate:
                 continue
@@ -47,5 +47,5 @@ class Preprocessing:
     
 
 if __name__ == '__main__':
-    pp = Preprocessing('/media/mishell/Ext. HDD 3/dev/dataset_maker/dataset/', 'dataset_4/')
-    pp.process(sample_rate = 44100, fade_out_len = 2000, max_len = 65536)
+    pp = Preprocessing('datasets/dataset/', 'datasets/dataset_4/')
+    pp.process(sample_rate = 44100, fade_out_len = 2000, max_len = 131072)

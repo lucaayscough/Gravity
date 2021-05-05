@@ -11,17 +11,18 @@ from utils import build_folder_structure, get_iter
 ### add equalized learning to sa module
 ### add demodulation 
 ### define custom up/downsample function
+### change loss
 
 
 config_dict = {
     # Iterarion
-    'restart_from_iter': False,
-    'restart_iter_num': 1,
-    'epochs': 100,
-    'datadir': 'dataset/',
+    'restart_from_iter': True,
+    'restart_iter_num': 2,
+    'epochs': 500,
+    'datadir': 'datasets/dataset_4/',
 
     # Training
-    'batch_size': 28,
+    'batch_size': 4,
     
     # Learning
     'learning_rate': 0.002,
@@ -41,13 +42,13 @@ config_dict = {
     # Model
     'z_dim': 512,
     'scale_factor': 4,
-    'depth': 5,
+    'depth': 7,
     'num_filters': 512,
     'kernel_size': 9,
     'stride': 1,
     'padding': 4,
     'dilation': 1,
-    'start_size': 64,
+    'start_size': 32,
     'use_self_attention': False,
 
     # Setup

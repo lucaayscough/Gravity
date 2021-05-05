@@ -188,12 +188,12 @@ class MiniBatchStdDev(nn.Module):
 # Self-attention layer.
 
 class SelfAttention(nn.Module):
-    def __init__(self, in_channels):
+    def __init__(self, in_channel):
         super().__init__()
 
-        self.query = EqualizedConv1d(in_channels, in_channels // 8, 1, 1, 0)
-        self.key = EqualizedConv1d(in_channels, in_channels // 8, 1, 1, 0)
-        self.value = EqualizedConv1d(in_channels, in_channels, 1, 1, 0)
+        self.query = nn.Conv1d(in_channel, in_channel // 8, 1)
+        self.key = nn.Conv1d(in_channel, in_channel // 8, 1)
+        self.value = nn.Conv1d(in_channel, in_channel, 1)
 
         self.gamma = nn.Parameter(torch.tensor(0.0))
 
@@ -343,13 +343,18 @@ class DisGeneralConvBlock(nn.Module):
         dilation,
         scale_factor,
         use_linear_downsampling,
+        use_self_attention,
         bias = True
     ):
         super().__init__()
+        
+        self.use_self_attention = use_self_attention
 
         self.conv_block_1 = EqualizedConv1d(in_channels = in_channels, out_channels = in_channels, kernel_size = kernel_size, stride = stride, padding = padding, dilation = dilation, bias = bias)
         self.conv_block_2 = EqualizedConv1d(in_channels = in_channels, out_channels = out_channels, kernel_size = kernel_size, stride = stride, padding = padding, dilation = dilation, bias = bias)
 
+        if self.use_self_attention:
+            self.self_attention = SelfAttention(in_channels)
 
         if use_linear_downsampling:
             self.down_sampler = nn.Upsample(scale_factor = 1 / scale_factor, mode = 'linear')
@@ -360,6 +365,10 @@ class DisGeneralConvBlock(nn.Module):
     
     def forward(self, x):
         x = self.l_relu(self.conv_block_1(x))
+
+        if self.use_self_attention:
+            x = self.self_attention(x)
+
         x = self.l_relu(self.conv_block_2(x))
         x = self.down_sampler(x)
         return x
@@ -587,12 +596,10 @@ class Generator(nn.Module):
                     use_style = use_style,
                     use_noise = use_noise,
                     use_linear_upsampling = use_linear_upsampling,
-                    use_self_attention = False #use_self_attention if l == self.depth-1 else False
+                    use_self_attention = use_self_attention
                 )
             )
             n = n // 2
-        
-        print(self.layers)
 
         # Network converter layers.
         self.converters = nn.ModuleList([])
@@ -704,6 +711,7 @@ class Discriminator(nn.Module):
                     dilation = self.dilation,
                     scale_factor = self.scale_factor,
                     use_linear_downsampling = self.use_linear_downsampling,
+                    use_self_attention = self.use_self_attention
                 )
             )
             n = n * 2

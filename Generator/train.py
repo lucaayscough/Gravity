@@ -6,7 +6,7 @@ import torchaudio
 from torch.utils.data import DataLoader
 import torch.autograd.profiler as profiler
 from model import Generator, Discriminator
-from utils import AudioFolder
+from utils import AudioFolder, gradient_penalty
 import time
 import copy
 
@@ -275,61 +275,41 @@ class Train:
 
     
     def _train_discriminator(self, real):
-        self.netD.zero_grad()
-
-        self._set_grad_flag(self.netD, True)
-        self._set_grad_flag(self.netG, False)
-
-        real.requires_grad = True
-        
-        # Train on real samples.
-        disc_real = self.netD(real).reshape(-1)
-        disc_real = nn.functional.softplus(-disc_real).mean()
-        disc_real.backward(retain_graph = True)
-
-        grad_real = torch.autograd.grad(outputs = disc_real.sum(), inputs = real, create_graph = True)[0]
-        grad_penalty_real = (grad_real.view(grad_real.size(0), -1).norm(2, dim=1) ** 2).mean()
-        grad_penalty_real = 10 / 2 * grad_penalty_real
-        grad_penalty_real.backward()
-        
-        # Train on fake samples.
         noise = torch.randn((self.batch_size, self.z_dim)).to(self.device)
         fake = self.netG(noise)
+                    
+        disc_real = self.netD(real).reshape(-1)
         disc_fake = self.netD(fake).reshape(-1)
+        
+        gp = gradient_penalty(self.netD, real, fake, device = self.device)
 
-        disc_fake = nn.functional.softplus(disc_fake).mean()
-        disc_fake.backward()
+        self.loss_disc = -(torch.mean(disc_real) - torch.mean(disc_fake)) + 10 * gp
 
-        self.loss_disc = (disc_real + disc_fake) / 2     
+        self.netD.zero_grad()
+        self.loss_disc.backward(retain_graph = True)
         self.opt_dis.step()
 
-        del grad_real, disc_real, grad_penalty_real, fake, noise, disc_fake, real
 
-
-    def _train_generator(self):
-        self.netG.zero_grad()
-
-        self._set_grad_flag(self.netD, False)
-        self._set_grad_flag(self.netG, True)
-
+    def _train_generator(self): 
         noise = torch.randn((self.batch_size, self.z_dim)).to(self.device)
         fake = self.netG(noise)
         output = self.netD(fake).reshape(-1)
-
-        output = nn.functional.softplus(-output).mean()
-        output.backward()
         
-        self.loss_gen = output
-
+        self.loss_gen = -torch.mean(output)
+        
+        self.netG.zero_grad()
+        self.loss_gen.backward()
         self.opt_gen.step()
-
-        del noise, fake, output
 
 # ------------------------------------------------------------
 # Helper functions.
 
     def _print_examples(self, idx, epoch, real): 
-        if idx % 200 == 0:
+        if idx % 1000 == 0:
+
+            #REMOVE THIS
+            self._save_state(epoch)
+            
             with torch.no_grad():
                 fake_sample = self.netG(
                     torch.randn((32, self.z_dim)).to(self.device),
@@ -381,7 +361,3 @@ class Train:
         # turn back on the gradient calculation
         toggle_grad(self.netG_shadow, True)
         toggle_grad(self.netG, True)
-
-    def _set_grad_flag(self, module, flag):
-        for p in module.parameters():
-            p.requires_grad = flag
