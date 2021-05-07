@@ -2,5 +2,5 @@ Generator/datasets
 Generator/runs
 Generator/__pycache__
 Generator/traced_models
-AdversarialAudio/Build
-AdversarialAudio/Dependencies
+App/Build
+App/Dependencies
