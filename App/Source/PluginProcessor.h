@@ -1,6 +1,8 @@
 #pragma once
 
 #include <juce_audio_processors/juce_audio_processors.h>
+#include <JuceHeader.h>
+#include "Generator.h"
 
 //==============================================================================
 class AudioPluginAudioProcessor  : public juce::AudioProcessor
@@ -43,9 +45,6 @@ public:
     void setStateInformation (const void* data, int sizeInBytes) override;
 
 private:
-    juce::Synthesiser mSampler;
-    const int mNumVoices{1};
-    
     //==============================================================================
     JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR (AudioPluginAudioProcessor)
 };

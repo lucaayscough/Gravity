@@ -4,3 +4,4 @@ Generator/__pycache__
 Generator/traced_models
 App/Build
 App/Dependencies
+App/Source/traced_generator.pt
