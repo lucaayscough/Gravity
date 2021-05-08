@@ -12,16 +12,13 @@ AudioPluginAudioProcessor::AudioPluginAudioProcessor()
                      #endif
                        )
 {
-    //for(int i = 0; i < mNumVoices; i++){
-      //  mSampler.addVoice(new juce::SamplerVoice());
-    //}
+    for(int i = 0; i < mNumVoices; i++){
+        mSampler.addVoice(new juce::SamplerVoice());
+    }
 }
 
 AudioPluginAudioProcessor::~AudioPluginAudioProcessor()
 {
-    for(i = 0; i < mNumVoices; i++){
-        mSampler.addVoices(new juce::SamplerVoice());
-    }
 }
 
 //==============================================================================
