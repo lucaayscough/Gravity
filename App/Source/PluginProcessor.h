@@ -46,9 +46,6 @@ private:
     juce::Synthesiser mSampler;
     const int mNumVoices{1};
     
-    mSampler.addVoice(new SamplerVoice());
-
-
     //==============================================================================
     JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR (AudioPluginAudioProcessor)
 };

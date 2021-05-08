@@ -19,6 +19,9 @@ AudioPluginAudioProcessor::AudioPluginAudioProcessor()
 
 AudioPluginAudioProcessor::~AudioPluginAudioProcessor()
 {
+    for(i = 0; i < mNumVoices; i++){
+        mSampler.addVoices(new juce::SamplerVoice());
+    }
 }
 
 //==============================================================================
