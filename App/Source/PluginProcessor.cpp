@@ -129,6 +129,7 @@ void AudioPluginAudioProcessor::processBlock (juce::AudioBuffer<float>& buffer,
     juce::ScopedNoDenormals noDenormals;
     auto totalNumInputChannels  = getTotalNumInputChannels();
     auto totalNumOutputChannels = getTotalNumOutputChannels();
+    auto numSamples = buffer.getNumSamples();
 
     // In case we have more outputs than inputs, this code clears any output
     // channels that didn't contain input data, (because these aren't
@@ -145,11 +146,32 @@ void AudioPluginAudioProcessor::processBlock (juce::AudioBuffer<float>& buffer,
     // the samples and the outer loop is handling the channels.
     // Alternatively, you can process the samples with the channels
     // interleaved by keeping the same state.
-    for (int channel = 0; channel < totalNumInputChannels; ++channel)
-    {
-        auto* channelData = buffer.getWritePointer (channel);
-        juce::ignoreUnused (channelData);
-        // ..do something to the data...
+    
+    for(const MidiMessageMetadata metadata : midiMessages){
+        Logger::writeToLog(metadata.getMessage().getDescription());
+        if(metadata.getMessage().isNoteOn())
+            mPlaySample = true;
+        else if(metadata.getMessage().isNoteOff()){
+            mPlaySample = false;
+            mSoundIdx = 0;
+        }
+    }
+
+    if(mPlaySample == true){
+        for (int channel = 0; channel < totalNumOutputChannels; ++channel)
+        {
+            auto* channelData = buffer.getWritePointer (channel);
+            juce::ignoreUnused (channelData);
+
+            for(int sample = 0; sample < numSamples; ++sample){
+                if(mSoundIdx < NUM_SAMPLES)
+                    channelData[sample] = g.sound[mSoundIdx];
+                else
+                    channelData[sample] = 0;
+                mSoundIdx += 1;
+
+            }
+        }
     }
 }
 

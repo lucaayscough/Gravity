@@ -10,7 +10,8 @@ AudioPluginAudioProcessorEditor::AudioPluginAudioProcessorEditor (AudioPluginAud
     // editor's size to whatever you need it to be.
 
     setSize (600, 600);
-
+    
+    mGenerateButton.onClick = [&]() {processorRef.g.generateSample();};
     addAndMakeVisible(mGenerateButton);
 }
 
@@ -36,5 +37,3 @@ void AudioPluginAudioProcessorEditor::resized()
         BUTTON_HEIGHT
     );
 }
-
-torch::jit::script::Module module = loadModule();
