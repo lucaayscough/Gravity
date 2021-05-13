@@ -11,7 +11,7 @@ AudioPluginAudioProcessorEditor::AudioPluginAudioProcessorEditor (AudioPluginAud
 
     setSize (600, 600);
     
-    mGenerateButton.onClick = [&]() {processorRef.g.generateSample();};
+    mGenerateButton.onClick = [&]() {processorRef.generator.generateSample(processorRef.generator.generateLatents());};
     addAndMakeVisible(mGenerateButton);
 }
 

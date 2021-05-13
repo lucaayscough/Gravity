@@ -8,13 +8,11 @@ const int NUM_SAMPLES = 131072;
 
 class Generator{
 public:
-    torch::jit::script::Module module;
+    torch::jit::script::Module generator_module, mapper_module;
     float sound[NUM_SAMPLES] = {};
-    
-    std::vector<torch::jit::IValue> inputs;
-    at::Tensor output;
 
     Generator();
-    void generateSample();
+    at::Tensor generateLatents();
+    void generateSample(at::Tensor latents);
 };
 

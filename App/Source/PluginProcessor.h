@@ -46,7 +46,7 @@ public:
     void getStateInformation (juce::MemoryBlock& destData) override;
     void setStateInformation (const void* data, int sizeInBytes) override;
 
-    Generator g;
+    Generator generator;
 
 private:
     bool mPlaySample = false;

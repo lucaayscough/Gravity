@@ -166,7 +166,7 @@ void AudioPluginAudioProcessor::processBlock (juce::AudioBuffer<float>& buffer,
 
             for(int sample = 0; sample < numSamples; ++sample){
                 if(mSoundIdx < NUM_SAMPLES)
-                    channelData[sample] = g.sound[mSoundIdx];
+                    channelData[sample] = generator.sound[mSoundIdx];
                 else
                     channelData[sample] = 0;
                 mSoundIdx += 1;

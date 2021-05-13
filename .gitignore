@@ -8,3 +8,6 @@ App/Source/traced_generator.pt
 .vs
 Generator/.vscode
 Generator/init.bat
+Generator/scripted_modules/generator_module.pt
+.vscode/settings.json
+Generator/scripted_modules/mapper_module.pt

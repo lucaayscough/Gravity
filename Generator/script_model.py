@@ -345,7 +345,7 @@ class MappingNetwork(nn.Module):
 # ------------------------------------------------------------
 # Generator network.
 
-class Generator(nn.Module):
+class Mapper(nn.Module):
     def __init__(
         self,
         z_dim,
@@ -421,14 +421,95 @@ class Generator(nn.Module):
     def forward(
         self,
         latent_z,
-        noise = torch.tensor(0) 
-    ):     
-        batch_size: int  = int(latent_z.size(0))
-
-        x = self.constant_input(batch_size)
-        
+    ):    
         latent_w = self.mapping_network(latent_z)
         latent_w = self.truncation(latent_w)
+
+        return latent_w
+
+
+
+class Generator(nn.Module):
+    def __init__(
+        self,
+        z_dim,
+        nf,
+        kernel_size,
+        stride,
+        padding,
+        dilation,
+        depth,
+        num_channels,
+        scale_factor,
+        use_linear_upsampling,
+        use_self_attention,
+        use_pixel_norm,
+        use_instance_norm,
+        use_style,
+        use_noise,
+        start_size
+    ):
+        super().__init__()
+        
+        self.z_dim = z_dim
+        self.nf = nf
+        self.depth = depth
+        self.num_channels = num_channels
+        self.scale_factor = scale_factor
+        self.use_linear_upsampling = use_linear_upsampling
+        
+        self.constant_input = ConstantInput(nf, start_size)
+
+        self.truncation = Truncation(avg_latent = torch.zeros(z_dim))
+        
+        # Base network layers
+        self.layers = nn.ModuleList([])
+        
+        n = self.nf
+        for l in range(self.depth):
+            if l == 0:
+                self.scale_factor = 1
+            else:
+                self.scale_factor = scale_factor
+
+            self.layers.append(
+                GenGeneralConvBlock(
+                    in_channels = n,
+                    out_channels = n // 2,
+                    kernel_size = kernel_size,
+                    stride = stride,
+                    padding = padding,
+                    dilation = dilation,
+                    scale_factor = float(self.scale_factor),
+                    use_pixel_norm = use_pixel_norm,
+                    use_instance_norm = use_instance_norm,
+                    use_style = use_style,
+                    use_noise = use_noise,
+                    use_linear_upsampling = use_linear_upsampling,
+                    use_self_attention = use_self_attention
+                )
+            )
+            n = n // 2
+
+        # Network converter layers.
+        self.converters = nn.ModuleList([])
+        
+        n = self.nf // 2
+        for i in range(depth):
+            self.converters.append(EqualizedConv1d(n, num_channels, 1, 1, 0))
+            n = n // 2
+
+        # Mapping network.
+        self.mapping_network = MappingNetwork(broadcast = depth * 2)
+     
+    def forward(
+        self,
+        latent_w,
+    ):     
+        batch_size: int  = 1
+
+        x = self.constant_input(batch_size)
+        noise = torch.tensor(0)
         
         # Layer 1
         x = self.layers[0](x, latent_w[:, 0:2], noise)
@@ -470,5 +551,5 @@ class Generator(nn.Module):
         out = F.upsample(out, scale_factor = float(self.scale_factor), mode = "linear")
         skip = self.converters[6](x)
         out = out + skip
-         
+
         return out
