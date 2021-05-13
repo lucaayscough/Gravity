@@ -1,7 +1,6 @@
 #pragma once
 
 #include "PluginProcessor.h"
-#include "Map.h"
 
 //==============================================================================
 class AudioPluginAudioProcessorEditor  : public juce::AudioProcessorEditor
@@ -19,6 +18,7 @@ private:
     const int BUTTON_HEIGHT = 50;
     juce::TextButton mGenerateButton;
     Map mMap;
+    Planet mPlanet;
 
     // This reference is provided as a quick way for your editor to
     // access the processor object that created it.

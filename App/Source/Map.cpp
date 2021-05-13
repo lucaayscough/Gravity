@@ -2,5 +2,5 @@
 
 
 void Map::paint(Graphics& g){
-    g.fillAll(juce::Colours::red);
+    g.fillAll(juce::Colours::black);
 }

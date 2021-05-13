@@ -1,8 +1,8 @@
 #pragma once
 
-#include "JuceHeader.h"
+#include <JuceHeader.h>
 
 
-struct Map : public juce::Component{
+class Map : public juce::Component{
     void paint(Graphics& g) override;
 };

@@ -18,6 +18,7 @@ AudioPluginAudioProcessorEditor::AudioPluginAudioProcessorEditor (AudioPluginAud
     mGenerateButton.onClick = [&]() {processorRef.generator.generateSample(processorRef.generator.generateLatents());};
     addAndMakeVisible(mGenerateButton);
     addAndMakeVisible(mMap);
+    addAndMakeVisible(mPlanet);
 }
 
 AudioPluginAudioProcessorEditor::~AudioPluginAudioProcessorEditor()
@@ -36,7 +37,10 @@ void AudioPluginAudioProcessorEditor::paint (juce::Graphics& g)
 void AudioPluginAudioProcessorEditor::resized()
 {
     auto r = getLocalBounds();
-    mMap.setBounds(r.reduced(30));
+    auto mapArea = r.reduced(30);
+    mMap.setBounds(mapArea);
+    mPlanet.setBounds(mapArea);
+    mPlanet.setSize(50, 50);
 
     mGenerateButton.setBounds(
         (getWidth() - BUTTON_WIDTH) / 2,
