@@ -24,7 +24,7 @@ netG = Generator(
 
 
 # Load model.
-checkpointG = torch.load("runs/iter_2/model/checkpoint_014_G.pth.tar")
+checkpointG = torch.load("runs/iter_2/model/checkpoint_027_G.pth.tar")
 netG.load_state_dict(checkpointG['state_dict'])
 
 

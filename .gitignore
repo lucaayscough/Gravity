@@ -5,3 +5,6 @@ Generator/traced_models
 App/Build
 App/Dependencies
 App/Source/traced_generator.pt
+.vs
+Generator/.vscode
+Generator/init.bat

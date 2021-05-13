@@ -24,7 +24,7 @@ void AudioPluginAudioProcessorEditor::paint (juce::Graphics& g)
 {
     g.fillAll(juce::Colours::lightgreen);
     g.setColour(juce::Colours::orange);
-    mGenerateButton.setButtonText("Hello");
+    mGenerateButton.setButtonText("BLaps");
 }
 
 void AudioPluginAudioProcessorEditor::resized()

@@ -156,7 +156,8 @@ void AudioPluginAudioProcessor::processBlock (juce::AudioBuffer<float>& buffer,
             mSoundIdx = 0;
         }
     }
-
+	
+	
     if(mPlaySample == true){
         for (int channel = 0; channel < totalNumOutputChannels; ++channel)
         {
