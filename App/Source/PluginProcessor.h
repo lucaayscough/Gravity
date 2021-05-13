@@ -2,9 +2,12 @@
 
 #include <juce_audio_processors/juce_audio_processors.h>
 #include <JuceHeader.h>
-#include "Generator.h"
 #include <iostream>
 #include <memory>
+
+#include "Generator.h"
+#include "Map.h"
+
 
 //==============================================================================
 class AudioPluginAudioProcessor  : public juce::AudioProcessor
