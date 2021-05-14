@@ -43,7 +43,7 @@ generator = Generator(
 )
 
 
-model_dir = "runs/iter_2/model/checkpoint_032_G.pth.tar"
+model_dir = "runs/iter_2/model/checkpoint_035_G.pth.tar"
 
 
 # Load model.

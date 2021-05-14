@@ -11,13 +11,21 @@ AudioPluginAudioProcessorEditor::AudioPluginAudioProcessorEditor (AudioPluginAud
     // editor's size to whatever you need it to be.
 
     // Main window.
-    setSize (800, 400);
+    setSize (1280, 720);
     setResizable(false, false);
     
     // Generate button.
     mGenerateButton.onClick = [&]() {processorRef.generator.generateSample(processorRef.generator.generateLatents());};
+    
+    mSun.getNewSample = [&]() {
+        processorRef.generator.generateSample(
+            processorRef.generator.generateLatents()
+        );
+    };
+
     addAndMakeVisible(mGenerateButton);
     addAndMakeVisible(mMap);
+    addAndMakeVisible(mSun);
     addAndMakeVisible(mPlanet);
 }
 
@@ -37,10 +45,15 @@ void AudioPluginAudioProcessorEditor::paint (juce::Graphics& g)
 void AudioPluginAudioProcessorEditor::resized()
 {
     auto r = getLocalBounds();
-    auto mapArea = r.reduced(30);
+    auto mapArea = r;
     mMap.setBounds(mapArea);
+    mSun.setBounds(
+        (getWidth() - mSun.DIAMETER) / 2,
+        (getHeight() - mSun.DIAMETER) / 2,
+        mSun.DIAMETER,
+        mSun.DIAMETER
+    );
     mPlanet.setBounds(mapArea);
-    mPlanet.setSize(50, 50);
 
     mGenerateButton.setBounds(
         (getWidth() - BUTTON_WIDTH) / 2,
