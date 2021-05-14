@@ -5,18 +5,20 @@
 
 class Planet : public juce::Component{
     juce::ComponentDragger dragger;
-    int diameter = 50;
+    int diameter = 35;
+
     void paint(Graphics& g) override;
     void resized() override;
     void mouseDown(const MouseEvent& e);
     void mouseDrag(const MouseEvent& e);
+    void checkBounds();
 };
 
 
 class Sun : public Planet{
     public: const int DIAMETER = 75;
     public: std::function<void()> getNewSample;
-
+    
     void paint(Graphics& g) override;
     void resized() override;
     void mouseDown(const MouseEvent& e) override;

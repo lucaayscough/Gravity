@@ -18,6 +18,23 @@ void Planet::mouseDown(const MouseEvent& e){
 
 void Planet::mouseDrag(const MouseEvent& e){
     dragger.dragComponent(this, e, nullptr);
+    checkBounds();
+}
+
+void Planet::checkBounds(){
+    auto posX = getX();
+    auto posY = getY();
+
+    if(posX < 0)
+        setBounds(0, posY, diameter, diameter);
+
+    posX = getX();
+    posY = getY();
+
+    if(posY < 0)
+        setBounds(posX, 0, diameter, diameter);
+    
+    Logger::writeToLog("X: " + std::to_string(posX) + ", Y: " + std::to_string(posY));
 }
 
 
