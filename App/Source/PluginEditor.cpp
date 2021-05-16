@@ -11,22 +11,24 @@ AudioPluginAudioProcessorEditor::AudioPluginAudioProcessorEditor (AudioPluginAud
     // editor's size to whatever you need it to be.
 
     // Main window.
-    setSize (1280, 720);
-    setResizable(false, false);
+    setSize (M_WINDOW_WIDTH, M_WINDOW_HEIGHT);
+    setResizable(M_IS_WIDTH_RESIZABLE, M_IS_HEIGHT_RESIZABLE);
     
-    // Generate button.
-    mGenerateButton.onClick = [&]() {processorRef.generator.generateSample(processorRef.generator.generateLatents());};
-    
+    // Lambda function for allowing Sun object to generate random sounds.
     mSun.getNewSample = [&]() {
         processorRef.generator.generateSample(
             processorRef.generator.generateLatents()
         );
     };
 
-    addAndMakeVisible(mGenerateButton);
+    mPlanet.setDiameter(M_DEFAULT_PLANET_DIAMETER);
+    mPlanet.setEdges(M_WINDOW_WIDTH, M_WINDOW_HEIGHT);
+
     addAndMakeVisible(mMap);
     addAndMakeVisible(mSun);
     addAndMakeVisible(mPlanet);
+
+    
 }
 
 AudioPluginAudioProcessorEditor::~AudioPluginAudioProcessorEditor()
@@ -36,10 +38,6 @@ AudioPluginAudioProcessorEditor::~AudioPluginAudioProcessorEditor()
 //==============================================================================
 void AudioPluginAudioProcessorEditor::paint (juce::Graphics& g)
 {
-    g.fillAll(juce::Colours::lightgreen);
-    
-    // Generate button.
-    mGenerateButton.setButtonText("BLaps");
 }
 
 void AudioPluginAudioProcessorEditor::resized()
@@ -47,18 +45,14 @@ void AudioPluginAudioProcessorEditor::resized()
     auto r = getLocalBounds();
     auto mapArea = r;
     mMap.setBounds(mapArea);
+    
+    // Sets the sun object in center of the window.
     mSun.setBounds(
-        (getWidth() - mSun.DIAMETER) / 2,
-        (getHeight() - mSun.DIAMETER) / 2,
-        mSun.DIAMETER,
-        mSun.DIAMETER
+        (getWidth() - mSun.getDiameter()) / 2,
+        (getHeight() - mSun.getDiameter()) / 2,
+        mSun.getDiameter(),
+        mSun.getDiameter()
     );
-    mPlanet.setBounds(mapArea);
 
-    mGenerateButton.setBounds(
-        (getWidth() - BUTTON_WIDTH) / 2,
-        20,
-        BUTTON_WIDTH,
-        BUTTON_HEIGHT
-    );
+    mPlanet.setBounds(mapArea);
 }

@@ -14,11 +14,17 @@ public:
     void resized() override;
 
 private:
-    const int BUTTON_WIDTH = 100;
-    const int BUTTON_HEIGHT = 50;
-    juce::TextButton mGenerateButton;
-    Map mMap;
+    // Window member variables.
+    const int M_WINDOW_WIDTH = 1280;
+    const int M_WINDOW_HEIGHT = 720;
+    const bool M_IS_WIDTH_RESIZABLE = false;
+    const bool M_IS_HEIGHT_RESIZABLE = false;
+    
+    // Planet member variables.
+    const int M_DEFAULT_PLANET_DIAMETER = 50;
 
+    // Main object inits.
+    Map mMap;
     Sun mSun;
     Planet mPlanet;
 
