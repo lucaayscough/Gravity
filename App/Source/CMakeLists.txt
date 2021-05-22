@@ -73,7 +73,9 @@ target_sources(AudioPluginExample
         PluginProcessor.cpp
 	    Generator.cpp
         Map.cpp
-        Planet.cpp)
+        Planet.cpp
+        Sun.cpp
+)
 
 # `target_compile_definitions` adds some preprocessor definitions to our target. In a Projucer
 # project, these might be passed in the 'Preprocessor Definitions' field. JUCE modules also make use

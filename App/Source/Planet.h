@@ -6,6 +6,11 @@
 class Planet: public juce::Component{
 private:
     juce::ComponentDragger m_Dragger;
+
+    const int M_SIZE_MODIFIER = 2;
+    const int M_MAX_PLANET_SIZE = 100;
+    const int M_MIN_PLANET_SIZE = 20;
+
     int m_Diameter = 50;
     int m_WindowWidth;
     int m_WindowHeight;
@@ -18,6 +23,7 @@ public:
     void paint(Graphics& g) override;
     void resized() override;
     
+    void reDraw(int diameter, int x, int y);
     void setDiameter(int diameter);
     void setMapBoundaries(int width, int height);
 
@@ -26,28 +32,8 @@ public:
 private:
     void mouseDown(const MouseEvent& e) override;
     void mouseDrag(const MouseEvent& e) override;
+    void mouseWheelMove(const MouseEvent& e, const MouseWheelDetails& w) override;
     void visibilityChanged() override;
     
     void checkBounds();
-};
-
-
-class Sun : public Planet{
-private:
-    const int M_DIAMETER = 75;
-
-public:
-    Sun();
-    ~Sun() override;
-
-    std::function<void()> getNewSample;
-    void paint(Graphics& g) override;
-    void resized() override;
-    int getDiameter();
-
-private:
-    void mouseDown(const MouseEvent& e) override;
-    void mouseDrag(const MouseEvent& e) override;
-
-    JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR(Sun)
 };

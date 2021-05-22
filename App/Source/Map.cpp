@@ -36,7 +36,12 @@ void Map::createPlanet(int x, int y){
 
     // Render planet to screen.
     planet.setMapBoundaries(getWidth(), getHeight());
-    planet.setBounds(x, y, planet.getDiameter(), planet.getDiameter());
+    planet.setBounds(
+        x - (planet.getDiameter() / 2),
+        y - (planet.getDiameter() / 2),
+        planet.getDiameter(),
+        planet.getDiameter()
+    );
     
     addAndMakeVisible(planet);
 

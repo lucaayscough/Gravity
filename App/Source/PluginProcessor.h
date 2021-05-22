@@ -8,6 +8,7 @@
 #include "Generator.h"
 #include "Map.h"
 #include "Planet.h"
+#include "Sun.h"
 
 
 //==============================================================================
