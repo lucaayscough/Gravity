@@ -6,4 +6,3 @@ project(AdversarialAudio)
 # Juce and Source.
 add_subdirectory(Dependencies/JUCE)
 add_subdirectory(Source)
-

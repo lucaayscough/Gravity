@@ -5,27 +5,26 @@
 
 class Planet: public juce::Component{
 private:
-    juce::ComponentDragger m_dragger;
-    int m_diameter;
-    int m_window_width;
-    int m_window_height;
+    juce::ComponentDragger m_Dragger;
+    int m_Diameter;
+    int m_WindowWidth;
+    int m_WindowHeight;
 
 public:
     Planet();
+    Planet(const Planet&);
     ~Planet() override;
 
     void paint(Graphics& g) override;
     void resized() override;
     
     void setDiameter(int diameter);
-    void setEdges(int width, int height);
+    void setWindowBoundary(int width, int height);
 
 private:
     void mouseDown(const MouseEvent& e);
     void mouseDrag(const MouseEvent& e);
     void checkBounds();
-
-    JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR(Planet)
 };
 
 

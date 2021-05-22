@@ -4,34 +4,36 @@
 // Main Planet class.
 
 Planet::Planet()
-    : m_diameter(50){}
+    : m_Diameter(50){}
+
+Planet::Planet(const Planet&){}
 
 Planet::~Planet(){}
 
 void Planet::paint(Graphics& g){
     g.setColour(juce::Colours::red);
-    g.fillEllipse(0, 0, m_diameter, m_diameter);
+    g.fillEllipse(0, 0, m_Diameter, m_Diameter);
 }
 
 void Planet::resized(){
-    setSize(m_diameter, m_diameter);
+    setSize(m_Diameter, m_Diameter);
 }
 
 void Planet::setDiameter(int diameter){
-    m_diameter = diameter;
+    m_Diameter = diameter;
 }
 
-void Planet::setEdges(int width, int height){
-    m_window_width = width;
-    m_window_height = height;
+void Planet::setWindowBoundary(int width, int height){
+    m_WindowWidth = width;
+    m_WindowHeight = height;
 }
 
 void Planet::mouseDown(const MouseEvent& e){
-    m_dragger.startDraggingComponent(this, e);
+    m_Dragger.startDraggingComponent(this, e);
 }
 
 void Planet::mouseDrag(const MouseEvent& e){
-    m_dragger.dragComponent(this, e, nullptr);
+    m_Dragger.dragComponent(this, e, nullptr);
     checkBounds();
 }
 
@@ -40,25 +42,25 @@ void Planet::checkBounds(){
     auto posY = getY();
 
     if(posX < 0)
-        setBounds(0, posY, m_diameter, m_diameter);
+        setBounds(0, posY, m_Diameter, m_Diameter);
 
     posX = getX();
     posY = getY();
 
     if(posY < 0)
-        setBounds(posX, 0, m_diameter, m_diameter);
+        setBounds(posX, 0, m_Diameter, m_Diameter);
     
     posX = getX();
     posY = getY();
 
-    if(posX + m_diameter > m_window_width)
-        setBounds(m_window_width - m_diameter, posY, m_diameter, m_diameter);
+    if(posX + m_Diameter > m_WindowWidth)
+        setBounds(m_WindowWidth - m_Diameter, posY, m_Diameter, m_Diameter);
 
     posX = getX();
     posY = getY();
 
-    if(posY + m_diameter > m_window_height)
-        setBounds(posX, m_window_height - m_diameter, m_diameter, m_diameter);
+    if(posY + m_Diameter > m_WindowHeight)
+        setBounds(posX, m_WindowHeight - m_Diameter, m_Diameter, m_Diameter);
     
     Logger::writeToLog("X: " + std::to_string(posX) + ", Y: " + std::to_string(posY));
 }

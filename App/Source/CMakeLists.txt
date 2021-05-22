@@ -114,7 +114,10 @@ target_link_libraries(AudioPluginExample
         juce::juce_recommended_warning_flags)
 
 
+# Libtorch
+
 set(CMAKE_PREFIX_PATH "../Dependencies/libtorch/share/cmake/Torch")
+
 find_package(Torch REQUIRED)
 set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} ${TORCH_CXX_FLAGS}")
 target_link_libraries(AudioPluginExample PRIVATE "${TORCH_LIBRARIES}")
@@ -128,4 +131,3 @@ if (MSVC)
                      ${TORCH_DLLS}
                      $<TARGET_FILE_DIR:AudioPluginExample>)
 endif (MSVC)
-

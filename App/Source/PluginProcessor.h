@@ -54,7 +54,7 @@ public:
 
 private:
     bool mPlaySample = false;
-    int mSoundIdx = 0;
+    int m_sample_index[2] = {0, 0};
 
     //==============================================================================
     JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR (AudioPluginAudioProcessor)

@@ -147,14 +147,15 @@ void AudioPluginAudioProcessor::processBlock (juce::AudioBuffer<float>& buffer,
     // the samples and the outer loop is handling the channels.
     // Alternatively, you can process the samples with the channels
     // interleaved by keeping the same state.
-    
+
     for(const MidiMessageMetadata metadata : midiMessages){
         Logger::writeToLog(metadata.getMessage().getDescription());
         if(metadata.getMessage().isNoteOn())
             mPlaySample = true;
         else if(metadata.getMessage().isNoteOff()){
             mPlaySample = false;
-            mSoundIdx = 0;
+            m_sample_index[0] = 0;
+            m_sample_index[1] = 0;
         }
     }
 	
@@ -166,13 +167,13 @@ void AudioPluginAudioProcessor::processBlock (juce::AudioBuffer<float>& buffer,
             juce::ignoreUnused (channelData);
 
             for(int sample = 0; sample < numSamples; ++sample){
-                if(mSoundIdx < NUM_SAMPLES)
-                    channelData[sample] = generator.sound[mSoundIdx];
+                if(m_sample_index[channel] < NUM_SAMPLES)
+                    channelData[sample] = generator.sound[m_sample_index[channel]];
                 else
                     channelData[sample] = 0;
-                mSoundIdx += 1;
-
+                m_sample_index[channel] += 1;
             }
+
         }
     }
 }

@@ -11,7 +11,7 @@ AudioPluginAudioProcessorEditor::AudioPluginAudioProcessorEditor (AudioPluginAud
     // editor's size to whatever you need it to be.
 
     // Main window.
-    setSize (M_WINDOW_WIDTH, M_WINDOW_HEIGHT);
+    setSize(M_WINDOW_WIDTH, M_WINDOW_HEIGHT);
     setResizable(M_IS_WIDTH_RESIZABLE, M_IS_HEIGHT_RESIZABLE);
     
     // Lambda function for allowing Sun object to generate random sounds.
@@ -21,14 +21,14 @@ AudioPluginAudioProcessorEditor::AudioPluginAudioProcessorEditor (AudioPluginAud
         );
     };
 
+    /*
     mPlanet.setDiameter(M_DEFAULT_PLANET_DIAMETER);
-    mPlanet.setEdges(M_WINDOW_WIDTH, M_WINDOW_HEIGHT);
+    mPlanet.setWindowBoundary(M_WINDOW_WIDTH, M_WINDOW_HEIGHT);
+    */
 
     addAndMakeVisible(mMap);
     addAndMakeVisible(mSun);
-    addAndMakeVisible(mPlanet);
-
-    
+    //addAndMakeVisible(mPlanet);
 }
 
 AudioPluginAudioProcessorEditor::~AudioPluginAudioProcessorEditor()
@@ -54,5 +54,5 @@ void AudioPluginAudioProcessorEditor::resized()
         mSun.getDiameter()
     );
 
-    mPlanet.setBounds(mapArea);
+    //mPlanet.setBounds(mapArea);
 }

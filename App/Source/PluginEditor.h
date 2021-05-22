@@ -26,7 +26,6 @@ private:
     // Main object inits.
     Map mMap;
     Sun mSun;
-    Planet mPlanet;
 
     // This reference is provided as a quick way for your editor to
     // access the processor object that created it.
