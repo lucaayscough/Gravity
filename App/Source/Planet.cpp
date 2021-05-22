@@ -3,8 +3,7 @@
 
 // Main Planet class.
 
-Planet::Planet()
-    : m_Diameter(50){}
+Planet::Planet(){}
 
 Planet::Planet(const Planet&){}
 
@@ -23,9 +22,13 @@ void Planet::setDiameter(int diameter){
     m_Diameter = diameter;
 }
 
-void Planet::setWindowBoundary(int width, int height){
+void Planet::setMapBoundaries(int width, int height){
     m_WindowWidth = width;
     m_WindowHeight = height;
+}
+
+int Planet::getDiameter(){
+    return m_Diameter;
 }
 
 void Planet::mouseDown(const MouseEvent& e){
@@ -35,6 +38,10 @@ void Planet::mouseDown(const MouseEvent& e){
 void Planet::mouseDrag(const MouseEvent& e){
     m_Dragger.dragComponent(this, e, nullptr);
     checkBounds();
+}
+
+void Planet::visibilityChanged(){
+    Logger::writeToLog("Visibility changed.");
 }
 
 void Planet::checkBounds(){

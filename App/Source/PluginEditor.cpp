@@ -21,14 +21,8 @@ AudioPluginAudioProcessorEditor::AudioPluginAudioProcessorEditor (AudioPluginAud
         );
     };
 
-    /*
-    mPlanet.setDiameter(M_DEFAULT_PLANET_DIAMETER);
-    mPlanet.setWindowBoundary(M_WINDOW_WIDTH, M_WINDOW_HEIGHT);
-    */
-
     addAndMakeVisible(mMap);
     addAndMakeVisible(mSun);
-    //addAndMakeVisible(mPlanet);
 }
 
 AudioPluginAudioProcessorEditor::~AudioPluginAudioProcessorEditor()
@@ -53,6 +47,4 @@ void AudioPluginAudioProcessorEditor::resized()
         mSun.getDiameter(),
         mSun.getDiameter()
     );
-
-    //mPlanet.setBounds(mapArea);
 }

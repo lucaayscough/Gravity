@@ -6,7 +6,7 @@
 class Planet: public juce::Component{
 private:
     juce::ComponentDragger m_Dragger;
-    int m_Diameter;
+    int m_Diameter = 50;
     int m_WindowWidth;
     int m_WindowHeight;
 
@@ -19,11 +19,15 @@ public:
     void resized() override;
     
     void setDiameter(int diameter);
-    void setWindowBoundary(int width, int height);
+    void setMapBoundaries(int width, int height);
+
+    int getDiameter();
 
 private:
-    void mouseDown(const MouseEvent& e);
-    void mouseDrag(const MouseEvent& e);
+    void mouseDown(const MouseEvent& e) override;
+    void mouseDrag(const MouseEvent& e) override;
+    void visibilityChanged() override;
+    
     void checkBounds();
 };
 
