@@ -1,10 +1,11 @@
 #include "Map.h"
 
 
+//--------------------------------------------------//
 // Constructors and destructors.
 
 Map::Map(){
-    reservePlanetMemory();
+    // Planet destruction.
     m_DestroyPlanet.setValue(false);
     m_DestroyPlanet.addListener(this);
 }
@@ -12,6 +13,7 @@ Map::Map(){
 Map::~Map(){}
 
 
+//--------------------------------------------------//
 // Public methods.
 
 void Map::paint(Graphics& g){
@@ -21,49 +23,49 @@ void Map::paint(Graphics& g){
 void Map::resized(){}
 
 
+//--------------------------------------------------//
 // Private methods.
 
 void Map::createPlanet(int x, int y){
     Logger::writeToLog("Creating planet...");
 
-    // Instantiate planet inside planets vector.
-    m_Planets.emplace_back(&m_DestroyPlanet);
+    // Instantiate planet inside planets array.
+    m_Planets.add(new Planet(&m_DestroyPlanet));
     
     m_NumPlanets = m_Planets.size();
 
     // Reference for ease of use.
-    Planet& planet = m_Planets[m_NumPlanets - 1];
+    auto new_planet = m_Planets[m_NumPlanets - 1];
 
     // Render planet to screen.
-    planet.setMapBoundaries(getWidth(), getHeight());
-    planet.setBounds(
-        x - (planet.getDiameter() / 2),
-        y - (planet.getDiameter() / 2),
-        planet.getDiameter(),
-        planet.getDiameter()
+    new_planet->setMapBoundaries(getWidth(), getHeight());
+    
+    new_planet->setBounds(
+        x - (new_planet->getDiameter() / 2),
+        y - (new_planet->getDiameter() / 2),
+        new_planet->getDiameter(),
+        new_planet->getDiameter()
     );
     
-    addAndMakeVisible(planet);
+    addAndMakeVisible(new_planet);
 
     Logger::writeToLog("Planet created.");
     Logger::writeToLog("Number of planets: " + std::to_string(m_NumPlanets) + "\n");
 }
 
 void Map::destroyPlanet(){
+    // For each planet check to see if it has been set for destruction.
     for(int i = 0; i < m_Planets.size(); i++){
-        if(m_Planets[i].m_Destroy == true){
+        if(m_Planets[i]->m_Destroy == true){
+            // Remove planet from array and delete.
+            m_Planets.remove(i, true);
 
-            //m_Planets[i] = Planet(&m_DestroyPlanet);
-            //removeFromDesktop(m_Planets.at(i));
+            // Change listener back to being false.
+            m_DestroyPlanet.setValue(false);
         }
     }
 
     Logger::writeToLog("Planet destroyed.");
-}
-
-void Map::reservePlanetMemory(){
-    // Sets the amount of memory to be reserved in vector for planet objects.
-    m_Planets.reserve(M_MAX_NUM_PLANETS);
 }
 
 void Map::mouseDoubleClick(const MouseEvent& e){
@@ -79,5 +81,6 @@ void Map::mouseDoubleClick(const MouseEvent& e){
 }
 
 void Map::valueChanged(juce::Value &value){
-    destroyPlanet();
+    if(m_DestroyPlanet == true)
+        destroyPlanet();
 }

@@ -6,7 +6,7 @@
 
 class Map: public juce::Component, public juce::Value::Listener{
 private:
-    std::vector<Planet> m_Planets;
+    OwnedArray<Planet> m_Planets;
     const int M_MAX_NUM_PLANETS = 20;
     int m_NumPlanets = 0;
     juce::Value m_DestroyPlanet;
