@@ -7,6 +7,10 @@
 
 Planet::Planet(){}
 
+Planet::Planet(juce::Value* destroy_planet_ptr)
+    : m_DestroyPlanetPtr(destroy_planet_ptr)
+    {}
+
 Planet::Planet(const Planet&){}
 
 Planet::~Planet(){}
@@ -25,22 +29,27 @@ void Planet::resized(){
 
 void Planet::reDraw(int diameter, int x, int y){
     // When called the component is redrawn.
-    // If the diameter is modified the difference is split
-    // so that the planet remains centred.
-
-    int new_x = x;
-    int new_y = y;
-
-    if(diameter > getDiameter()){
-        new_x = x - (M_SIZE_MODIFIER / 2);
-        new_y = y - (M_SIZE_MODIFIER / 2);
-    } else if(diameter < getDiameter()){
-        new_x = x + (M_SIZE_MODIFIER / 2);
-        new_y = y + (M_SIZE_MODIFIER / 2);
-    }
 
     setDiameter(diameter);
-    setBounds(new_x, new_y, diameter, diameter);
+    setBounds(x, y, diameter, diameter);
+}
+
+void Planet::resizePlanet(int diameter){
+    // When called the planet will be resized.
+    // X and Y are calculated such that the planet will remain centred.
+
+    int new_x;
+    int new_y;
+
+    if(diameter > getDiameter()){
+        new_x = getX() - (M_SIZE_MODIFIER / 2);
+        new_y = getY() - (M_SIZE_MODIFIER / 2);
+    } else if(diameter < getDiameter()){
+        new_x = getX() + (M_SIZE_MODIFIER / 2);
+        new_y = getY() + (M_SIZE_MODIFIER / 2);
+    }
+
+    reDraw(diameter, new_x, new_y);
 }
 
 void Planet::setDiameter(int diameter){
@@ -60,12 +69,26 @@ int Planet::getDiameter(){
 // Private methods.
 
 void Planet::mouseDown(const MouseEvent& e){
-    m_Dragger.startDraggingComponent(this, e);
+    if(e.mods.isLeftButtonDown()){
+        // Starts dragging component.
+
+        m_Dragger.startDraggingComponent(this, e);
+    } 
+    
+    else if(e.mods.isRightButtonDown()){
+        // Initializes planet destruction.
+
+        m_Destroy = true;
+        m_DestroyPlanetPtr->setValue(true);
+        Logger::writeToLog("Set to destroy.");
+    }
 }
 
 void Planet::mouseDrag(const MouseEvent& e){
-    m_Dragger.dragComponent(this, e, nullptr);
-    checkBounds();
+    if(e.mods.isLeftButtonDown()){
+        m_Dragger.dragComponent(this, e, nullptr);
+        checkBounds();
+    }
 }
 
 void Planet::mouseWheelMove(const MouseEvent& e, const MouseWheelDetails& w){
@@ -75,9 +98,9 @@ void Planet::mouseWheelMove(const MouseEvent& e, const MouseWheelDetails& w){
     Logger::writeToLog("Wheel moved.");
 
     if(w.deltaY > 0.0f && getDiameter() < M_MAX_PLANET_SIZE)
-        reDraw(getDiameter() + M_SIZE_MODIFIER, getX(), getY());
+        resizePlanet(getDiameter() + M_SIZE_MODIFIER);
     else if(w.deltaY < 0.0f && getDiameter() > M_MIN_PLANET_SIZE)
-        reDraw(getDiameter() - M_SIZE_MODIFIER, getX(), getY());
+        resizePlanet(getDiameter() - M_SIZE_MODIFIER);
 }
 
 void Planet::visibilityChanged(){

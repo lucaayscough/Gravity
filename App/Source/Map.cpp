@@ -5,6 +5,8 @@
 
 Map::Map(){
     reservePlanetMemory();
+    m_DestroyPlanet.setValue(false);
+    m_DestroyPlanet.addListener(this);
 }
 
 Map::~Map(){}
@@ -16,9 +18,7 @@ void Map::paint(Graphics& g){
     g.fillAll(juce::Colours::black);
 }
 
-void Map::resized(){
-    m_Planets.reserve(20);
-}
+void Map::resized(){}
 
 
 // Private methods.
@@ -27,12 +27,12 @@ void Map::createPlanet(int x, int y){
     Logger::writeToLog("Creating planet...");
 
     // Instantiate planet inside planets vector.
-    m_Planets.emplace_back();
+    m_Planets.emplace_back(&m_DestroyPlanet);
     
     m_NumPlanets = m_Planets.size();
 
     // Reference for ease of use.
-    Planet& planet = m_Planets.at(m_NumPlanets - 1);
+    Planet& planet = m_Planets[m_NumPlanets - 1];
 
     // Render planet to screen.
     planet.setMapBoundaries(getWidth(), getHeight());
@@ -47,6 +47,18 @@ void Map::createPlanet(int x, int y){
 
     Logger::writeToLog("Planet created.");
     Logger::writeToLog("Number of planets: " + std::to_string(m_NumPlanets) + "\n");
+}
+
+void Map::destroyPlanet(){
+    for(int i = 0; i < m_Planets.size(); i++){
+        if(m_Planets[i].m_Destroy == true){
+
+            //m_Planets[i] = Planet(&m_DestroyPlanet);
+            //removeFromDesktop(m_Planets.at(i));
+        }
+    }
+
+    Logger::writeToLog("Planet destroyed.");
 }
 
 void Map::reservePlanetMemory(){
@@ -64,4 +76,8 @@ void Map::mouseDoubleClick(const MouseEvent& e){
         createPlanet(eventX, eventY);
     else
         Logger::writeToLog("Maximum number of planets reached.");
+}
+
+void Map::valueChanged(juce::Value &value){
+    destroyPlanet();
 }

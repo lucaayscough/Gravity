@@ -4,6 +4,9 @@
 
 
 class Planet: public juce::Component{
+public:
+    bool m_Destroy = false;
+
 private:
     juce::ComponentDragger m_Dragger;
 
@@ -14,9 +17,11 @@ private:
     int m_Diameter = 50;
     int m_WindowWidth;
     int m_WindowHeight;
+    juce::Value* m_DestroyPlanetPtr;
 
 public:
     Planet();
+    Planet(juce::Value* destroy_planet_ptr);
     Planet(const Planet&);
     ~Planet() override;
 
@@ -24,6 +29,8 @@ public:
     void resized() override;
     
     void reDraw(int diameter, int x, int y);
+    void resizePlanet(int diameter);
+
     void setDiameter(int diameter);
     void setMapBoundaries(int width, int height);
 
