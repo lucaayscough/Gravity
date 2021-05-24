@@ -1,7 +1,5 @@
 #pragma once
 
-#include <JuceHeader.h>
-
 
 class Planet: public juce::Component{
 public:
@@ -17,30 +15,45 @@ private:
     int m_Diameter = 50;
     int m_WindowWidth;
     int m_WindowHeight;
+    
+    // Used to update the state in the map object
+    // when a planet is set to be destroyed.
     juce::Value* m_DestroyPlanetPtr;
+
+    // Used to access the generator instantiated in
+    // the PluginProcessor.
+    Generator* m_GeneratorPtr;
+
+    // Generated sound.
+    at::Tensor m_Latents;
+    juce::Array<float> m_Sample;
+
 
 public:
     Planet();
-    Planet(juce::Value* destroy_planet_ptr);
-    Planet(const Planet&);
+    Planet(juce::Value*, Generator*);
     ~Planet() override;
 
-    void paint(Graphics& g) override;
+    void paint(Graphics&) override;
     void resized() override;
     
-    void reDraw(int diameter, int x, int y);
-    void resizePlanet(int diameter);
+    void draw(int, int, int);
+    void resizePlanet(int);
 
-    void setDiameter(int diameter);
-    void setMapBoundaries(int width, int height);
+    void setDiameter(int);
+    void setMapBoundaries(int, int);
 
     int getDiameter();
 
+    void generateSample();
+
 private:
-    void mouseDown(const MouseEvent& e) override;
-    void mouseDrag(const MouseEvent& e) override;
-    void mouseWheelMove(const MouseEvent& e, const MouseWheelDetails& w) override;
+    void mouseDown(const MouseEvent&) override;
+    void mouseDrag(const MouseEvent&) override;
+    void mouseWheelMove(const MouseEvent&, const MouseWheelDetails&) override;
     void visibilityChanged() override;
     
     void checkBounds();
+
+    JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR(Planet)
 };

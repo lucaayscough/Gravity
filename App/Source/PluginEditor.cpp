@@ -1,5 +1,4 @@
-#include "PluginProcessor.h"
-#include "PluginEditor.h"
+#include "Headers.h"
 
 
 //==============================================================================
@@ -12,37 +11,29 @@ AudioPluginAudioProcessorEditor::AudioPluginAudioProcessorEditor (AudioPluginAud
     setSize(M_WINDOW_WIDTH, M_WINDOW_HEIGHT);
     setResizable(M_IS_WIDTH_RESIZABLE, M_IS_HEIGHT_RESIZABLE);
     
+    addAndMakeVisible(m_Map);
+    m_Map.setGeneratorAccess(&processorRef.generator);
+
+    Generator* genPtr = &processorRef.generator;
+
     // Lambda function for allowing Sun object to generate random sounds.
+
+    /*
     mSun.getNewSample = [&]() {
         processorRef.generator.generateSample(
             processorRef.generator.generateLatents()
         );
     };
-
-    addAndMakeVisible(mMap);
-    addAndMakeVisible(mSun);
+    */    
 }
 
-AudioPluginAudioProcessorEditor::~AudioPluginAudioProcessorEditor()
-{
-}
+AudioPluginAudioProcessorEditor::~AudioPluginAudioProcessorEditor(){}
 
 //==============================================================================
-void AudioPluginAudioProcessorEditor::paint (juce::Graphics& g)
-{
-}
+void AudioPluginAudioProcessorEditor::paint (juce::Graphics& g){}
 
-void AudioPluginAudioProcessorEditor::resized()
-{
+void AudioPluginAudioProcessorEditor::resized(){
     auto r = getLocalBounds();
     auto mapArea = r;
-    mMap.setBounds(mapArea);
-    
-    // Sets the sun object in center of the window.
-    mSun.setBounds(
-        (getWidth() - mSun.getDiameter()) / 2,
-        (getHeight() - mSun.getDiameter()) / 2,
-        mSun.getDiameter(),
-        mSun.getDiameter()
-    );
+    m_Map.setBounds(mapArea);
 }

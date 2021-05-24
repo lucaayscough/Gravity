@@ -1,21 +1,27 @@
-#include "Planet.h"
+#include "Headers.h"
 
 
 // Main Planet class.
 
+//--------------------------------------------------//
 // Constructors and destructors.
 
 Planet::Planet(){}
 
-Planet::Planet(juce::Value* destroy_planet_ptr)
-    : m_DestroyPlanetPtr(destroy_planet_ptr)
-    {}
+Planet::Planet(juce::Value* destroy_planet_ptr, Generator* generator_ptr)
+    : m_DestroyPlanetPtr(destroy_planet_ptr), m_GeneratorPtr(generator_ptr)
+    {
+        // Allocates storage to array that holds sample.
+        m_Sample.ensureStorageAllocated(m_GeneratorPtr->M_NUM_SAMPLES);
 
-Planet::Planet(const Planet&){}
+        m_Latents = m_GeneratorPtr->generateLatents();
+        generateSample();
+    }
 
 Planet::~Planet(){}
 
 
+//--------------------------------------------------//
 // Public methods.
 
 void Planet::paint(Graphics& g){
@@ -27,7 +33,7 @@ void Planet::resized(){
     setSize(m_Diameter, m_Diameter);
 }
 
-void Planet::reDraw(int diameter, int x, int y){
+void Planet::draw(int diameter, int x, int y){
     // When called the component is redrawn.
 
     setDiameter(diameter);
@@ -49,7 +55,7 @@ void Planet::resizePlanet(int diameter){
         new_y = getY() + (M_SIZE_MODIFIER / 2);
     }
 
-    reDraw(diameter, new_x, new_y);
+    draw(diameter, new_x, new_y);
 }
 
 void Planet::setDiameter(int diameter){
@@ -65,19 +71,22 @@ int Planet::getDiameter(){
     return m_Diameter;
 }
 
+void Planet::generateSample(){
+    m_Sample = m_GeneratorPtr->generateSample(m_Latents);
+}
 
+
+//--------------------------------------------------//
 // Private methods.
 
 void Planet::mouseDown(const MouseEvent& e){
     if(e.mods.isLeftButtonDown()){
         // Starts dragging component.
-
         m_Dragger.startDraggingComponent(this, e);
     } 
     
     else if(e.mods.isRightButtonDown()){
         // Initializes planet destruction.
-
         m_Destroy = true;
         m_DestroyPlanetPtr->setValue(true);
         Logger::writeToLog("Set to destroy.");

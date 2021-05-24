@@ -1,5 +1,4 @@
-#include "PluginProcessor.h"
-#include "PluginEditor.h"
+#include "Headers.h"
 
 
 //==============================================================================
@@ -148,6 +147,7 @@ void AudioPluginAudioProcessor::processBlock (juce::AudioBuffer<float>& buffer,
     // Alternatively, you can process the samples with the channels
     // interleaved by keeping the same state.
 
+    /*
     for(const MidiMessageMetadata metadata : midiMessages){
         Logger::writeToLog(metadata.getMessage().getDescription());
         if(metadata.getMessage().isNoteOn())
@@ -167,7 +167,7 @@ void AudioPluginAudioProcessor::processBlock (juce::AudioBuffer<float>& buffer,
             juce::ignoreUnused (channelData);
 
             for(int sample = 0; sample < numSamples; ++sample){
-                if(m_sample_index[channel] < NUM_SAMPLES)
+                if(m_sample_index[channel] < generator.M_NUM_SAMPLES)
                     channelData[sample] = generator.sound[m_sample_index[channel]];
                 else
                     channelData[sample] = 0;
@@ -176,6 +176,7 @@ void AudioPluginAudioProcessor::processBlock (juce::AudioBuffer<float>& buffer,
 
         }
     }
+    */
 }
 
 //==============================================================================

@@ -1,4 +1,4 @@
-#include "Generator.h"
+#include "Headers.h"
 
 
 Generator::Generator(){
@@ -20,7 +20,7 @@ at::Tensor Generator::generateLatents(){
     return output;
 }
 
-void Generator::generateSample(at::Tensor latents){
+juce::Array<float> Generator::generateSample(at::Tensor& latents){
     torch::NoGradGuard no_grad;
 
     // Create input tensor with latents.
@@ -30,8 +30,13 @@ void Generator::generateSample(at::Tensor latents){
     // Forward input to module.
     at::Tensor output = generator_module.forward(inputs).toTensor();
 
+    juce::Array<float> sample;
+    sample.ensureStorageAllocated(M_NUM_SAMPLES);
+
     // Copy tensor to array.
-    for(int i = 0; i < NUM_SAMPLES; i++){
-        sound[i] = output[0][0][i].item<float>();
+    for(int i = 0; i < M_NUM_SAMPLES; i++){
+        sample.insert(i, output[0][0][i].item<float>());
     }
+
+    return sample;
 }

@@ -1,4 +1,4 @@
-#include "Sun.h"
+#include "Headers.h"
 
 
 // Sun class which inherits from the parent Planet class.

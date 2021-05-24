@@ -1,15 +1,5 @@
 #pragma once
 
-#include <juce_audio_processors/juce_audio_processors.h>
-#include <JuceHeader.h>
-#include <iostream>
-#include <memory>
-
-#include "Generator.h"
-#include "Map.h"
-#include "Planet.h"
-#include "Sun.h"
-
 
 //==============================================================================
 class AudioPluginAudioProcessor  : public juce::AudioProcessor
