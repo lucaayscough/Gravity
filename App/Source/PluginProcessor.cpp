@@ -147,7 +147,10 @@ void AudioPluginAudioProcessor::processBlock (juce::AudioBuffer<float>& buffer,
     // Alternatively, you can process the samples with the channels
     // interleaved by keeping the same state.
 
-    /*
+    if(AudioContainer::playAudio){
+        mPlaySample = true;
+    }
+
     for(const MidiMessageMetadata metadata : midiMessages){
         Logger::writeToLog(metadata.getMessage().getDescription());
         if(metadata.getMessage().isNoteOn())
@@ -168,15 +171,15 @@ void AudioPluginAudioProcessor::processBlock (juce::AudioBuffer<float>& buffer,
 
             for(int sample = 0; sample < numSamples; ++sample){
                 if(m_sample_index[channel] < generator.M_NUM_SAMPLES)
-                    channelData[sample] = generator.sound[m_sample_index[channel]];
+                    channelData[sample] = AudioContainer::audio[m_sample_index[channel]];
                 else
                     channelData[sample] = 0;
+                    mPlaySample = false;
+                    AudioContainer::playAudio = false;
                 m_sample_index[channel] += 1;
             }
-
         }
     }
-    */
 }
 
 //==============================================================================

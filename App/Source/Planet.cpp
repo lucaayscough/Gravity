@@ -93,10 +93,15 @@ void Planet::mouseDown(const MouseEvent& e){
         Logger::writeToLog("Sample generated.");
     }
 
-    else if(e.mods.isLeftButtonDown()){
+    else if(e.mods.isLeftButtonDown() && e.mouseWasClicked()){
+        AudioContainer::audio.addArray(m_Sample);
+        AudioContainer::playAudio = true;
+    }
+
+    else if(e.mods.isLeftButtonDown() && !e.mouseWasClicked()){
         // Starts dragging component.
         m_Dragger.startDraggingComponent(this, e);
-    } 
+    }
     
     else if(e.mods.isRightButtonDown()){
         // Initializes planet destruction.

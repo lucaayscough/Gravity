@@ -7,6 +7,8 @@
 #include <torch/script.h>
 #include "Generator.h"
 
+#include "AudioContainer.h"
+
 #include "Planet.h"
 #include "Sun.h"
 #include "Map.h"
