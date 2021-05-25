@@ -5,9 +5,6 @@
 // Constructors and destructors.
 
 Map::Map(){
-    // Display sun.
-    addAndMakeVisible(m_Sun);
-
     // Planet destruction.
     m_DestroyPlanet.setValue(false);
     m_DestroyPlanet.addListener(this);
@@ -23,16 +20,25 @@ void Map::paint(Graphics& g){
     g.fillAll(juce::Colours::black);
 }
 
-void Map::resized(){
+void Map::resized(){}
+
+void Map::createSun(){
+    // Create sun object.
+    m_Sun.add(new Sun(m_GeneratorPtr));
+
+    // Display sun.
+    addAndMakeVisible(m_Sun[0]);
+
     // Draws sun to the center of the screen.
-    m_Sun.draw(
-        m_Sun.getDiameter(),
-        (getWidth() - m_Sun.getDiameter()) / 2,
-        (getHeight() - m_Sun.getDiameter()) / 2
+    m_Sun[0]->draw(
+        m_Sun[0]->getDiameter(),
+        (getWidth() - m_Sun[0]->getDiameter()) / 2,
+        (getHeight() - m_Sun[0]->getDiameter()) / 2
     );
 }
 
 void Map::setGeneratorAccess(Generator* generator_ptr){
+    // This is called externally.
     m_GeneratorPtr = generator_ptr;
 }
 
@@ -103,4 +109,5 @@ void Map::mouseDoubleClick(const MouseEvent& e){
 void Map::valueChanged(juce::Value &value){
     if(m_DestroyPlanet == true)
         destroyPlanet();
+    
 }

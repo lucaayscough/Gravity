@@ -14,7 +14,7 @@ Planet::Planet(juce::Value* destroy_planet_ptr, Generator* generator_ptr)
         // Allocates storage to array that holds sample.
         m_Sample.ensureStorageAllocated(m_GeneratorPtr->M_NUM_SAMPLES);
 
-        m_Latents = m_GeneratorPtr->generateLatents();
+        generateLatents();
         generateSample();
     }
 
@@ -71,6 +71,10 @@ int Planet::getDiameter(){
     return m_Diameter;
 }
 
+void Planet::generateLatents(){
+    m_Latents = m_GeneratorPtr->generateLatents();
+}
+
 void Planet::generateSample(){
     m_Sample = m_GeneratorPtr->generateSample(m_Latents);
 }
@@ -80,7 +84,16 @@ void Planet::generateSample(){
 // Private methods.
 
 void Planet::mouseDown(const MouseEvent& e){
-    if(e.mods.isLeftButtonDown()){
+    if(e.getNumberOfClicks() > 1 && e.mods.isLeftButtonDown()){
+        Logger::writeToLog("Generating sample...");
+
+        generateLatents();
+        generateSample();
+
+        Logger::writeToLog("Sample generated.");
+    }
+
+    else if(e.mods.isLeftButtonDown()){
         // Starts dragging component.
         m_Dragger.startDraggingComponent(this, e);
     } 
@@ -90,7 +103,7 @@ void Planet::mouseDown(const MouseEvent& e){
         m_Destroy = true;
         m_DestroyPlanetPtr->setValue(true);
         Logger::writeToLog("Set to destroy.");
-    }
+    }    
 }
 
 void Planet::mouseDrag(const MouseEvent& e){

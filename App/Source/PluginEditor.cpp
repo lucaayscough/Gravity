@@ -11,20 +11,14 @@ AudioPluginAudioProcessorEditor::AudioPluginAudioProcessorEditor (AudioPluginAud
     setSize(M_WINDOW_WIDTH, M_WINDOW_HEIGHT);
     setResizable(M_IS_WIDTH_RESIZABLE, M_IS_HEIGHT_RESIZABLE);
     
+    // Make map visible.
     addAndMakeVisible(m_Map);
+
+    // Pass the map a pointer to the generator class.
     m_Map.setGeneratorAccess(&processorRef.generator);
 
-    Generator* genPtr = &processorRef.generator;
-
-    // Lambda function for allowing Sun object to generate random sounds.
-
-    /*
-    mSun.getNewSample = [&]() {
-        processorRef.generator.generateSample(
-            processorRef.generator.generateLatents()
-        );
-    };
-    */    
+    // Create sun inside the map.
+    m_Map.createSun();
 }
 
 AudioPluginAudioProcessorEditor::~AudioPluginAudioProcessorEditor(){}

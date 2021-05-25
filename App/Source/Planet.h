@@ -24,6 +24,7 @@ private:
     // the PluginProcessor.
     Generator* m_GeneratorPtr;
 
+protected:
     // Generated sound.
     at::Tensor m_Latents;
     juce::Array<float> m_Sample;
@@ -45,6 +46,7 @@ public:
 
     int getDiameter();
 
+    void generateLatents();
     void generateSample();
 
 private:

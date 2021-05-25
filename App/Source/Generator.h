@@ -1,8 +1,6 @@
 #pragma once
 
 
-
-
 class Generator{
 public:
     static const int M_NUM_SAMPLES = 131072;
@@ -13,5 +11,3 @@ public:
     at::Tensor generateLatents();
     juce::Array<float> generateSample(at::Tensor&);
 };
-
-

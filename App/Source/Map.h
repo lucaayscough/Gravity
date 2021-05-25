@@ -3,8 +3,8 @@
 
 class Map: public juce::Component, public juce::Value::Listener{
 private:
-    // Construct sun.
-    Sun m_Sun;
+    // Sun container.
+    OwnedArray<Sun> m_Sun;
 
     // Planet container and variables.
     OwnedArray<Planet> m_Planets;
@@ -23,6 +23,7 @@ public:
 
     void paint(Graphics&) override;
     void resized() override;
+    void createSun();
 
     void setGeneratorAccess(Generator*);
 
