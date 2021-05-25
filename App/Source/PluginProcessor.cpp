@@ -170,13 +170,17 @@ void AudioPluginAudioProcessor::processBlock (juce::AudioBuffer<float>& buffer,
             juce::ignoreUnused (channelData);
 
             for(int sample = 0; sample < numSamples; ++sample){
-                if(m_sample_index[channel] < generator.M_NUM_SAMPLES)
+                if(m_sample_index[channel] < generator.M_NUM_SAMPLES){
                     channelData[sample] = AudioContainer::audio[m_sample_index[channel]];
-                else
+                    m_sample_index[channel] += 1;
+                }
+                else{
                     channelData[sample] = 0;
+                    m_sample_index[0] = 0;
+                    m_sample_index[1] = 0;
                     mPlaySample = false;
                     AudioContainer::playAudio = false;
-                m_sample_index[channel] += 1;
+                }
             }
         }
     }

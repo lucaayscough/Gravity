@@ -84,6 +84,9 @@ void Planet::generateSample(){
 // Private methods.
 
 void Planet::mouseDown(const MouseEvent& e){
+    // Starts dragging component.
+    m_Dragger.startDraggingComponent(this, e);
+    
     if(e.getNumberOfClicks() > 1 && e.mods.isLeftButtonDown()){
         Logger::writeToLog("Generating sample...");
 
@@ -94,13 +97,10 @@ void Planet::mouseDown(const MouseEvent& e){
     }
 
     else if(e.mods.isLeftButtonDown() && e.mouseWasClicked()){
+        Logger::writeToLog("Playing audio...");
+        AudioContainer::audio.clear();
         AudioContainer::audio.addArray(m_Sample);
         AudioContainer::playAudio = true;
-    }
-
-    else if(e.mods.isLeftButtonDown() && !e.mouseWasClicked()){
-        // Starts dragging component.
-        m_Dragger.startDraggingComponent(this, e);
     }
     
     else if(e.mods.isRightButtonDown()){
