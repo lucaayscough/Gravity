@@ -40,6 +40,13 @@ void Sun::mouseDown(const MouseEvent& e){
 
         Logger::writeToLog("Sample generated.");
     }
+
+    else if(e.mods.isLeftButtonDown() && e.mouseWasClicked()){
+        Logger::writeToLog("Playing audio...");
+        AudioContainer::audio.clear();
+        AudioContainer::audio.addArray(m_Sample);
+        AudioContainer::playAudio = true;
+    }
 }
 
 void Sun::mouseDrag(const MouseEvent& e){}
