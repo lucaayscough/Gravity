@@ -54,6 +54,9 @@ void Map::createPlanet(int x, int y){
     // Reference for ease of use.
     auto new_planet = m_Planets[m_NumPlanets - 1];
 
+    // Add listener for planet destruction request.
+    new_planet->m_Destroy.addListener(this);
+
     // Render planet to screen.
     new_planet->setMapBoundaries(getWidth(), getHeight());
     

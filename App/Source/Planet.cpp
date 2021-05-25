@@ -18,7 +18,6 @@ Planet::Planet(Generator* generator_ptr)
         generateSample();
 
         m_Destroy.setValue(false);
-        //m_Destroy.addListener(this);
     }
 
 Planet::~Planet(){}
