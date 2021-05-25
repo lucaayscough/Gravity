@@ -8,14 +8,17 @@
 
 Planet::Planet(){}
 
-Planet::Planet(juce::Value* destroy_planet_ptr, Generator* generator_ptr)
-    : m_DestroyPlanetPtr(destroy_planet_ptr), m_GeneratorPtr(generator_ptr)
+Planet::Planet(Generator* generator_ptr)
+    : m_GeneratorPtr(generator_ptr)
     {
         // Allocates storage to array that holds sample.
         m_Sample.ensureStorageAllocated(m_GeneratorPtr->M_NUM_SAMPLES);
 
         generateLatents();
         generateSample();
+
+        m_Destroy.setValue(false);
+        //m_Destroy.addListener(this);
     }
 
 Planet::~Planet(){}
@@ -105,8 +108,7 @@ void Planet::mouseDown(const MouseEvent& e){
     
     else if(e.mods.isRightButtonDown()){
         // Initializes planet destruction.
-        m_Destroy = true;
-        m_DestroyPlanetPtr->setValue(true);
+        m_Destroy.setValue(true);
         Logger::writeToLog("Set to destroy.");
     }    
 }

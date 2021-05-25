@@ -3,7 +3,7 @@
 
 class Planet: public juce::Component{
 public:
-    bool m_Destroy = false;
+    juce::Value m_Destroy;
 
 private:
     juce::ComponentDragger m_Dragger;
@@ -15,16 +15,12 @@ private:
     int m_Diameter = 50;
     int m_WindowWidth;
     int m_WindowHeight;
-    
-    // Used to update the state in the map object
-    // when a planet is set to be destroyed.
-    juce::Value* m_DestroyPlanetPtr;
 
+protected:
     // Used to access the generator instantiated in
     // the PluginProcessor.
     Generator* m_GeneratorPtr;
 
-protected:
     // Generated sound.
     at::Tensor m_Latents;
     juce::Array<float> m_Sample;
@@ -32,7 +28,7 @@ protected:
 
 public:
     Planet();
-    Planet(juce::Value*, Generator*);
+    Planet(Generator*);
     ~Planet() override;
 
     void paint(Graphics&) override;
@@ -46,8 +42,8 @@ public:
 
     int getDiameter();
 
-    void generateLatents();
-    void generateSample();
+    virtual void generateLatents();
+    virtual void generateSample();
 
 private:
     void mouseDown(const MouseEvent&) override;

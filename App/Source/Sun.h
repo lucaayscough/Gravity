@@ -5,10 +5,6 @@ class Sun : public Planet{
 private:
     const int M_DIAMETER = 75;
 
-    // Used to access the generator instantiated in
-    // the PluginProcessor.
-    Generator* m_GeneratorPtr;
-
 public:
     Sun();
     Sun(Generator*);
@@ -19,8 +15,8 @@ public:
 
     int getDiameter();
     
-    void generateLatents();
-    void generateSample();
+    void generateLatents() override;
+    void generateSample() override;
 
 private:
     void mouseDown(const MouseEvent& e) override;

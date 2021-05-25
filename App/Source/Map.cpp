@@ -4,11 +4,10 @@
 //--------------------------------------------------//
 // Constructors and destructors.
 
-Map::Map(){
-    // Planet destruction.
-    m_DestroyPlanet.setValue(false);
-    m_DestroyPlanet.addListener(this);
-}
+Map::Map(){}
+
+Map::Map(Generator* generator_ptr)
+    : m_GeneratorPtr(generator_ptr){}
 
 Map::~Map(){}
 
@@ -20,7 +19,9 @@ void Map::paint(Graphics& g){
     g.fillAll(juce::Colours::black);
 }
 
-void Map::resized(){}
+void Map::resized(){
+    createSun();
+}
 
 void Map::createSun(){
     // Create sun object.
@@ -37,11 +38,6 @@ void Map::createSun(){
     );
 }
 
-void Map::setGeneratorAccess(Generator* generator_ptr){
-    // This is called externally.
-    m_GeneratorPtr = generator_ptr;
-}
-
 
 //--------------------------------------------------//
 // Private methods.
@@ -51,7 +47,7 @@ void Map::createPlanet(int x, int y){
 
     // Instantiate planet inside planets array.
     // Pointer for destruction value and for generator are passed.
-    m_Planets.add(new Planet(&m_DestroyPlanet, m_GeneratorPtr));
+    m_Planets.add(new Planet(m_GeneratorPtr));
     
     m_NumPlanets = m_Planets.size();
 
@@ -83,9 +79,6 @@ void Map::destroyPlanet(){
 
             // Reduce number of planets counter.
             m_NumPlanets -= 1;
-
-            // Change listener back to being false.
-            m_DestroyPlanet.setValue(false);
         }
     }
 
@@ -107,7 +100,5 @@ void Map::mouseDoubleClick(const MouseEvent& e){
 }
 
 void Map::valueChanged(juce::Value &value){
-    if(m_DestroyPlanet == true)
-        destroyPlanet();
-    
+    destroyPlanet();
 }

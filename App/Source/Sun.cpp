@@ -7,13 +7,7 @@
 Sun::Sun(){}
 
 Sun::Sun(Generator* generator_ptr)
-    : m_GeneratorPtr(generator_ptr)
-    {
-        m_Sample.ensureStorageAllocated(m_GeneratorPtr->M_NUM_SAMPLES);
-
-        generateLatents();
-        generateSample();
-    }
+    : Planet(generator_ptr){}
 
 Sun::~Sun(){}
 
