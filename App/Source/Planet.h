@@ -12,9 +12,16 @@ private:
     const int M_MAX_PLANET_SIZE = 100;
     const int M_MIN_PLANET_SIZE = 20;
 
+    // Diameter of the planet.
     int m_Diameter = 50;
-    int m_WindowWidth;
-    int m_WindowHeight;
+
+    // Boundary to avoid clipping of component when moved.
+    int m_ClipBoundary = 100;
+
+    // Map boundaries.
+    juce::ComponentBoundsConstrainer m_MapConstrainer;
+    int m_MapWidth;
+    int m_MapHeight;
 
 protected:
     // Used to access the generator instantiated in
@@ -41,17 +48,22 @@ public:
     void setMapBoundaries(int, int);
 
     int getDiameter();
+    int getClipBoundary();
 
     virtual void generateLatents();
     virtual void generateSample();
 
 private:
+    bool hitTest(int, int) override;
     void mouseDown(const MouseEvent&) override;
+    void mouseUp(const MouseEvent&) override;
     void mouseDrag(const MouseEvent&) override;
     void mouseWheelMove(const MouseEvent&, const MouseWheelDetails&) override;
     void visibilityChanged() override;
     
     void checkBounds();
+
+    void allocateStorage();
 
     JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR(Planet)
 };

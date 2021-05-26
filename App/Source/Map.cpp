@@ -53,6 +53,7 @@ void Map::createPlanet(int x, int y){
 
     // Reference for ease of use.
     auto new_planet = m_Planets[m_NumPlanets - 1];
+    addAndMakeVisible(new_planet);
 
     // Add listener for planet destruction request.
     new_planet->m_Destroy.addListener(this);
@@ -60,14 +61,13 @@ void Map::createPlanet(int x, int y){
     // Render planet to screen.
     new_planet->setMapBoundaries(getWidth(), getHeight());
     
-    new_planet->setBounds(
-        x - (new_planet->getDiameter() / 2),
-        y - (new_planet->getDiameter() / 2),
+    new_planet->draw(
         new_planet->getDiameter(),
-        new_planet->getDiameter()
+        x - (new_planet->getDiameter() / 2) - (new_planet->getClipBoundary() / 2),
+        y - (new_planet->getDiameter() / 2) - (new_planet->getClipBoundary() / 2)
     );
     
-    addAndMakeVisible(new_planet);
+    
 
     Logger::writeToLog("Planet created.");
     Logger::writeToLog("Number of planets: " + std::to_string(m_NumPlanets) + "\n");

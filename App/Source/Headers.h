@@ -2,6 +2,7 @@
 
 #include <juce_audio_processors/juce_audio_processors.h>
 #include <JuceHeader.h>
+#include <math.h>
 
 #include <torch/torch.h>
 #include <torch/script.h>
