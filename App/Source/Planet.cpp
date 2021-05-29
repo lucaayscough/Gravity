@@ -8,8 +8,8 @@
 
 Planet::Planet(){}
 
-Planet::Planet(Generator* generator_ptr)
-    : m_GeneratorPtr(generator_ptr)
+Planet::Planet(juce::OwnedArray<Planet>* planets_ptr, Generator* generator_ptr)
+    : m_PlanetsPtr(planets_ptr), m_GeneratorPtr(generator_ptr)
     {
         allocateStorage();
 
@@ -19,6 +19,7 @@ Planet::Planet(Generator* generator_ptr)
 
         // Listener value used to determine when to destroy the planet.
         m_Destroy.setValue(false);
+        setPosXY(getX(), getY());
     }
 
 Planet::~Planet(){}
@@ -28,6 +29,7 @@ Planet::~Planet(){}
 // Public methods.
 
 void Planet::paint(Graphics& g){
+    //g.fillAll(juce::Colours::green);
     g.setColour(juce::Colours::red);
     draw(m_Diameter, getX(), getY());
     g.fillEllipse(m_ClipBoundary / 2, m_ClipBoundary / 2, m_Diameter, m_Diameter);
@@ -69,12 +71,23 @@ void Planet::setMapBoundaries(int width, int height){
     m_MapHeight = height;
 }
 
+void Planet::setPosXY(int x, int y){
+    m_PosX = x;
+    m_PosY = y;
+}
+
 int Planet::getDiameter(){
     return m_Diameter;
 }
 
 int Planet::getClipBoundary(){
     return m_ClipBoundary;
+}
+
+float Planet::getDistance(int xa, int ya, int xb, int yb){  
+    float a = (float)pow(xb - xa, 2);
+    float b = (float)pow(yb - ya, 2); 
+    return sqrt(a + b);
 }
 
 void Planet::generateLatents(){
@@ -92,9 +105,7 @@ void Planet::generateSample(){
 bool Planet::hitTest(int x, int y){
     float a = pow((float)x - ((float)m_Diameter + (float)m_ClipBoundary) / 2.0f, 2.0f);
     float b = pow((float)y - ((float)m_Diameter + (float)m_ClipBoundary) / 2.0f, 2.0f);
-    float c = sqrt(a + b);
-
-    return c <= m_Diameter / 2;
+    return sqrt(a + b) <= m_Diameter / 2;
 }
 
 void Planet::mouseDown(const MouseEvent& e){
@@ -134,7 +145,9 @@ void Planet::mouseUp(const MouseEvent& e){}
 
 void Planet::mouseDrag(const MouseEvent& e){
     m_Dragger.dragComponent(this, e, nullptr);
+    checkCollision();
     checkBounds();
+    setPosXY(getX(), getY());
 }
 
 void Planet::mouseWheelMove(const MouseEvent& e, const MouseWheelDetails& w){
@@ -155,6 +168,53 @@ void Planet::visibilityChanged(){
     Logger::writeToLog("Visibility changed.");
 }
 
+void Planet::checkCollision(){
+    int centrePosX = (
+        getX() +
+        getDiameter() / 2  +
+        getClipBoundary() / 2
+    );
+    
+    int centrePosY = (
+        getY() +
+        getDiameter() / 2  +
+        getClipBoundary() / 2
+    );
+
+    int centrePosX2, centrePosY2;
+    float distance, ratioX, ratioY;
+    float min_distance;
+
+    Planet* planet;
+
+    for(int i = 0; i < m_PlanetsPtr->size(); i++){
+        // Variable for ease of use.
+        planet = (*m_PlanetsPtr)[i];
+
+        // Avoid self collision testing.
+        if(planet->getComponentID() != getComponentID()){
+            centrePosX2 = (
+                planet->getX() +
+                planet->getDiameter() / 2  +
+                planet->getClipBoundary() / 2
+            );
+            
+            centrePosY2 = (
+                planet->getY() +
+                planet->getDiameter() / 2  +
+                planet->getClipBoundary() / 2
+            );
+
+            distance = getDistance(centrePosX, centrePosY, centrePosX2, centrePosY2);
+            min_distance = (planet->getDiameter() + m_Diameter) / 2;
+
+            if(distance <= min_distance){
+                draw(m_Diameter, m_PosX, m_PosY);
+            }
+        }
+    }
+}
+
 void Planet::checkBounds(){
     //Check left boundary.
     if(getX() < -(m_ClipBoundary / 2))
@@ -173,7 +233,7 @@ void Planet::checkBounds(){
         draw(m_Diameter, getX(), m_MapHeight - m_Diameter - (m_ClipBoundary / 2));
     
     // Write planet position to screen.
-    Logger::writeToLog("X: " + std::to_string(getX()) + ", Y: " + std::to_string(getY()));
+    //Logger::writeToLog("X: " + std::to_string(getX()) + ", Y: " + std::to_string(getY()));
 }
 
 void Planet::allocateStorage(){

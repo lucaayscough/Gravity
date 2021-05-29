@@ -21,7 +21,7 @@ private:
     
     // Window member variables.
     const int M_WINDOW_WIDTH = 800;
-    const int M_WINDOW_HEIGHT = 400;
+    const int M_WINDOW_HEIGHT = 600;
     const bool M_IS_WIDTH_RESIZABLE = false;
     const bool M_IS_HEIGHT_RESIZABLE = false;
     

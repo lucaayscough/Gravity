@@ -3,7 +3,8 @@
 
 class Planet: public juce::Component{
 public:
-    juce::Value m_Destroy;
+    // Value used to activate planet destruction.
+    juce::Value m_Destroy;  
 
 private:
     juce::ComponentDragger m_Dragger;
@@ -22,10 +23,17 @@ private:
     int m_MapWidth;
     int m_MapHeight;
 
+    // Collision safety.
+    int m_PosX;
+    int m_PosY;
+
 protected:
     // Used to access the generator instantiated in
     // the PluginProcessor.
     Generator* m_GeneratorPtr;
+
+    // Pointer to array containing planets.
+    juce::OwnedArray<Planet>* m_PlanetsPtr;  
 
     // Generated sound.
     at::Tensor m_Latents;
@@ -34,7 +42,7 @@ protected:
 
 public:
     Planet();
-    Planet(Generator*);
+    Planet(juce::OwnedArray<Planet>*, Generator*);
     ~Planet() override;
 
     void paint(Graphics&) override;
@@ -45,9 +53,11 @@ public:
 
     void setDiameter(int);
     void setMapBoundaries(int, int);
+    void setPosXY(int, int);
 
     virtual int getDiameter();
     int getClipBoundary();
+    float getDistance(int, int, int, int);
 
     virtual void generateLatents();
     virtual void generateSample();
@@ -60,6 +70,7 @@ private:
     void mouseWheelMove(const MouseEvent&, const MouseWheelDetails&) override;
     void visibilityChanged() override;
 
+    void checkCollision();
     void checkBounds();
     void allocateStorage();
 

@@ -7,7 +7,7 @@ private:
 
 public:
     Sun();
-    Sun(Generator*);
+    Sun(juce::OwnedArray<Planet>*, Generator*);
     ~Sun() override;
 
     void paint(Graphics& g) override;

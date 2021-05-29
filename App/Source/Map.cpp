@@ -25,7 +25,7 @@ void Map::resized(){
 
 void Map::createSun(){
     // Create sun object.
-    m_Sun.add(new Sun(m_GeneratorPtr));
+    m_Sun.add(new Sun(&m_Planets, m_GeneratorPtr));
 
     // Display sun.
     addAndMakeVisible(m_Sun[0]);
@@ -43,12 +43,28 @@ void Map::createPlanet(int x, int y){
 
     // Instantiate planet inside planets array.
     // Pointer for destruction value and for generator are passed.
-    m_Planets.add(new Planet(m_GeneratorPtr));
+    m_Planets.add(new Planet(&m_Planets, m_GeneratorPtr));
     
     m_NumPlanets = m_Planets.size();
 
     // Reference for ease of use.
     auto new_planet = m_Planets[m_NumPlanets - 1];
+    
+    // Generate random ID for component.
+    auto randomID = juce::String(juce::Random::getSystemRandom().nextInt(100001));    
+
+    // Check if ID is unique.
+    for(int i = 0; i < m_NumPlanets - 1; i++){
+        if(m_Planets[i]->getComponentID() == randomID){
+            while(m_Planets[i]->getComponentID() == randomID){
+                randomID = juce::String(juce::Random::getSystemRandom().nextInt(100001)); 
+            }
+        }
+    }
+    
+    // Set ID.
+    new_planet->setComponentID(randomID);
+
     addAndMakeVisible(new_planet);
 
     // Add listener for planet destruction request.
@@ -98,6 +114,6 @@ void Map::mouseDoubleClick(const MouseEvent& e){
     }
 }
 
-void Map::valueChanged(juce::Value &value){
+void Map::valueChanged(juce::Value& value){
     destroyPlanet();
 }

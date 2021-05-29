@@ -6,14 +6,13 @@
 
 Sun::Sun(){}
 
-Sun::Sun(Generator* generator_ptr)
-    : Planet(generator_ptr){}
+Sun::Sun(juce::OwnedArray<Planet>* planets_ptr, Generator* generator_ptr)
+    : Planet(planets_ptr, generator_ptr){}
 
 Sun::~Sun(){}
 
 void Sun::paint(Graphics& g){
-    setSize(M_DIAMETER, M_DIAMETER);
-    g.fillAll(juce::Colours::green);
+    //g.fillAll(juce::Colours::green);
     g.setColour(juce::Colours::yellow);
     g.fillEllipse(0, 0, M_DIAMETER, M_DIAMETER);
 }
