@@ -19,7 +19,6 @@ private:
     int m_ClipBoundary = 100;
 
     // Map boundaries.
-    juce::ComponentBoundsConstrainer m_MapConstrainer;
     int m_MapWidth;
     int m_MapHeight;
 
@@ -47,7 +46,7 @@ public:
     void setDiameter(int);
     void setMapBoundaries(int, int);
 
-    int getDiameter();
+    virtual int getDiameter();
     int getClipBoundary();
 
     virtual void generateLatents();
@@ -60,9 +59,8 @@ private:
     void mouseDrag(const MouseEvent&) override;
     void mouseWheelMove(const MouseEvent&, const MouseWheelDetails&) override;
     void visibilityChanged() override;
-    
-    void checkBounds();
 
+    void checkBounds();
     void allocateStorage();
 
     JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR(Planet)

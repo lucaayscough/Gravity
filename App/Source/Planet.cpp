@@ -14,8 +14,8 @@ Planet::Planet(Generator* generator_ptr)
         allocateStorage();
 
         // Generate random sample.
-        //generateLatents();
-        //generateSample();
+        generateLatents();
+        generateSample();
 
         // Listener value used to determine when to destroy the planet.
         m_Destroy.setValue(false);
@@ -50,7 +50,7 @@ void Planet::resizePlanet(int diameter){
     if(diameter > getDiameter()){
         new_x = getX() - (M_SIZE_MODIFIER / 2);
         new_y = getY() - (M_SIZE_MODIFIER / 2);
-    } else if(diameter < getDiameter()){
+    } else{
         new_x = getX() + (M_SIZE_MODIFIER / 2);
         new_y = getY() + (M_SIZE_MODIFIER / 2);
     }
@@ -90,8 +90,8 @@ void Planet::generateSample(){
 // Private methods.
 
 bool Planet::hitTest(int x, int y){
-    float a = pow(x - (m_Diameter + m_ClipBoundary) / 2, 2);
-    float b = pow(y - (m_Diameter + m_ClipBoundary) / 2, 2);
+    float a = pow((float)x - ((float)m_Diameter + (float)m_ClipBoundary) / 2.0f, 2.0f);
+    float b = pow((float)y - ((float)m_Diameter + (float)m_ClipBoundary) / 2.0f, 2.0f);
     float c = sqrt(a + b);
 
     return c <= m_Diameter / 2;

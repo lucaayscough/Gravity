@@ -31,11 +31,7 @@ void Map::createSun(){
     addAndMakeVisible(m_Sun[0]);
 
     // Draws sun to the center of the screen.
-    m_Sun[0]->draw(
-        m_Sun[0]->getDiameter(),
-        (getWidth() - m_Sun[0]->getDiameter()) / 2,
-        (getHeight() - m_Sun[0]->getDiameter()) / 2
-    );
+    m_Sun[0]->draw();
 }
 
 

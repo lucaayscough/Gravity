@@ -13,14 +13,18 @@ public:
     void paint(Graphics& g) override;
     void resized() override;
 
-    int getDiameter();
+    void draw();
+
+    int getDiameter() override;
     
     void generateLatents() override;
     void generateSample() override;
 
 private:
+    bool hitTest(int, int) override;
     void mouseDown(const MouseEvent& e) override;
     void mouseDrag(const MouseEvent& e) override;
+    void mouseWheelMove(const MouseEvent&, const MouseWheelDetails&) override;
 
     JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR(Sun)
 };

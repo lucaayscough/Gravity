@@ -3,8 +3,8 @@
 
 Generator::Generator(){
     // Loads generator model.
-    generator_module = torch::jit::load("C:\\Program Files\\AdversarialAudio\\generator_module.pt");
-    mapper_module = torch::jit::load("C:\\Program Files\\AdversarialAudio\\mapper_module.pt");
+    generator_module = torch::jit::load("/Users/lucaayscough/dev/AdversarialAudio/Generator/scripted_modules/generator_module.pt");
+    mapper_module = torch::jit::load("/Users/lucaayscough/dev/AdversarialAudio/Generator/scripted_modules/mapper_module.pt");
 }
 
 at::Tensor Generator::generateLatents(){
