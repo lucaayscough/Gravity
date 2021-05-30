@@ -76,6 +76,7 @@ target_sources(AudioPluginExample
         Planet.cpp
         Sun.cpp
         AudioContainer.cpp
+        Variables.cpp
 )
 
 # `target_compile_definitions` adds some preprocessor definitions to our target. In a Projucer

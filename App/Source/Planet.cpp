@@ -90,6 +90,18 @@ float Planet::getDistance(int xa, int ya, int xb, int yb){
     return sqrt(a + b);
 }
 
+int Planet::getCentreX(Planet* planet){
+    // Returns the the centre X position of the planet,
+    // taking into a account clip boundary.
+    return planet->getX() + ((planet->getDiameter() + planet->getClipBoundary()) / 2);
+}
+
+int Planet::getCentreY(Planet* planet){
+    // Returns the the centre Y position of the planet,
+    // taking into a account clip boundary.
+    return planet->getY() + ((planet->getDiameter() + planet->getClipBoundary()) / 2);
+}
+
 void Planet::generateLatents(){
     m_Latents = m_GeneratorPtr->generateLatents();
 }
@@ -113,7 +125,6 @@ void Planet::mouseDown(const MouseEvent& e){
     m_Dragger.startDraggingComponent(this, e);
     
     if(e.mods.isLeftButtonDown()){
-
         // Generates new sample if double clicked with left mouse button.
         if(e.getNumberOfClicks() > 1){
             Logger::writeToLog("Generating sample...");
@@ -169,23 +180,27 @@ void Planet::visibilityChanged(){
 }
 
 void Planet::checkCollision(){
-    int centrePosX = (
-        getX() +
-        getDiameter() / 2  +
-        getClipBoundary() / 2
-    );
-    
-    int centrePosY = (
-        getY() +
-        getDiameter() / 2  +
-        getClipBoundary() / 2
-    );
+    int centrePosX = getCentreX(this);
+    int centrePosY = getCentreY(this);
 
-    int centrePosX2, centrePosY2;
-    float distance, ratioX, ratioY;
-    float min_distance;
+    float distance, minDistance;
+
+    // Check collision with sun.
+    {
+        int centreXSun = Variables::WINDOW_WIDTH / 2;
+        int centreYSun = Variables::WINDOW_HEIGHT / 2;
+        int sunDiameter = Variables::SUN_DIAMETER;
+
+        distance = getDistance(centrePosX, centrePosY, centreXSun, centreYSun);
+        minDistance = (sunDiameter + m_Diameter) / 2;
+
+        if(distance <= minDistance){
+            draw(m_Diameter, m_PosX, m_PosY);
+        }
+    }
 
     Planet* planet;
+    int centrePosX2, centrePosY2;
 
     for(int i = 0; i < m_PlanetsPtr->size(); i++){
         // Variable for ease of use.
@@ -193,22 +208,13 @@ void Planet::checkCollision(){
 
         // Avoid self collision testing.
         if(planet->getComponentID() != getComponentID()){
-            centrePosX2 = (
-                planet->getX() +
-                planet->getDiameter() / 2  +
-                planet->getClipBoundary() / 2
-            );
-            
-            centrePosY2 = (
-                planet->getY() +
-                planet->getDiameter() / 2  +
-                planet->getClipBoundary() / 2
-            );
+            centrePosX2 = getCentreX(planet);
+            centrePosY2 = getCentreY(planet);
 
             distance = getDistance(centrePosX, centrePosY, centrePosX2, centrePosY2);
-            min_distance = (planet->getDiameter() + m_Diameter) / 2;
+            minDistance = (planet->getDiameter() + m_Diameter) / 2;
 
-            if(distance <= min_distance){
+            if(distance <= minDistance){
                 draw(m_Diameter, m_PosX, m_PosY);
             }
         }

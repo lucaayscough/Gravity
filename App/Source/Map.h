@@ -24,6 +24,8 @@ public:
 
 private:
     void createPlanet(int, int);
+    void setPlanetID(Planet*);
+    void setupPlanet(Planet*, int x, int y);
     void destroyPlanet();
 
     void mouseDoubleClick(const MouseEvent&) override;

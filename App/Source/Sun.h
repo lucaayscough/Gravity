@@ -3,7 +3,7 @@
 
 class Sun : public Planet{
 private:
-    const int M_DIAMETER = 75;
+    const int M_DIAMETER = Variables::SUN_DIAMETER;
 
 public:
     Sun();

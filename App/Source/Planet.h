@@ -33,7 +33,7 @@ protected:
     Generator* m_GeneratorPtr;
 
     // Pointer to array containing planets.
-    juce::OwnedArray<Planet>* m_PlanetsPtr;  
+    juce::OwnedArray<Planet>* m_PlanetsPtr; 
 
     // Generated sound.
     at::Tensor m_Latents;
@@ -58,6 +58,8 @@ public:
     virtual int getDiameter();
     int getClipBoundary();
     float getDistance(int, int, int, int);
+    int getCentreX(Planet*);
+    int getCentreY(Planet*);
 
     virtual void generateLatents();
     virtual void generateSample();

@@ -9,6 +9,7 @@
 #include "Generator.h"
 
 #include "AudioContainer.h"
+#include "Variables.h"
 
 #include "Planet.h"
 #include "Sun.h"

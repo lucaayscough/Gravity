@@ -42,47 +42,51 @@ void Map::createPlanet(int x, int y){
     Logger::writeToLog("Creating planet...");
 
     // Instantiate planet inside planets array.
-    // Pointer for destruction value and for generator are passed.
+    // Pointers to sun, planets and generator objects are passed.
     m_Planets.add(new Planet(&m_Planets, m_GeneratorPtr));
     
     m_NumPlanets = m_Planets.size();
 
-    // Reference for ease of use.
-    auto new_planet = m_Planets[m_NumPlanets - 1];
-    
+    setupPlanet(m_Planets[m_NumPlanets - 1], x, y);
+
+    Logger::writeToLog("Planet created.");
+    Logger::writeToLog("Number of planets: " + std::to_string(m_NumPlanets) + "\n");
+}
+
+void Map::setPlanetID(Planet* planet){
     // Generate random ID for component.
     auto randomID = juce::String(juce::Random::getSystemRandom().nextInt(100001));    
 
     // Check if ID is unique.
     for(int i = 0; i < m_NumPlanets - 1; i++){
-        if(m_Planets[i]->getComponentID() == randomID){
-            while(m_Planets[i]->getComponentID() == randomID){
-                randomID = juce::String(juce::Random::getSystemRandom().nextInt(100001)); 
+        if(planet->getComponentID() == randomID){
+            while(planet->getComponentID() == randomID){
+                randomID = juce::String(juce::Random::getSystemRandom().nextInt(100000)); 
             }
         }
     }
     
     // Set ID.
-    new_planet->setComponentID(randomID);
+    planet->setComponentID(randomID);
+}
 
-    addAndMakeVisible(new_planet);
+void Map::setupPlanet(Planet* planet, int x, int y){
+    setPlanetID(planet);
+
+    addAndMakeVisible(planet);
 
     // Add listener for planet destruction request.
-    new_planet->m_Destroy.addListener(this);
+    planet->m_Destroy.addListener(this);
 
     // Render planet to screen.
-    new_planet->setMapBoundaries(getWidth(), getHeight());
+    planet->setMapBoundaries(getWidth(), getHeight());
     
-    new_planet->draw(
-        new_planet->getDiameter(),
-        x - (new_planet->getDiameter() / 2) - (new_planet->getClipBoundary() / 2),
-        y - (new_planet->getDiameter() / 2) - (new_planet->getClipBoundary() / 2)
+    planet->draw(
+        planet->getDiameter(),
+        x - (planet->getDiameter() / 2) - (planet->getClipBoundary() / 2),
+        y - (planet->getDiameter() / 2) - (planet->getClipBoundary() / 2)
     );
     
-    
-
-    Logger::writeToLog("Planet created.");
-    Logger::writeToLog("Number of planets: " + std::to_string(m_NumPlanets) + "\n");
 }
 
 void Map::destroyPlanet(){
