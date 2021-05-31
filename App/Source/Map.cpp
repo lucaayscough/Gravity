@@ -104,17 +104,17 @@ void Map::destroyPlanet(){
 
             // Reduce number of planets counter.
             m_NumPlanets -= 1;
+
+            Logger::writeToLog("\nPlanet destroyed.\n");
         }
     }
-
-    Logger::writeToLog("\nPlanet destroyed.\n");
 }
 
 float Map::getDistance(Sun* sun, Planet* planet){
     int centrePlanetX = planet->getCentreX(planet);
     int centrePlanetY = planet->getCentreY(planet);
-    int centreSunX = sun->getX() - sun->getDiameter() / 2;
-    int centreSunY = sun->getY() - sun->getDiameter() / 2;
+    int centreSunX = sun->getX() + sun->getDiameter() / 2;
+    int centreSunY = sun->getY() + sun->getDiameter() / 2;
 
     float a = (float)pow(centreSunX - centrePlanetX, 2.0f);
     float b = (float)pow(centreSunY - centrePlanetY, 2.0f);
@@ -134,13 +134,23 @@ float Map::getDistance(Planet* planet_a, Planet* planet_b){
 }
 
 float Map::getForceVector(Sun* sun, Planet* planet){
-    float distance = getDistance(sun, planet);
-    return (float)sun->getDiameter() * (float)planet->getDiameter() / (float)pow(distance, 2.0f);
+    float r = getDistance(sun, planet);
+    float m = ((float)sun->getDiameter() * (float)planet->getDiameter());
+    
+    Logger::writeToLog("Width: " + std::to_string(getWidth()));
+    Logger::writeToLog("Distance: " + std::to_string(r));
+    
+    return (m / pow(r, 2.0f)) / 2;
 }
 
 float Map::getForceVector(Planet* planet_a, Planet* planet_b){
-    float distance = getDistance(planet_a, planet_b);
-    return (float)planet_a->getDiameter() * (float)planet_b->getDiameter() / (float)pow(distance, 2);
+    float r = getDistance(planet_a, planet_b);
+    float m = ((float)planet_a->getDiameter() * (float)planet_b->getDiameter());
+    
+    Logger::writeToLog("Width: " + std::to_string(getWidth()));
+    Logger::writeToLog("Distance: " + std::to_string(r));
+    
+    return (m / pow(r, 2.0f)) / 2;
 }
 
 void Map::mixLatents(){
@@ -169,7 +179,7 @@ void Map::mixLatents(){
         planet_a = m_Planets[i];
 
         forceVector = getForceVector(sun, planet_a);
-        Logger::writeToLog(std::to_string(forceVector));
+        Logger::writeToLog("Force: " + std::to_string(forceVector));
         sun->m_LerpLatents = at::lerp(sun->m_LerpLatents, planet_a->m_LerpLatents, forceVector);
     }
 
