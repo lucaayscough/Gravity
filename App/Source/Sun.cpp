@@ -12,7 +12,6 @@ Sun::Sun(juce::OwnedArray<Planet>* planets_ptr, Generator* generator_ptr)
 Sun::~Sun(){}
 
 void Sun::paint(Graphics& g){
-    //g.fillAll(juce::Colours::green);
     g.setColour(juce::Colours::yellow);
     g.fillEllipse(0, 0, M_DIAMETER, M_DIAMETER);
 }
@@ -20,8 +19,6 @@ void Sun::paint(Graphics& g){
 void Sun::resized(){}
 
 void Sun::draw(){
-    // When called the component is redrawn.
-    // setBounds(x, y, diameter, diameter)
     setSize(M_DIAMETER, M_DIAMETER);
     setCentreRelative(0.5, 0.5);
 }
@@ -34,8 +31,8 @@ void Sun::generateLatents(){
     m_Latents = m_GeneratorPtr->generateLatents();
 }
 
-void Sun::generateSample(){
-    m_Sample = m_GeneratorPtr->generateSample(m_Latents);
+void Sun::generateSample(at::Tensor& latents){
+    m_Sample = m_GeneratorPtr->generateSample(latents);
 }
 
 bool Sun::hitTest(int x, int y){
@@ -51,7 +48,7 @@ void Sun::mouseDown(const MouseEvent& e){
         Logger::writeToLog("Generating sample...");
 
         generateLatents();
-        generateSample();
+        generateSample(m_Latents);
 
         Logger::writeToLog("Sample generated.");
     }
@@ -63,6 +60,8 @@ void Sun::mouseDown(const MouseEvent& e){
         AudioContainer::playAudio = true;
     }
 }
+
+void Sun::mouseUp(const MouseEvent& e){}
 
 void Sun::mouseDrag(const MouseEvent& e){}
 

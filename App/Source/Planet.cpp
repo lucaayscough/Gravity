@@ -15,10 +15,14 @@ Planet::Planet(juce::OwnedArray<Planet>* planets_ptr, Generator* generator_ptr)
 
         // Generate random sample.
         generateLatents();
-        generateSample();
+        generateSample(m_Latents);
 
         // Listener value used to determine when to destroy the planet.
         m_Destroy.setValue(false);
+
+        // Listener used to detect when lerp graph needs recalculating.
+        m_LerpGraph.setValue(false);
+
         setPosXY(getX(), getY());
     }
 
@@ -29,7 +33,6 @@ Planet::~Planet(){}
 // Public methods.
 
 void Planet::paint(Graphics& g){
-    //g.fillAll(juce::Colours::green);
     g.setColour(juce::Colours::red);
     draw(m_Diameter, getX(), getY());
     g.fillEllipse(m_ClipBoundary / 2, m_ClipBoundary / 2, m_Diameter, m_Diameter);
@@ -38,14 +41,10 @@ void Planet::paint(Graphics& g){
 void Planet::resized(){}
 
 void Planet::draw(int diameter, int x, int y){
-    // When called the component is redrawn.
     setBounds(x, y, diameter + m_ClipBoundary, diameter + m_ClipBoundary);
 }
 
 void Planet::resizePlanet(int diameter){
-    // When called the planet will be resized.
-    // X and Y are calculated such that the planet will remain centred.
-
     int new_x;
     int new_y;
 
@@ -66,7 +65,6 @@ void Planet::setDiameter(int diameter){
 }
 
 void Planet::setMapBoundaries(int width, int height){
-    // Sets the map boundaries.
     m_MapWidth = width;
     m_MapHeight = height;
 }
@@ -90,15 +88,23 @@ float Planet::getDistance(int xa, int ya, int xb, int yb){
     return sqrt(a + b);
 }
 
+float Planet::getDistance(Planet* planet_a, Planet* planet_b){  
+    int centreXA = getCentreX(planet_a);
+    int centreYA = getCentreY(planet_a);
+    int centreXB = getCentreX(planet_b);
+    int centreYB = getCentreY(planet_b);
+
+    float a = (float)pow(centreXB - centreXA, 2);
+    float b = (float)pow(centreYB - centreYA, 2);
+
+    return sqrt(a + b);
+}
+
 int Planet::getCentreX(Planet* planet){
-    // Returns the the centre X position of the planet,
-    // taking into a account clip boundary.
     return planet->getX() + ((planet->getDiameter() + planet->getClipBoundary()) / 2);
 }
 
 int Planet::getCentreY(Planet* planet){
-    // Returns the the centre Y position of the planet,
-    // taking into a account clip boundary.
     return planet->getY() + ((planet->getDiameter() + planet->getClipBoundary()) / 2);
 }
 
@@ -106,10 +112,9 @@ void Planet::generateLatents(){
     m_Latents = m_GeneratorPtr->generateLatents();
 }
 
-void Planet::generateSample(){
-    m_Sample = m_GeneratorPtr->generateSample(m_Latents);
+void Planet::generateSample(at::Tensor& latents){
+    m_Sample = m_GeneratorPtr->generateSample(latents);
 }
-
 
 //--------------------------------------------------//
 // Private methods.
@@ -130,7 +135,7 @@ void Planet::mouseDown(const MouseEvent& e){
             Logger::writeToLog("Generating sample...");
 
             generateLatents();
-            generateSample();
+            generateSample(m_Latents);
 
             Logger::writeToLog("Sample generated.");
         }
@@ -152,7 +157,10 @@ void Planet::mouseDown(const MouseEvent& e){
     }    
 }
 
-void Planet::mouseUp(const MouseEvent& e){}
+void Planet::mouseUp(const MouseEvent& e){
+    m_LerpGraph.setValue(true);
+    m_LerpGraph.setValue(false);
+}
 
 void Planet::mouseDrag(const MouseEvent& e){
     m_Dragger.dragComponent(this, e, nullptr);
@@ -161,10 +169,7 @@ void Planet::mouseDrag(const MouseEvent& e){
     setPosXY(getX(), getY());
 }
 
-void Planet::mouseWheelMove(const MouseEvent& e, const MouseWheelDetails& w){
-    // If the mouse wheel is moved the diameter of the planet is
-    // modified making sure it is not going over the size limitations.
-    
+void Planet::mouseWheelMove(const MouseEvent& e, const MouseWheelDetails& w){    
     Logger::writeToLog("Wheel moved.");
 
     if(w.deltaY > 0.0f && m_Diameter < M_MAX_PLANET_SIZE){
@@ -243,6 +248,5 @@ void Planet::checkBounds(){
 }
 
 void Planet::allocateStorage(){
-    // Allocates storage to array that holds sample.
     m_Sample.ensureStorageAllocated(m_GeneratorPtr->M_NUM_SAMPLES);
 }

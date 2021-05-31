@@ -17,7 +17,7 @@ public:
     Map();
     Map(Generator*);
     ~Map() override;
-
+    
     void paint(Graphics&) override;
     void resized() override;
     void createSun();
@@ -28,6 +28,22 @@ private:
     void setupPlanet(Planet*, int x, int y);
     void destroyPlanet();
 
+    // Returns distance between a planet and the sun.
+    float getDistance(Sun*, Planet*);
+
+    // Returns distance between a planet and the sun.
+    float getDistance(Planet*, Planet*);
+
+    // Returns force vector between a planet and the sun.
+    float getForceVector(Sun*, Planet*);
+
+    // Returns force vector between two planets.
+    float getForceVector(Planet*, Planet*);
+
+    // Mixes all latents.
+    void mixLatents();
+
+    void mouseUp(const MouseEvent&) override;
     void mouseDoubleClick(const MouseEvent&) override;
     void valueChanged(juce::Value&) override;
 
