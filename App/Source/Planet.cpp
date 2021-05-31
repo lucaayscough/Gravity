@@ -128,7 +128,9 @@ bool Planet::hitTest(int x, int y){
 void Planet::mouseDown(const MouseEvent& e){
     // Starts dragging component.
     m_Dragger.startDraggingComponent(this, e);
-    
+}
+
+void Planet::mouseUp(const MouseEvent& e){
     if(e.mods.isLeftButtonDown()){
         // Generates new sample if double clicked with left mouse button.
         if(e.getNumberOfClicks() > 1){
@@ -141,7 +143,7 @@ void Planet::mouseDown(const MouseEvent& e){
         }
         
         // Plays sample if clicked once with left mouse button.
-        else if(e.mouseWasClicked()){
+        else if(e.getNumberOfClicks() == 1 && e.mouseWasClicked()){
             Logger::writeToLog("Playing audio...");
             AudioContainer::audio.clear();
             AudioContainer::audio.addArray(m_Sample);
@@ -154,10 +156,8 @@ void Planet::mouseDown(const MouseEvent& e){
         // Initializes planet destruction.
         m_Destroy.setValue(true);
         Logger::writeToLog("Set to destroy.");
-    }    
-}
+    }
 
-void Planet::mouseUp(const MouseEvent& e){
     m_LerpGraph.setValue(true);
     m_LerpGraph.setValue(false);
 }
