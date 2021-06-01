@@ -127,8 +127,8 @@ float Map::getDistance(Planet* planet_a, Planet* planet_b){
     int centreXB = planet_b->getCentreX(planet_b);
     int centreYB = planet_b->getCentreY(planet_b);
 
-    float a = (float)pow(centreXB - centreXA, 2);
-    float b = (float)pow(centreYB - centreYA, 2);
+    float a = (float)pow(centreXB - centreXA, 2.0f);
+    float b = (float)pow(centreYB - centreYA, 2.0f);
 
     return sqrt(a + b);
 }
@@ -140,7 +140,7 @@ float Map::getForceVector(Sun* sun, Planet* planet){
     Logger::writeToLog("Width: " + std::to_string(getWidth()));
     Logger::writeToLog("Distance: " + std::to_string(r));
     
-    return (m / pow(r, 2.0f)) / 2;
+    return (m / pow(r, 2.0f));
 }
 
 float Map::getForceVector(Planet* planet_a, Planet* planet_b){
@@ -150,7 +150,7 @@ float Map::getForceVector(Planet* planet_a, Planet* planet_b){
     Logger::writeToLog("Width: " + std::to_string(getWidth()));
     Logger::writeToLog("Distance: " + std::to_string(r));
     
-    return (m / pow(r, 2.0f)) / 2;
+    return (m / pow(r, 2.0f));
 }
 
 void Map::mixLatents(){
