@@ -10,5 +10,9 @@ struct Variables{
     
     // Planet member variables.
     static const int DEFAULT_PLANET_DIAMETER;
+    static const int MAX_PLANET_SIZE;
+    static const int MIN_PLANET_SIZE;
+    static const int SIZE_MODIFIER;
+    static const int CLIP_BOUNDARY;
     static const int SUN_DIAMETER;
 };
