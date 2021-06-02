@@ -54,6 +54,7 @@ void Sun::mouseDown(const MouseEvent& e){
     }
 
     else if(e.mods.isLeftButtonDown() && e.mouseWasClicked()){
+        addSample();
         playSample();
     }
 }

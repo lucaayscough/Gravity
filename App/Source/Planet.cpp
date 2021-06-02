@@ -57,6 +57,9 @@ void Planet::resizePlanet(int diameter){
 
     setDiameter(diameter);
     draw(diameter, new_x, new_y);
+
+    // NEED A WAY TO UPDATE GRAPH WHEN DONE ZOOMING IN ON SOUND
+    //updateGraph();
 }
 
 void Planet::setDiameter(int diameter){
@@ -115,10 +118,18 @@ void Planet::generateSample(at::Tensor& latents){
     m_Sample = m_GeneratorPtr->generateSample(latents);
 }
 
-void Planet::playSample(){
-    Logger::writeToLog("Playing audio...");
+void Planet::updateGraph(){
+    m_LerpGraph.setValue(true);
+    m_LerpGraph.setValue(false);
+}
+
+void Planet::addSample(){
     m_AudioContainerPtr->audio.clear();
     m_AudioContainerPtr->audio.addArray(m_Sample);
+}
+
+void Planet::playSample(){
+    Logger::writeToLog("Playing audio...");
     m_AudioContainerPtr->sampleIndex.clear();
     m_AudioContainerPtr->playAudio = true;
 }
@@ -151,12 +162,12 @@ void Planet::mouseUp(const MouseEvent& e){
         
         // Plays sample if clicked once with left mouse button.
         else if(e.getNumberOfClicks() == 1 && e.mouseWasClicked()){
+            addSample();
             playSample();
         }
 
         else if(e.mouseWasDraggedSinceMouseDown()){
-            m_LerpGraph.setValue(true);
-            m_LerpGraph.setValue(false);
+            updateGraph();
         }
     }
     

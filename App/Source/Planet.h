@@ -83,7 +83,12 @@ public:
     virtual void generateLatents();
     virtual void generateSample(at::Tensor&);
 
-    // Changes states in AudioContainer and plays audio.
+    void updateGraph();
+
+    // Changes states in AudioContainer.
+    void addSample();
+
+    // Plays sample.
     void playSample();
 
 private:

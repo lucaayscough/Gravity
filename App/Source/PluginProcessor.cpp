@@ -131,7 +131,7 @@ void AudioPluginAudioProcessor::processBlock (juce::AudioBuffer<float>& buffer,
     int totalNumOutputChannels = getTotalNumOutputChannels();
     int numSamples = buffer.getNumSamples();
 
-    while(m_AudioContainer.sampleIndex.size() < totalNumOutputChannels){
+    while(m_AudioContainer.sampleIndex.size() <= totalNumOutputChannels){
         m_AudioContainer.sampleIndex.add(0);
     }
     
@@ -179,25 +179,24 @@ void AudioPluginAudioProcessor::setStateInformation(const void* data, int sizeIn
 }
 
 void AudioPluginAudioProcessor::playAudio(juce::AudioBuffer<float>& buffer, int totalNumOutputChannels, int numSamples){
-    for (int channel = 0; channel < totalNumOutputChannels; ++channel)
-        {
-            buffer.clear();
-
-            auto* channelData = buffer.getWritePointer(channel);
-            juce::ignoreUnused(channelData);
-
-            for(int sample = 0; sample < numSamples; ++sample){
-                // Add samples to buffer if max length of samples is not exceeded.
-                if(m_AudioContainer.sampleIndex[channel] < m_Generator.M_NUM_SAMPLES){
-                    channelData[sample] = m_AudioContainer.audio[m_AudioContainer.sampleIndex[channel]];
-                    m_AudioContainer.sampleIndex.set(channel, m_AudioContainer.sampleIndex[channel] + 1);
-                }
-                else{
-                    stopAudio();
-                }
+    buffer.clear();
+    
+    for (int channel = 0; channel < totalNumOutputChannels; ++channel){
+        auto* channelData = buffer.getWritePointer(channel);
+        juce::ignoreUnused(channelData);
+        
+        for(int sample = 0; sample < numSamples; ++sample){
+            // Add samples to buffer if max length of samples is not exceeded.
+            if(m_AudioContainer.sampleIndex[channel] < m_Generator.M_NUM_SAMPLES){
+                channelData[sample] = m_AudioContainer.audio[m_AudioContainer.sampleIndex[channel]];
+                m_AudioContainer.sampleIndex.set(channel, m_AudioContainer.sampleIndex[channel] + 1);
+            }
+            else{
+                stopAudio();
             }
         }
     }
+}
 
 void AudioPluginAudioProcessor::stopAudio(){
     m_AudioContainer.sampleIndex.clear();

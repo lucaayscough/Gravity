@@ -32,6 +32,9 @@ void Map::createSun(){
 
     // Draws sun to the center of the screen.
     m_Sun[0]->draw();
+
+    // Add sun sample to audio container.
+    m_Sun[0]->addSample();
 }
 
 
@@ -184,6 +187,7 @@ void Map::mixLatents(){
     }
 
     sun->generateSample(sun->m_LerpLatents);
+    sun->addSample();
 }
 
 void Map::mouseUp(const MouseEvent& e){}
