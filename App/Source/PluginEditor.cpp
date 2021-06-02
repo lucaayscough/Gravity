@@ -8,7 +8,7 @@ AudioPluginAudioProcessorEditor::AudioPluginAudioProcessorEditor (AudioPluginAud
     juce::ignoreUnused (processorRef);
 
     // Create map and make it visible.
-    m_Map.add(new Map(&processorRef.generator));
+    m_Map.add(new Map(&processorRef.m_Generator, &processorRef.m_AudioContainer));
     addAndMakeVisible(m_Map[0]);
 
     // Main window.

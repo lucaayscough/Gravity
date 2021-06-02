@@ -6,8 +6,8 @@
 
 Sun::Sun(){}
 
-Sun::Sun(juce::OwnedArray<Planet>* planets_ptr, Generator* generator_ptr)
-    : Planet(planets_ptr, generator_ptr){}
+Sun::Sun(juce::OwnedArray<Planet>* planets_ptr, Generator* generator_ptr, AudioContainer* audiocontainer_ptr)
+    : Planet(planets_ptr, generator_ptr, audiocontainer_ptr){}
 
 Sun::~Sun(){}
 
@@ -54,10 +54,7 @@ void Sun::mouseDown(const MouseEvent& e){
     }
 
     else if(e.mods.isLeftButtonDown() && e.mouseWasClicked()){
-        Logger::writeToLog("Playing audio...");
-        AudioContainer::audio.clear();
-        AudioContainer::audio.addArray(m_Sample);
-        AudioContainer::playAudio = true;
+        playSample();
     }
 }
 

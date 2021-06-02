@@ -8,9 +8,8 @@
 
 Planet::Planet(){}
 
-Planet::Planet(juce::OwnedArray<Planet>* planets_ptr, Generator* generator_ptr)
-    : m_PlanetsPtr(planets_ptr), m_GeneratorPtr(generator_ptr)
-    {
+Planet::Planet(juce::OwnedArray<Planet>* planets_ptr, Generator* generator_ptr, AudioContainer* audiocontainer_ptr)
+    : m_PlanetsPtr(planets_ptr), m_GeneratorPtr(generator_ptr), m_AudioContainerPtr(audiocontainer_ptr){
         allocateStorage();
 
         // Generate random sample.
@@ -116,6 +115,14 @@ void Planet::generateSample(at::Tensor& latents){
     m_Sample = m_GeneratorPtr->generateSample(latents);
 }
 
+void Planet::playSample(){
+    Logger::writeToLog("Playing audio...");
+    m_AudioContainerPtr->audio.clear();
+    m_AudioContainerPtr->audio.addArray(m_Sample);
+    m_AudioContainerPtr->sampleIndex.clear();
+    m_AudioContainerPtr->playAudio = true;
+}
+
 //--------------------------------------------------//
 // Private methods.
 
@@ -144,10 +151,12 @@ void Planet::mouseUp(const MouseEvent& e){
         
         // Plays sample if clicked once with left mouse button.
         else if(e.getNumberOfClicks() == 1 && e.mouseWasClicked()){
-            Logger::writeToLog("Playing audio...");
-            AudioContainer::audio.clear();
-            AudioContainer::audio.addArray(m_Sample);
-            AudioContainer::playAudio = true;
+            playSample();
+        }
+
+        else if(e.mouseWasDraggedSinceMouseDown()){
+            m_LerpGraph.setValue(true);
+            m_LerpGraph.setValue(false);
         }
     }
     
@@ -157,9 +166,6 @@ void Planet::mouseUp(const MouseEvent& e){
         m_Destroy.setValue(true);
         Logger::writeToLog("Set to destroy.");
     }
-
-    m_LerpGraph.setValue(true);
-    m_LerpGraph.setValue(false);
 }
 
 void Planet::mouseDrag(const MouseEvent& e){

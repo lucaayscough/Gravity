@@ -12,10 +12,11 @@ private:
     int m_NumPlanets = 0;
 
     Generator* m_GeneratorPtr;
+    AudioContainer* m_AudioContainerPtr;
 
 public:
     Map();
-    Map(Generator*);
+    Map(Generator*, AudioContainer*);
     ~Map() override;
     
     void paint(Graphics&) override;

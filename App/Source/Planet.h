@@ -9,6 +9,10 @@ public:
     // Value used to activate lerp graph calculation.
     juce::Value m_LerpGraph;
 
+    // Generated latents.
+    at::Tensor m_Latents;
+    at::Tensor m_LerpLatents;
+
 private:
     juce::ComponentDragger m_Dragger;
 
@@ -34,22 +38,17 @@ protected:
     // Used to access the generator instantiated in
     // the PluginProcessor.
     Generator* m_GeneratorPtr;
+    AudioContainer* m_AudioContainerPtr;
 
     // Pointer to array containing planets.
     juce::OwnedArray<Planet>* m_PlanetsPtr; 
 
-public:
-    // Generated latents.
-    at::Tensor m_Latents;
-    at::Tensor m_LerpLatents;
-
-protected:
     // Generated sample.
     juce::Array<float> m_Sample;
 
 public:
     Planet();
-    Planet(juce::OwnedArray<Planet>*, Generator*);
+    Planet(juce::OwnedArray<Planet>*, Generator*, AudioContainer*);
     ~Planet() override;
 
     void paint(Graphics&) override;
@@ -84,7 +83,8 @@ public:
     virtual void generateLatents();
     virtual void generateSample(at::Tensor&);
 
-    float getForceVector(Planet*, Planet*);
+    // Changes states in AudioContainer and plays audio.
+    void playSample();
 
 private:
     bool hitTest(int, int) override;

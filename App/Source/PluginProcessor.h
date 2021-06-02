@@ -1,9 +1,7 @@
 #pragma once
 
 
-//==============================================================================
-class AudioPluginAudioProcessor  : public juce::AudioProcessor
-{
+class AudioPluginAudioProcessor  : public juce::AudioProcessor{
 public:
     //==============================================================================
     AudioPluginAudioProcessor();
@@ -41,12 +39,12 @@ public:
     void getStateInformation (juce::MemoryBlock& destData) override;
     void setStateInformation (const void* data, int sizeInBytes) override;
 
-    Generator generator;
+    Generator m_Generator;
+    AudioContainer m_AudioContainer;
 
 private:
-    bool mPlaySample = false;
-    int m_sample_index[2] = {0, 0};
+    void playAudio(juce::AudioBuffer<float>&, int, int);
+    void stopAudio();
 
-    //==============================================================================
     JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR (AudioPluginAudioProcessor)
 };

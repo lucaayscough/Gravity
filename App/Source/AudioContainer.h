@@ -2,6 +2,7 @@
 
 
 struct AudioContainer{
-    static juce::Array<float> audio;
-    static bool playAudio;
+    juce::Array<float> audio;
+    bool playAudio;
+    juce::Array<int> sampleIndex;
 };

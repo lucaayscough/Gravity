@@ -127,95 +127,85 @@ void AudioPluginAudioProcessor::processBlock (juce::AudioBuffer<float>& buffer,
     juce::ignoreUnused (midiMessages);
 
     juce::ScopedNoDenormals noDenormals;
-    auto totalNumInputChannels  = getTotalNumInputChannels();
-    auto totalNumOutputChannels = getTotalNumOutputChannels();
-    auto numSamples = buffer.getNumSamples();
+    int totalNumInputChannels  = getTotalNumInputChannels();
+    int totalNumOutputChannels = getTotalNumOutputChannels();
+    int numSamples = buffer.getNumSamples();
 
-    // In case we have more outputs than inputs, this code clears any output
-    // channels that didn't contain input data, (because these aren't
-    // guaranteed to be empty - they may contain garbage).
-    // This is here to avoid people getting screaming feedback
-    // when they first compile a plugin, but obviously you don't need to keep
-    // this code if your algorithm always overwrites all the output channels.
-    for (auto i = totalNumInputChannels; i < totalNumOutputChannels; ++i)
-        buffer.clear (i, 0, buffer.getNumSamples());
-
-    // This is the place where you'd normally do the guts of your plugin's
-    // audio processing...
-    // Make sure to reset the state if your inner loop is processing
-    // the samples and the outer loop is handling the channels.
-    // Alternatively, you can process the samples with the channels
-    // interleaved by keeping the same state.
-
-    if(AudioContainer::playAudio){
-        mPlaySample = true;
+    while(m_AudioContainer.sampleIndex.size() < totalNumOutputChannels){
+        m_AudioContainer.sampleIndex.add(0);
     }
+    
+    // Clear extra channel buffers.
+    for (int i = totalNumInputChannels; i < totalNumOutputChannels; ++i)
+        buffer.clear(i, 0, buffer.getNumSamples());
 
+    // Check for midi data.
     for(const MidiMessageMetadata metadata : midiMessages){
         Logger::writeToLog(metadata.getMessage().getDescription());
         if(metadata.getMessage().isNoteOn())
-            mPlaySample = true;
+            m_AudioContainer.playAudio = true;
         else if(metadata.getMessage().isNoteOff()){
-            mPlaySample = false;
-            m_sample_index[0] = 0;
-            m_sample_index[1] = 0;
+            stopAudio();
         }
     }
-	
-	
-    if(mPlaySample == true){
-        for (int channel = 0; channel < totalNumOutputChannels; ++channel)
-        {
-            auto* channelData = buffer.getWritePointer (channel);
-            juce::ignoreUnused (channelData);
 
-            for(int sample = 0; sample < numSamples; ++sample){
-                if(m_sample_index[channel] < generator.M_NUM_SAMPLES){
-                    channelData[sample] = AudioContainer::audio[m_sample_index[channel]];
-                    m_sample_index[channel] += 1;
-                }
-                else{
-                    channelData[sample] = 0;
-                    m_sample_index[0] = 0;
-                    m_sample_index[1] = 0;
-                    mPlaySample = false;
-                    AudioContainer::playAudio = false;
-                }
-            }
-        }
+    // Check for generic play request.
+    if(m_AudioContainer.playAudio){
+        playAudio(buffer, totalNumOutputChannels, numSamples);
     }
 }
 
 //==============================================================================
-bool AudioPluginAudioProcessor::hasEditor() const
-{
+bool AudioPluginAudioProcessor::hasEditor() const{
     return true; // (change this to false if you choose to not supply an editor)
 }
 
-juce::AudioProcessorEditor* AudioPluginAudioProcessor::createEditor()
-{
+juce::AudioProcessorEditor* AudioPluginAudioProcessor::createEditor(){
     return new AudioPluginAudioProcessorEditor (*this);
 }
 
 //==============================================================================
-void AudioPluginAudioProcessor::getStateInformation (juce::MemoryBlock& destData)
-{
+void AudioPluginAudioProcessor::getStateInformation(juce::MemoryBlock& destData){
     // You should use this method to store your parameters in the memory block.
     // You could do that either as raw data, or use the XML or ValueTree classes
     // as intermediaries to make it easy to save and load complex data.
     juce::ignoreUnused (destData);
 }
 
-void AudioPluginAudioProcessor::setStateInformation (const void* data, int sizeInBytes)
-{
+void AudioPluginAudioProcessor::setStateInformation(const void* data, int sizeInBytes){
     // You should use this method to restore your parameters from this memory block,
     // whose contents will have been created by the getStateInformation() call.
     juce::ignoreUnused (data, sizeInBytes);
 }
 
+void AudioPluginAudioProcessor::playAudio(juce::AudioBuffer<float>& buffer, int totalNumOutputChannels, int numSamples){
+    for (int channel = 0; channel < totalNumOutputChannels; ++channel)
+        {
+            buffer.clear();
+
+            auto* channelData = buffer.getWritePointer(channel);
+            juce::ignoreUnused(channelData);
+
+            for(int sample = 0; sample < numSamples; ++sample){
+                // Add samples to buffer if max length of samples is not exceeded.
+                if(m_AudioContainer.sampleIndex[channel] < m_Generator.M_NUM_SAMPLES){
+                    channelData[sample] = m_AudioContainer.audio[m_AudioContainer.sampleIndex[channel]];
+                    m_AudioContainer.sampleIndex.set(channel, m_AudioContainer.sampleIndex[channel] + 1);
+                }
+                else{
+                    stopAudio();
+                }
+            }
+        }
+    }
+
+void AudioPluginAudioProcessor::stopAudio(){
+    m_AudioContainer.sampleIndex.clear();
+    m_AudioContainer.playAudio = false;
+}
+
 //==============================================================================
-// This creates new instances of the plugin..
-juce::AudioProcessor* JUCE_CALLTYPE createPluginFilter()
-{
+// This creates new instances of the plugin.
+juce::AudioProcessor* JUCE_CALLTYPE createPluginFilter(){
     return new AudioPluginAudioProcessor();
 }
