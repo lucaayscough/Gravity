@@ -10,13 +10,13 @@ AudioPluginAudioProcessor::AudioPluginAudioProcessor()
                       #endif
                        .withOutput ("Output", juce::AudioChannelSet::stereo(), true)
                      #endif
-                       )
-{
-}
+                       ),
+                       parametersId("Parameters"),
+                       valueTreeState(*this, nullptr, parametersId, {}),
+                       parameters(valueTreeState.state)
+                       {}
 
-AudioPluginAudioProcessor::~AudioPluginAudioProcessor()
-{
-}
+AudioPluginAudioProcessor::~AudioPluginAudioProcessor(){}
 
 //==============================================================================
 const juce::String AudioPluginAudioProcessor::getName() const
@@ -177,6 +177,9 @@ void AudioPluginAudioProcessor::setStateInformation(const void* data, int sizeIn
     // whose contents will have been created by the getStateInformation() call.
     juce::ignoreUnused (data, sizeInBytes);
 }
+
+//------------------------------------------------------------//
+// Audio playback methods.
 
 void AudioPluginAudioProcessor::playAudio(juce::AudioBuffer<float>& buffer, int totalNumOutputChannels, int numSamples){
     buffer.clear();

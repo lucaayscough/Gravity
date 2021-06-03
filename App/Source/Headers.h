@@ -10,6 +10,7 @@
 
 #include "AudioContainer.h"
 #include "Variables.h"
+#include "Parameters.h"
 
 #include "Planet.h"
 #include "Sun.h"

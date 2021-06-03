@@ -42,6 +42,11 @@ public:
     Generator m_Generator;
     AudioContainer m_AudioContainer;
 
+    // ValueTreeState variables.
+    juce::Identifier parametersId;
+    juce::AudioProcessorValueTreeState valueTreeState;
+    Parameters parameters;
+
 private:
     void playAudio(juce::AudioBuffer<float>&, int, int);
     void stopAudio();
