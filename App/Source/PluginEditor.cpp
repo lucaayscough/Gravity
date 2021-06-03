@@ -1,15 +1,13 @@
 #include "Headers.h"
 
 
-//==============================================================================
-AudioPluginAudioProcessorEditor::AudioPluginAudioProcessorEditor (AudioPluginAudioProcessor& p)
-    : AudioProcessorEditor (&p), processorRef (p)
+AudioPluginAudioProcessorEditor::AudioPluginAudioProcessorEditor(AudioPluginAudioProcessor& p):
+    AudioProcessorEditor(&p),
+    processorRef(p),
+    m_Map(&processorRef.m_Generator, &processorRef.m_AudioContainer, &processorRef.parameters)
 {
     juce::ignoreUnused (processorRef);
-
-    // Create map and make it visible.
-    m_Map.add(new Map(&processorRef.m_Generator, &processorRef.m_AudioContainer));
-    addAndMakeVisible(m_Map[0]);
+    addAndMakeVisible(m_Map);
 
     // Main window.
     setSize(M_WINDOW_WIDTH, M_WINDOW_HEIGHT);
@@ -19,10 +17,10 @@ AudioPluginAudioProcessorEditor::AudioPluginAudioProcessorEditor (AudioPluginAud
 AudioPluginAudioProcessorEditor::~AudioPluginAudioProcessorEditor(){}
 
 //==============================================================================
-void AudioPluginAudioProcessorEditor::paint (juce::Graphics& g){}
+void AudioPluginAudioProcessorEditor::paint(juce::Graphics& g){}
 
 void AudioPluginAudioProcessorEditor::resized(){
     auto r = getLocalBounds();
     auto mapArea = r;
-    m_Map[0]->setBounds(mapArea);
+    m_Map.setBounds(mapArea);
 }

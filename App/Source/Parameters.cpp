@@ -20,3 +20,8 @@ void Parameters::addSunNode(){
     juce::ValueTree sunNode(sunType);
     rootNode.addChild(sunNode, -1, nullptr);
 }
+
+void Parameters::addPlanetNode(){
+    juce::ValueTree planetNode(planetType);
+    rootNode.addChild(planetNode, -1, nullptr);
+}

@@ -3,8 +3,6 @@
 
 class Map: public juce::Component, public juce::Value::Listener{
 private:
-    // Sun container.
-    juce::OwnedArray<Sun> m_Sun;
 
     // Planet container and variables.
     OwnedArray<Planet> m_Planets;
@@ -13,10 +11,14 @@ private:
 
     Generator* m_GeneratorPtr;
     AudioContainer* m_AudioContainerPtr;
+    Parameters* m_ParametersPtr;
+
+    // Sun container.
+    Sun m_Sun;
 
 public:
     Map();
-    Map(Generator*, AudioContainer*);
+    Map(Generator*, AudioContainer*, Parameters*);
     ~Map() override;
     
     void paint(Graphics&) override;
@@ -30,13 +32,13 @@ private:
     void destroyPlanet();
 
     // Returns distance between a planet and the sun.
-    float getDistance(Sun*, Planet*);
+    float getDistance(Sun&, Planet*);
 
     // Returns distance between a planet and the sun.
     float getDistance(Planet*, Planet*);
 
     // Returns force vector between a planet and the sun.
-    float getForceVector(Sun*, Planet*);
+    float getForceVector(Sun&, Planet*);
 
     // Returns force vector between two planets.
     float getForceVector(Planet*, Planet*);

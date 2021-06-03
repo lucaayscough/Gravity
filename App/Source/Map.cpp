@@ -6,8 +6,11 @@
 
 Map::Map(){}
 
-Map::Map(Generator* generator_ptr, AudioContainer* audiocontainer_ptr)
-    : m_GeneratorPtr(generator_ptr), m_AudioContainerPtr(audiocontainer_ptr){}
+Map::Map(Generator* generator_ptr, AudioContainer* audiocontainer_ptr, Parameters* parameters_ptr):
+    m_GeneratorPtr(generator_ptr),
+    m_AudioContainerPtr(audiocontainer_ptr),
+    m_ParametersPtr(parameters_ptr),
+    m_Sun(&m_Planets, m_GeneratorPtr, m_AudioContainerPtr){}
 
 Map::~Map(){}
 
@@ -24,17 +27,14 @@ void Map::resized(){
 }
 
 void Map::createSun(){
-    // Create sun object.
-    m_Sun.add(new Sun(&m_Planets, m_GeneratorPtr, m_AudioContainerPtr));
-
     // Display sun.
-    addAndMakeVisible(m_Sun[0]);
+    addAndMakeVisible(m_Sun);
 
     // Draws sun to the center of the screen.
-    m_Sun[0]->draw();
+    m_Sun.draw();
 
     // Add sun sample to audio container.
-    m_Sun[0]->addSample();
+    m_Sun.addSample();
 }
 
 
@@ -113,11 +113,11 @@ void Map::destroyPlanet(){
     }
 }
 
-float Map::getDistance(Sun* sun, Planet* planet){
+float Map::getDistance(Sun& sun, Planet* planet){
     int centrePlanetX = planet->getCentreX(planet);
     int centrePlanetY = planet->getCentreY(planet);
-    int centreSunX = sun->getX() + sun->getDiameter() / 2;
-    int centreSunY = sun->getY() + sun->getDiameter() / 2;
+    int centreSunX = sun.getX() + sun.getDiameter() / 2;
+    int centreSunY = sun.getY() + sun.getDiameter() / 2;
 
     float a = (float)pow(centreSunX - centrePlanetX, 2.0f);
     float b = (float)pow(centreSunY - centrePlanetY, 2.0f);
@@ -136,9 +136,9 @@ float Map::getDistance(Planet* planet_a, Planet* planet_b){
     return sqrt(a + b);
 }
 
-float Map::getForceVector(Sun* sun, Planet* planet){
+float Map::getForceVector(Sun& sun, Planet* planet){
     float r = getDistance(sun, planet);
-    float m = ((float)sun->getDiameter() * (float)planet->getDiameter());
+    float m = ((float)sun.getDiameter() * (float)planet->getDiameter());
     
     Logger::writeToLog("Width: " + std::to_string(getWidth()));
     Logger::writeToLog("Distance: " + std::to_string(r));
@@ -162,8 +162,8 @@ void Map::mixLatents(){
     float forceVector;
     Planet* planet_a;
     Planet* planet_b;
-    Sun* sun = m_Sun[0];
-    sun->m_LerpLatents = sun->m_Latents;
+
+    m_Sun.m_LerpLatents = m_Sun.m_Latents;
 
     for(int i = 0; i < m_Planets.size(); i++){
         planet_a = m_Planets[i];
@@ -181,13 +181,13 @@ void Map::mixLatents(){
     for(int i = 0; i < m_Planets.size(); i++){
         planet_a = m_Planets[i];
 
-        forceVector = getForceVector(sun, planet_a);
+        forceVector = getForceVector(m_Sun, planet_a);
         Logger::writeToLog("Force: " + std::to_string(forceVector));
-        sun->m_LerpLatents = at::lerp(sun->m_LerpLatents, planet_a->m_LerpLatents, forceVector);
+        m_Sun.m_LerpLatents = at::lerp(m_Sun.m_LerpLatents, planet_a->m_LerpLatents, forceVector);
     }
 
-    sun->generateSample(sun->m_LerpLatents);
-    sun->addSample();
+    m_Sun.generateSample(m_Sun.m_LerpLatents);
+    m_Sun.addSample();
 }
 
 void Map::mouseUp(const MouseEvent& e){}

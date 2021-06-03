@@ -35,13 +35,13 @@ private:
     int m_PosY;
 
 protected:
+    // Pointer to array containing planets.
+    juce::OwnedArray<Planet>* m_PlanetsPtr;
+
     // Used to access the generator instantiated in
     // the PluginProcessor.
     Generator* m_GeneratorPtr;
     AudioContainer* m_AudioContainerPtr;
-
-    // Pointer to array containing planets.
-    juce::OwnedArray<Planet>* m_PlanetsPtr; 
 
     // Generated sample.
     juce::Array<float> m_Sample;

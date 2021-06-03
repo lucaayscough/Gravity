@@ -8,22 +8,25 @@
 
 Planet::Planet(){}
 
-Planet::Planet(juce::OwnedArray<Planet>* planets_ptr, Generator* generator_ptr, AudioContainer* audiocontainer_ptr)
-    : m_PlanetsPtr(planets_ptr), m_GeneratorPtr(generator_ptr), m_AudioContainerPtr(audiocontainer_ptr){
-        allocateStorage();
+Planet::Planet(juce::OwnedArray<Planet>* planets_ptr, Generator* generator_ptr, AudioContainer* audiocontainer_ptr):
+    m_PlanetsPtr(planets_ptr),
+    m_GeneratorPtr(generator_ptr),
+    m_AudioContainerPtr(audiocontainer_ptr)
+{
+    allocateStorage();
 
-        // Generate random sample.
-        generateLatents();
-        generateSample(m_Latents);
+    // Generate random sample.
+    generateLatents();
+    generateSample(m_Latents);
 
-        // Listener value used to determine when to destroy the planet.
-        m_Destroy.setValue(false);
+    // Listener value used to determine when to destroy the planet.
+    m_Destroy.setValue(false);
 
-        // Listener used to detect when lerp graph needs recalculating.
-        m_LerpGraph.setValue(false);
+    // Listener used to detect when lerp graph needs recalculating.
+    m_LerpGraph.setValue(false);
 
-        setPosXY(getX(), getY());
-    }
+    setPosXY(getX(), getY());
+}
 
 Planet::~Planet(){}
 

@@ -17,8 +17,9 @@ private:
     AudioPluginAudioProcessor& processorRef;
 
     // Map container.
-    juce::OwnedArray<Map> m_Map;
-    
+    //juce::OwnedArray<Map> m_Map;
+    Map m_Map;
+
     // Window member variables.
     const int M_WINDOW_WIDTH = Variables::WINDOW_WIDTH;
     const int M_WINDOW_HEIGHT = Variables::WINDOW_HEIGHT;

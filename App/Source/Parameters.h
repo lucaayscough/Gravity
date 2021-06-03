@@ -8,10 +8,23 @@ struct Parameters{
     juce::Identifier sunType;
     juce::Identifier planetType;
 
+    // Property identifiers.
+    juce::Identifier diameter;
+    juce::Identifier posX;
+    juce::Identifier posY;
+    juce::Identifier posCentreX;
+    juce::Identifier posCentreY;
+    juce::Identifier colour;
+    juce::Identifier latents;
+    juce::Identifier lerpLatents;
+    juce::Identifier sample;
+
+
     // Constructors and destructors.
     Parameters(juce::ValueTree);
     ~Parameters();
 
-    // Structuring methods.
+    // Restructuring methods.
     void addSunNode();
+    void addPlanetNode();
 };
