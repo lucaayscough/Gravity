@@ -35,8 +35,8 @@ Planet::~Planet(){}
 
 void Planet::paint(Graphics& g){
     g.setColour(juce::Colours::red);
-    draw(m_Diameter, getX(), getY());
-    g.fillEllipse(getClipBoundary() / 2, getClipBoundary() / 2, m_Diameter, m_Diameter);
+    draw(getDiameter(), getX(), getY());
+    g.fillEllipse(getClipBoundary() / 2, getClipBoundary() / 2, getDiameter(), getDiameter());
 }
 
 void Planet::resized(){}
@@ -64,9 +64,7 @@ void Planet::resizePlanet(int diameter){
     //updateGraph();
 }
 
-void Planet::setDiameter(int diameter){
-    m_Diameter = diameter;
-}
+void Planet::setDiameter(int diameter){m_ParametersPtr->rootNode.getChildWithProperty(Parameters::idProp, getComponentID()).setProperty(Parameters::diameterProp, diameter, nullptr);}
 
 void Planet::setMapBoundaries(int width, int height){
     m_MapWidth = width;
@@ -78,7 +76,7 @@ void Planet::setPosXY(int x, int y){
     m_PosY = y;
 }
 
-int Planet::getDiameter(){return m_Diameter;}
+int Planet::getDiameter(){return m_ParametersPtr->rootNode.getChildWithProperty(Parameters::idProp, getComponentID()).getProperty(Parameters::diameterProp);}
 int Planet::getClipBoundary(){return Variables::CLIP_BOUNDARY;}
 
 float Planet::getDistance(int xa, int ya, int xb, int yb){  
@@ -130,9 +128,9 @@ void Planet::playSample(){
 // Private methods.
 
 bool Planet::hitTest(int x, int y){
-    float a = pow((float)x - ((float)m_Diameter + (float)getClipBoundary()) / 2.0f, 2.0f);
-    float b = pow((float)y - ((float)m_Diameter + (float)getClipBoundary()) / 2.0f, 2.0f);
-    return sqrt(a + b) <= m_Diameter / 2;
+    float a = pow((float)x - ((float)getDiameter() + (float)getClipBoundary()) / 2.0f, 2.0f);
+    float b = pow((float)y - ((float)getDiameter() + (float)getClipBoundary()) / 2.0f, 2.0f);
+    return sqrt(a + b) <= getDiameter() / 2;
 }
 
 void Planet::mouseDown(const MouseEvent& e){
@@ -181,11 +179,11 @@ void Planet::mouseDrag(const MouseEvent& e){
 void Planet::mouseWheelMove(const MouseEvent& e, const MouseWheelDetails& w){    
     Logger::writeToLog("Wheel moved.");
 
-    if(w.deltaY > 0.0f && m_Diameter < Variables::MAX_PLANET_SIZE){
-        resizePlanet(m_Diameter + Variables::SIZE_MODIFIER);
+    if(w.deltaY > 0.0f && getDiameter() < Variables::MAX_PLANET_SIZE){
+        resizePlanet(getDiameter() + Variables::SIZE_MODIFIER);
     }
-    else if(w.deltaY < 0.0f && m_Diameter > Variables::MIN_PLANET_SIZE){
-        resizePlanet(m_Diameter - Variables::SIZE_MODIFIER);
+    else if(w.deltaY < 0.0f && getDiameter() > Variables::MIN_PLANET_SIZE){
+        resizePlanet(getDiameter() - Variables::SIZE_MODIFIER);
     }
 }
 
@@ -206,10 +204,10 @@ void Planet::checkCollision(){
         int sunDiameter = Variables::SUN_DIAMETER;
 
         distance = getDistance(centrePosX, centrePosY, centreXSun, centreYSun);
-        minDistance = (sunDiameter + m_Diameter) / 2;
+        minDistance = (sunDiameter + getDiameter()) / 2;
 
         if(distance <= minDistance){
-            draw(m_Diameter, m_PosX, m_PosY);
+            draw(getDiameter(), m_PosX, m_PosY);
         }
     }
 
@@ -226,10 +224,10 @@ void Planet::checkCollision(){
             centrePosY2 = getCentreY(planet);
 
             distance = getDistance(centrePosX, centrePosY, centrePosX2, centrePosY2);
-            minDistance = (planet->getDiameter() + m_Diameter) / 2;
+            minDistance = (planet->getDiameter() + getDiameter()) / 2;
 
             if(distance <= minDistance){
-                draw(m_Diameter, m_PosX, m_PosY);
+                draw(getDiameter(), m_PosX, m_PosY);
             }
         }
     }
@@ -238,19 +236,19 @@ void Planet::checkCollision(){
 void Planet::checkBounds(){
     //Check left boundary.
     if(getX() < -(getClipBoundary() / 2))
-        draw(m_Diameter, -(getClipBoundary() / 2), getY());
+        draw(getDiameter(), -(getClipBoundary() / 2), getY());
 
     // Check top boundary.
     if(getY() < -(getClipBoundary() / 2))
-        draw(m_Diameter, getX(), -(getClipBoundary() / 2));
+        draw(getDiameter(), getX(), -(getClipBoundary() / 2));
 
     // Check right boundary,
-    if(getX() + m_Diameter + (getClipBoundary() / 2) > m_MapWidth)
-        draw(m_Diameter, m_MapWidth - m_Diameter - (getClipBoundary() / 2), getY());
+    if(getX() + getDiameter() + (getClipBoundary() / 2) > m_MapWidth)
+        draw(getDiameter(), m_MapWidth - getDiameter() - (getClipBoundary() / 2), getY());
 
     // Check bottom boundary.
-    if(getY() + m_Diameter + (getClipBoundary() / 2) > m_MapHeight)
-        draw(m_Diameter, getX(), m_MapHeight - m_Diameter - (getClipBoundary() / 2));
+    if(getY() + getDiameter() + (getClipBoundary() / 2) > m_MapHeight)
+        draw(getDiameter(), getX(), m_MapHeight - getDiameter() - (getClipBoundary() / 2));
     
     // Write planet position to screen.
     //Logger::writeToLog("X: " + std::to_string(getX()) + ", Y: " + std::to_string(getY()));

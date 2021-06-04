@@ -16,9 +16,6 @@ public:
 private:
     juce::ComponentDragger m_Dragger;
 
-    // Diameter of the planet.
-    int m_Diameter = Variables::DEFAULT_PLANET_DIAMETER;
-
     // Map boundaries.
     int m_MapWidth;
     int m_MapHeight;
