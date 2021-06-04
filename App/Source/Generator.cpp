@@ -1,11 +1,16 @@
 #include "Headers.h"
 
 
-Generator::Generator(){
-    // Loads generator model.
-    generator_module = torch::jit::load("/Users/lucaayscough/dev/AdversarialAudio/Generator/scripted_modules/generator_module.pt");
-    mapper_module = torch::jit::load("/Users/lucaayscough/dev/AdversarialAudio/Generator/scripted_modules/mapper_module.pt");
-}
+torch::jit::script::Module Generator::generator_module = torch::jit::load("/Users/lucaayscough/dev/AdversarialAudio/Generator/scripted_modules/generator_module.pt");
+torch::jit::script::Module Generator::mapper_module = torch::jit::load("/Users/lucaayscough/dev/AdversarialAudio/Generator/scripted_modules/mapper_module.pt");
+
+
+//------------------------------------------------------------//
+// Constructors and destructors.
+
+Generator::Generator(){}
+Generator::~Generator(){}
+
 
 at::Tensor Generator::generateLatents(){
     torch::NoGradGuard no_grad;

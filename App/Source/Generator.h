@@ -4,10 +4,12 @@
 class Generator{
 public:
     static const int M_NUM_SAMPLES = 131072;
+    static torch::jit::script::Module generator_module, mapper_module;
 
-    torch::jit::script::Module generator_module, mapper_module;
-
+    // Constructors and destructors.
     Generator();
-    at::Tensor generateLatents();
-    juce::Array<float> generateSample(at::Tensor&);
+    ~Generator();
+
+    static at::Tensor generateLatents();
+    static juce::Array<float> generateSample(at::Tensor&);
 };

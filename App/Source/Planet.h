@@ -40,15 +40,15 @@ protected:
 
     // Used to access the generator instantiated in
     // the PluginProcessor.
-    Generator* m_GeneratorPtr;
     AudioContainer* m_AudioContainerPtr;
+    Parameters* m_ParametersPtr;
 
     // Generated sample.
     juce::Array<float> m_Sample;
 
 public:
     Planet();
-    Planet(juce::OwnedArray<Planet>*, Generator*, AudioContainer*);
+    Planet(juce::OwnedArray<Planet>*, AudioContainer*, Parameters*);
     ~Planet() override;
 
     void paint(Graphics&) override;

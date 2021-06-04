@@ -9,7 +9,6 @@ private:
     const int M_MAX_NUM_PLANETS = 20;
     int m_NumPlanets = 0;
 
-    Generator* m_GeneratorPtr;
     AudioContainer* m_AudioContainerPtr;
     Parameters* m_ParametersPtr;
 
@@ -18,14 +17,14 @@ private:
 
 public:
     Map();
-    Map(Generator*, AudioContainer*, Parameters*);
+    Map(AudioContainer*, Parameters*);
     ~Map() override;
-    
-    void paint(Graphics&) override;
-    void resized() override;
-    void createSun();
 
 private:
+    void paint(Graphics&) override;
+    void resized() override;
+    
+    void createSun();
     void createPlanet(int, int);
     void setPlanetID(Planet*);
     void setupPlanet(Planet*, int x, int y);

@@ -5,20 +5,19 @@ struct Parameters{
     juce::ValueTree rootNode;
 
     // Type identifiers.
-    juce::Identifier sunType;
-    juce::Identifier planetType;
+    static juce::Identifier sunType;
+    static juce::Identifier planetType;
 
     // Property identifiers.
-    juce::Identifier diameter;
-    juce::Identifier posX;
-    juce::Identifier posY;
-    juce::Identifier posCentreX;
-    juce::Identifier posCentreY;
-    juce::Identifier colour;
-    juce::Identifier latents;
-    juce::Identifier lerpLatents;
-    juce::Identifier sample;
-
+    static juce::Identifier diameterProp;
+    static juce::Identifier posXProp;
+    static juce::Identifier posYProp;
+    static juce::Identifier posCentreXProp;
+    static juce::Identifier posCentreYProp;
+    static juce::Identifier colourProp;
+    static juce::Identifier latentsProp;
+    static juce::Identifier lerpLatentsProp;
+    static juce::Identifier sampleProp;
 
     // Constructors and destructors.
     Parameters(juce::ValueTree);
@@ -27,4 +26,8 @@ struct Parameters{
     // Restructuring methods.
     void addSunNode();
     void addPlanetNode();
+
+    // Tensor operations.
+    void generateLatents(ValueTree);
+    void generateSample(ValueTree, at::Tensor);
 };

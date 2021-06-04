@@ -4,43 +4,54 @@
 // Sun class which inherits from the parent Planet class.
 // Movement is disabled and position is fixed.
 
+
+//------------------------------------------------------------//
+// Constructors and destructors.
+
 Sun::Sun(){}
 
-Sun::Sun(juce::OwnedArray<Planet>* planets_ptr, Generator* generator_ptr, AudioContainer* audiocontainer_ptr)
-    : Planet(planets_ptr, generator_ptr, audiocontainer_ptr){}
+Sun::Sun(juce::OwnedArray<Planet>* planets_ptr, AudioContainer* audiocontainer_ptr, Parameters* parameters_ptr)
+    : Planet(planets_ptr, audiocontainer_ptr, parameters_ptr){}
 
 Sun::~Sun(){}
 
+
+//------------------------------------------------------------//
+// View methods.
+
 void Sun::paint(Graphics& g){
     g.setColour(juce::Colours::yellow);
-    g.fillEllipse(0, 0, M_DIAMETER, M_DIAMETER);
+    g.fillEllipse(0, 0, getDiameter(), getDiameter());
 }
 
 void Sun::resized(){}
 
 void Sun::draw(){
-    setSize(M_DIAMETER, M_DIAMETER);
+    setSize(getDiameter(), getDiameter());
     setCentreRelative(0.5, 0.5);
 }
 
-int Sun::getDiameter(){
-    return M_DIAMETER;
-}
+//------------------------------------------------------------//
+// Interface methods.
 
-void Sun::generateLatents(){
-    m_Latents = m_GeneratorPtr->generateLatents();
-}
+int Sun::getDiameter(){return m_ParametersPtr->rootNode.getChildWithName(Parameters::sunType).getProperty(Parameters::diameterProp);}
 
-void Sun::generateSample(at::Tensor& latents){
-    m_Sample = m_GeneratorPtr->generateSample(latents);
-}
+
+//------------------------------------------------------------//
+// Temporary methods.
+
+void Sun::generateLatents(){m_Latents = Generator::generateLatents();}
+void Sun::generateSample(at::Tensor& latents){m_Sample = Generator::generateSample(latents);}
+
+//------------------------------------------------------------//
+// Controller methods.
 
 bool Sun::hitTest(int x, int y){
-    float a = pow((float)x - ((float)M_DIAMETER / 2.0f), 2.0f);
-    float b = pow((float)y - ((float)M_DIAMETER / 2.0f), 2.0f);
+    float a = pow((float)x - ((float)getDiameter() / 2.0f), 2.0f);
+    float b = pow((float)y - ((float)getDiameter() / 2.0f), 2.0f);
     float c = sqrt(a + b);
 
-    return c <= (float)(M_DIAMETER / 2);
+    return c <= (float)(getDiameter() / 2);
 }
 
 void Sun::mouseDown(const MouseEvent& e){
@@ -60,7 +71,5 @@ void Sun::mouseDown(const MouseEvent& e){
 }
 
 void Sun::mouseUp(const MouseEvent& e){}
-
 void Sun::mouseDrag(const MouseEvent& e){}
-
 void Sun::mouseWheelMove(const MouseEvent& e, const MouseWheelDetails& w){}

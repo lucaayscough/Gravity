@@ -2,27 +2,26 @@
 
 
 class Sun : public Planet{
-private:
-    const int M_DIAMETER = Variables::SUN_DIAMETER;
-
 public:
+    // Constructors and destructors.
     Sun();
-    Sun(juce::OwnedArray<Planet>*, Generator*, AudioContainer*);
+    Sun(juce::OwnedArray<Planet>*, AudioContainer*, Parameters*);
     ~Sun() override;
 
+    // View methods.
     void paint(Graphics& g) override;
     void resized() override;
-
-    // When called the component is redrawn.
     void draw();
 
+    // Interface methods.
     int getDiameter() override;
-    float getDistance(Planet*);
-    
+
+    // Temporary methods.
     void generateLatents() override;
     void generateSample(at::Tensor&) override;
 
 private:
+    // Controller methods.
     bool hitTest(int, int) override;
     void mouseDown(const MouseEvent& e) override;
     void mouseUp(const MouseEvent& e) override;

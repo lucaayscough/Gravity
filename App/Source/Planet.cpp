@@ -8,11 +8,10 @@
 
 Planet::Planet(){}
 
-Planet::Planet(juce::OwnedArray<Planet>* planets_ptr, Generator* generator_ptr, AudioContainer* audiocontainer_ptr):
+Planet::Planet(juce::OwnedArray<Planet>* planets_ptr, AudioContainer* audiocontainer_ptr, Parameters* parameters_ptr):
     m_PlanetsPtr(planets_ptr),
-    m_GeneratorPtr(generator_ptr),
-    m_AudioContainerPtr(audiocontainer_ptr)
-{
+    m_AudioContainerPtr(audiocontainer_ptr),
+    m_ParametersPtr(parameters_ptr){
     allocateStorage();
 
     // Generate random sample.
@@ -113,13 +112,8 @@ int Planet::getCentreY(Planet* planet){
     return planet->getY() + ((planet->getDiameter() + planet->getClipBoundary()) / 2);
 }
 
-void Planet::generateLatents(){
-    m_Latents = m_GeneratorPtr->generateLatents();
-}
-
-void Planet::generateSample(at::Tensor& latents){
-    m_Sample = m_GeneratorPtr->generateSample(latents);
-}
+void Planet::generateLatents(){m_Latents = Generator::generateLatents();}
+void Planet::generateSample(at::Tensor& latents){m_Sample = Generator::generateSample(latents);}
 
 void Planet::updateGraph(){
     m_LerpGraph.setValue(true);
@@ -267,6 +261,4 @@ void Planet::checkBounds(){
     //Logger::writeToLog("X: " + std::to_string(getX()) + ", Y: " + std::to_string(getY()));
 }
 
-void Planet::allocateStorage(){
-    m_Sample.ensureStorageAllocated(m_GeneratorPtr->M_NUM_SAMPLES);
-}
+void Planet::allocateStorage(){m_Sample.ensureStorageAllocated(Generator::M_NUM_SAMPLES);}

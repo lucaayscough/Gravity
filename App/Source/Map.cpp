@@ -6,11 +6,10 @@
 
 Map::Map(){}
 
-Map::Map(Generator* generator_ptr, AudioContainer* audiocontainer_ptr, Parameters* parameters_ptr):
-    m_GeneratorPtr(generator_ptr),
+Map::Map(AudioContainer* audiocontainer_ptr, Parameters* parameters_ptr):
     m_AudioContainerPtr(audiocontainer_ptr),
     m_ParametersPtr(parameters_ptr),
-    m_Sun(&m_Planets, m_GeneratorPtr, m_AudioContainerPtr){}
+    m_Sun(&m_Planets, m_AudioContainerPtr, m_ParametersPtr){}
 
 Map::~Map(){}
 
@@ -45,8 +44,7 @@ void Map::createPlanet(int x, int y){
     Logger::writeToLog("\nCreating planet...");
 
     // Instantiate planet inside planets array.
-    // Pointers to sun, planets and generator objects are passed.
-    m_Planets.add(new Planet(&m_Planets, m_GeneratorPtr, m_AudioContainerPtr));
+    m_Planets.add(new Planet(&m_Planets, m_AudioContainerPtr, m_ParametersPtr));
     
     // Update number of planets.
     m_NumPlanets = m_Planets.size();
