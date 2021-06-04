@@ -78,6 +78,7 @@ void Map::setPlanetID(Planet* planet){
 
 void Map::setupPlanet(Planet* planet, int x, int y){
     setPlanetID(planet);
+    m_ParametersPtr->addPlanetNode(planet->getComponentID());
 
     addAndMakeVisible(planet);
 
@@ -100,13 +101,12 @@ void Map::destroyPlanet(){
     // For each planet check to see if it has been set for destruction.
     for(int i = 0; i < m_Planets.size(); i++){
         if(m_Planets[i]->m_Destroy == true){
+            m_ParametersPtr->removePlanetNode(m_Planets[i]->getComponentID());
             // Remove planet from array and delete.
             m_Planets.remove(i, true);
 
             // Reduce number of planets counter.
             m_NumPlanets -= 1;
-
-            Logger::writeToLog("\nPlanet destroyed.\n");
         }
     }
 }

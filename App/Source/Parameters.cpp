@@ -11,6 +11,7 @@ juce::Identifier Parameters::planetType("Planet");
 //------------------------------------------------------------//
 // Property identifiers.
 
+juce::Identifier Parameters::idProp("ID");
 juce::Identifier Parameters::diameterProp("Diameter");
 juce::Identifier Parameters::posXProp("Position X");
 juce::Identifier Parameters::posYProp("Position Y");
@@ -38,13 +39,23 @@ Parameters::~Parameters(){}
 
 void Parameters::addSunNode(){
     juce::ValueTree sunNode(sunType);
-    rootNode.addChild(sunNode, -1, nullptr);
     sunNode.setProperty(diameterProp, Variables::SUN_DIAMETER, nullptr);
+    rootNode.addChild(sunNode, -1, nullptr);
 }
 
-void Parameters::addPlanetNode(){
+void Parameters::addPlanetNode(const juce::String& id){
     juce::ValueTree planetNode(planetType);
+    planetNode.setProperty(idProp, id, nullptr);
+    planetNode.setProperty(diameterProp, Variables::DEFAULT_PLANET_DIAMETER, nullptr);
     rootNode.addChild(planetNode, -1, nullptr);
+}
+
+void Parameters::removePlanetNode(const juce::String& id){
+    for(int i = 0; i < rootNode.getNumChildren(); i++){
+        if(rootNode.getChild(i).getProperty(idProp) == id){
+            rootNode.removeChild(i, nullptr);
+        }
+    }
 }
 
 

@@ -36,13 +36,13 @@ Planet::~Planet(){}
 void Planet::paint(Graphics& g){
     g.setColour(juce::Colours::red);
     draw(m_Diameter, getX(), getY());
-    g.fillEllipse(m_ClipBoundary / 2, m_ClipBoundary / 2, m_Diameter, m_Diameter);
+    g.fillEllipse(getClipBoundary() / 2, getClipBoundary() / 2, m_Diameter, m_Diameter);
 }
 
 void Planet::resized(){}
 
 void Planet::draw(int diameter, int x, int y){
-    setBounds(x, y, diameter + m_ClipBoundary, diameter + m_ClipBoundary);
+    setBounds(x, y, diameter + getClipBoundary(), diameter + getClipBoundary());
 }
 
 void Planet::resizePlanet(int diameter){
@@ -50,11 +50,11 @@ void Planet::resizePlanet(int diameter){
     int new_y;
 
     if(diameter > getDiameter()){
-        new_x = getX() - (M_SIZE_MODIFIER / 2);
-        new_y = getY() - (M_SIZE_MODIFIER / 2);
+        new_x = getX() - (Variables::SIZE_MODIFIER / 2);
+        new_y = getY() - (Variables::SIZE_MODIFIER / 2);
     } else{
-        new_x = getX() + (M_SIZE_MODIFIER / 2);
-        new_y = getY() + (M_SIZE_MODIFIER / 2);
+        new_x = getX() + (Variables::SIZE_MODIFIER / 2);
+        new_y = getY() + (Variables::SIZE_MODIFIER / 2);
     }
 
     setDiameter(diameter);
@@ -78,13 +78,8 @@ void Planet::setPosXY(int x, int y){
     m_PosY = y;
 }
 
-int Planet::getDiameter(){
-    return m_Diameter;
-}
-
-int Planet::getClipBoundary(){
-    return m_ClipBoundary;
-}
+int Planet::getDiameter(){return m_Diameter;}
+int Planet::getClipBoundary(){return Variables::CLIP_BOUNDARY;}
 
 float Planet::getDistance(int xa, int ya, int xb, int yb){  
     float a = (float)pow(xb - xa, 2);
@@ -135,8 +130,8 @@ void Planet::playSample(){
 // Private methods.
 
 bool Planet::hitTest(int x, int y){
-    float a = pow((float)x - ((float)m_Diameter + (float)m_ClipBoundary) / 2.0f, 2.0f);
-    float b = pow((float)y - ((float)m_Diameter + (float)m_ClipBoundary) / 2.0f, 2.0f);
+    float a = pow((float)x - ((float)m_Diameter + (float)getClipBoundary()) / 2.0f, 2.0f);
+    float b = pow((float)y - ((float)m_Diameter + (float)getClipBoundary()) / 2.0f, 2.0f);
     return sqrt(a + b) <= m_Diameter / 2;
 }
 
@@ -186,11 +181,11 @@ void Planet::mouseDrag(const MouseEvent& e){
 void Planet::mouseWheelMove(const MouseEvent& e, const MouseWheelDetails& w){    
     Logger::writeToLog("Wheel moved.");
 
-    if(w.deltaY > 0.0f && m_Diameter < M_MAX_PLANET_SIZE){
-        resizePlanet(m_Diameter + M_SIZE_MODIFIER);
+    if(w.deltaY > 0.0f && m_Diameter < Variables::MAX_PLANET_SIZE){
+        resizePlanet(m_Diameter + Variables::SIZE_MODIFIER);
     }
-    else if(w.deltaY < 0.0f && m_Diameter > M_MIN_PLANET_SIZE){
-        resizePlanet(m_Diameter - M_SIZE_MODIFIER);
+    else if(w.deltaY < 0.0f && m_Diameter > Variables::MIN_PLANET_SIZE){
+        resizePlanet(m_Diameter - Variables::SIZE_MODIFIER);
     }
 }
 
@@ -242,20 +237,20 @@ void Planet::checkCollision(){
 
 void Planet::checkBounds(){
     //Check left boundary.
-    if(getX() < -(m_ClipBoundary / 2))
-        draw(m_Diameter, -(m_ClipBoundary / 2), getY());
+    if(getX() < -(getClipBoundary() / 2))
+        draw(m_Diameter, -(getClipBoundary() / 2), getY());
 
     // Check top boundary.
-    if(getY() < -(m_ClipBoundary / 2))
-        draw(m_Diameter, getX(), -(m_ClipBoundary / 2));
+    if(getY() < -(getClipBoundary() / 2))
+        draw(m_Diameter, getX(), -(getClipBoundary() / 2));
 
     // Check right boundary,
-    if(getX() + m_Diameter + (m_ClipBoundary / 2) > m_MapWidth)
-        draw(m_Diameter, m_MapWidth - m_Diameter - (m_ClipBoundary / 2), getY());
+    if(getX() + m_Diameter + (getClipBoundary() / 2) > m_MapWidth)
+        draw(m_Diameter, m_MapWidth - m_Diameter - (getClipBoundary() / 2), getY());
 
     // Check bottom boundary.
-    if(getY() + m_Diameter + (m_ClipBoundary / 2) > m_MapHeight)
-        draw(m_Diameter, getX(), m_MapHeight - m_Diameter - (m_ClipBoundary / 2));
+    if(getY() + m_Diameter + (getClipBoundary() / 2) > m_MapHeight)
+        draw(m_Diameter, getX(), m_MapHeight - m_Diameter - (getClipBoundary() / 2));
     
     // Write planet position to screen.
     //Logger::writeToLog("X: " + std::to_string(getX()) + ", Y: " + std::to_string(getY()));

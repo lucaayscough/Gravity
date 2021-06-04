@@ -16,15 +16,8 @@ public:
 private:
     juce::ComponentDragger m_Dragger;
 
-    const int M_SIZE_MODIFIER = Variables::SIZE_MODIFIER;
-    const int M_MAX_PLANET_SIZE = Variables::MAX_PLANET_SIZE;
-    const int M_MIN_PLANET_SIZE = Variables::MIN_PLANET_SIZE;
-
     // Diameter of the planet.
     int m_Diameter = Variables::DEFAULT_PLANET_DIAMETER;
-
-    // Boundary to avoid clipping of component when moved.
-    int m_ClipBoundary = Variables::CLIP_BOUNDARY;
 
     // Map boundaries.
     int m_MapWidth;

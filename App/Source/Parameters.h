@@ -9,6 +9,7 @@ struct Parameters{
     static juce::Identifier planetType;
 
     // Property identifiers.
+    static juce::Identifier idProp;
     static juce::Identifier diameterProp;
     static juce::Identifier posXProp;
     static juce::Identifier posYProp;
@@ -25,7 +26,8 @@ struct Parameters{
 
     // Restructuring methods.
     void addSunNode();
-    void addPlanetNode();
+    void addPlanetNode(const juce::String&);
+    void removePlanetNode(const juce::String&);
 
     // Tensor operations.
     void generateLatents(ValueTree);
