@@ -17,22 +17,12 @@ Map::~Map(){}
 //--------------------------------------------------//
 // Public methods.
 
-void Map::paint(Graphics& g){
-    g.fillAll(juce::Colours::black);
-}
-
-void Map::resized(){
-    createSun();
-}
+void Map::paint(Graphics& g){g.fillAll(juce::Colours::black);}
+void Map::resized(){createSun();}
 
 void Map::createSun(){
-    // Display sun.
     addAndMakeVisible(m_Sun);
-
-    // Draws sun to the center of the screen.
     m_Sun.draw();
-
-    // Add sun sample to audio container.
     m_Sun.addSample();
 }
 
@@ -41,8 +31,6 @@ void Map::createSun(){
 // Private methods.
 
 void Map::createPlanet(int x, int y){
-    Logger::writeToLog("\nCreating planet...");
-
     // Create planet node.
     m_ParametersPtr->addPlanetNode();
     juce::ValueTree node = m_ParametersPtr->rootNode.getChild(m_ParametersPtr->rootNode.getNumChildren() - 1);
@@ -58,9 +46,6 @@ void Map::createPlanet(int x, int y){
 
     // Run latent mixture algorithm.
     mixLatents();
-    
-    Logger::writeToLog("Planet created.");
-    Logger::writeToLog("Number of planets: " + std::to_string(m_NumPlanets) + "\n");
 }
 
 void Map::setPlanetID(Planet* planet){
@@ -75,23 +60,21 @@ void Map::setPlanetID(Planet* planet){
             }
         }
     }
-    
-    // Set ID.
+
     planet->setComponentID(randomID);
 }
 
 void Map::setupPlanet(Planet* planet, int x, int y, juce::ValueTree node){
     setPlanetID(planet);
     node.setProperty(Parameters::idProp, planet->getComponentID(), nullptr);
+    node.setProperty(Parameters::mapWidthProp, getWidth(), nullptr);
+    node.setProperty(Parameters::mapHeightProp, getHeight(), nullptr);
 
     addAndMakeVisible(planet);
 
     // Add listener for planet destruction request and lerp graph.
     planet->m_Destroy.addListener(this);
     planet->m_LerpGraph.addListener(this);
-
-    // Render planet to screen.
-    planet->setMapBoundaries(getWidth(), getHeight());
     
     planet->draw(
         planet->getDiameter(),
@@ -114,6 +97,8 @@ void Map::destroyPlanet(){
         }
     }
 }
+
+int Map::getMaxNumPlanets(){return Variables::MAX_NUM_PLANETS;}
 
 float Map::getDistance(Sun& sun, Planet* planet){
     int centrePlanetX = planet->getCentreX(planet);
@@ -201,7 +186,7 @@ void Map::mouseDoubleClick(const MouseEvent& e){
         int eventX = e.getMouseDownX();
         int eventY = e.getMouseDownY();
 
-        if(m_NumPlanets < M_MAX_NUM_PLANETS)
+        if(m_NumPlanets < getMaxNumPlanets())
             createPlanet(eventX, eventY);
         else
             Logger::writeToLog("Maximum number of planets reached.");

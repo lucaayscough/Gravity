@@ -16,10 +16,6 @@ public:
 private:
     juce::ComponentDragger m_Dragger;
 
-    // Map boundaries.
-    int m_MapWidth;
-    int m_MapHeight;
-
     // Collision safety.
     int m_PosX;
     int m_PosY;
@@ -37,24 +33,35 @@ protected:
 
     juce::ValueTree m_State;
 
+
+//--------------------------------------------------//
+// Constructors and destructors.
+
 public:
-    // Constructors and destructors.
     Planet();
     Planet(juce::OwnedArray<Planet>*, AudioContainer*, juce::ValueTree);
     ~Planet() override;
 
-    // View methods.
+//--------------------------------------------------//
+// View methods.
+
     void paint(Graphics&) override;
     void resized() override;
     void draw(int, int, int);
     void resizePlanet(int);
 
-    // Interface methods.
+//--------------------------------------------------//
+// Interface methods.
+
+private:
     void setDiameter(int);
-    void setMapBoundaries(int, int);
     void setPosXY(int, int);
 
+public:
     virtual int getDiameter();
+
+    int getMapWidth();
+    int getMapHeight();
     int getClipBoundary();
     float getDistance(int, int, int, int);
     float getDistance(Planet*, Planet*);
@@ -62,24 +69,20 @@ public:
     int getCentreY(Planet*);
 
     void updateGraph();
-
-    // Changes states in AudioContainer.
     void addSample();
-
-    // Plays sample.
     void playSample();
-
-    // Allocates storage to array that holds sample.
-    void allocateStorage();
 
     void checkCollision();
     void checkBounds();
 
+    void allocateStorage();
     virtual void generateLatents();
     virtual void generateSample(at::Tensor&);
 
+//--------------------------------------------------//
+// Controller methods.
+
 private:
-    // Controller methods.
     bool hitTest(int, int) override;
     void mouseDown(const MouseEvent&) override;
     void mouseUp(const MouseEvent&) override;

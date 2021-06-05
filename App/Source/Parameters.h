@@ -10,6 +10,8 @@ struct Parameters{
 
     // Property identifiers.
     static juce::Identifier idProp;
+    static juce::Identifier mapWidthProp;
+    static juce::Identifier mapHeightProp;
     static juce::Identifier diameterProp;
     static juce::Identifier posXProp;
     static juce::Identifier posYProp;

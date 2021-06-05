@@ -2,26 +2,37 @@
 
 
 class Sun : public Planet{
+
+//--------------------------------------------------//
+// Constructors and destructors.
+
 public:
-    // Constructors and destructors.
     Sun();
     Sun(juce::OwnedArray<Planet>*, AudioContainer*, juce::ValueTree);
     ~Sun() override;
 
-    // View methods.
+//--------------------------------------------------//
+// View methods.
+
     void paint(Graphics& g) override;
     void resized() override;
     void draw();
 
-    // Interface methods.
+//--------------------------------------------------//
+// Interface methods.
+
     int getDiameter() override;
 
-    // Temporary methods.
+//--------------------------------------------------//
+// Temporary methods.
+
     void generateLatents() override;
     void generateSample(at::Tensor&) override;
 
+//--------------------------------------------------//
+// Controller methods.
+
 private:
-    // Controller methods.
     bool hitTest(int, int) override;
     void mouseDown(const MouseEvent& e) override;
     void mouseUp(const MouseEvent& e) override;

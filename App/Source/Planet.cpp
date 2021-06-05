@@ -29,7 +29,6 @@ Planet::Planet(juce::OwnedArray<Planet>* planets_ptr, AudioContainer* audioconta
 
 Planet::~Planet(){}
 
-
 //--------------------------------------------------//
 // View methods.
 
@@ -66,17 +65,14 @@ void Planet::resizePlanet(int diameter){
 
 void Planet::setDiameter(int diameter){m_State.setProperty(Parameters::diameterProp, diameter, nullptr);}
 
-void Planet::setMapBoundaries(int width, int height){
-    m_MapWidth = width;
-    m_MapHeight = height;
-}
-
 void Planet::setPosXY(int x, int y){
     m_PosX = x;
     m_PosY = y;
 }
 
 int Planet::getDiameter(){return m_State.getProperty(Parameters::diameterProp);}
+int Planet::getMapWidth(){return m_State.getProperty(Parameters::mapWidthProp);}
+int Planet::getMapHeight(){return m_State.getProperty(Parameters::mapHeightProp);}
 int Planet::getClipBoundary(){return Variables::CLIP_BOUNDARY;}
 
 float Planet::getDistance(int xa, int ya, int xb, int yb){  
@@ -243,15 +239,12 @@ void Planet::checkBounds(){
         draw(getDiameter(), getX(), -(getClipBoundary() / 2));
 
     // Check right boundary,
-    if(getX() + getDiameter() + (getClipBoundary() / 2) > m_MapWidth)
-        draw(getDiameter(), m_MapWidth - getDiameter() - (getClipBoundary() / 2), getY());
+    if(getX() + getDiameter() + (getClipBoundary() / 2) > getMapWidth())
+        draw(getDiameter(), getMapWidth() - getDiameter() - (getClipBoundary() / 2), getY());
 
     // Check bottom boundary.
-    if(getY() + getDiameter() + (getClipBoundary() / 2) > m_MapHeight)
-        draw(getDiameter(), getX(), m_MapHeight - getDiameter() - (getClipBoundary() / 2));
-    
-    // Write planet position to screen.
-    //Logger::writeToLog("X: " + std::to_string(getX()) + ", Y: " + std::to_string(getY()));
+    if(getY() + getDiameter() + (getClipBoundary() / 2) > getMapHeight())
+        draw(getDiameter(), getX(), getMapHeight() - getDiameter() - (getClipBoundary() / 2));
 }
 
 void Planet::allocateStorage(){m_Sample.ensureStorageAllocated(Generator::M_NUM_SAMPLES);}

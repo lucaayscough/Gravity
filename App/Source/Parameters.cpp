@@ -12,6 +12,8 @@ juce::Identifier Parameters::planetType("Planet");
 // Property identifiers.
 
 juce::Identifier Parameters::idProp("ID");
+juce::Identifier Parameters::mapWidthProp("Map Width");
+juce::Identifier Parameters::mapHeightProp("Map Height");
 juce::Identifier Parameters::diameterProp("Diameter");
 juce::Identifier Parameters::posXProp("Position X");
 juce::Identifier Parameters::posYProp("Position Y");

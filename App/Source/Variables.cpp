@@ -7,6 +7,9 @@ const int Variables::WINDOW_HEIGHT = 600;
 const bool Variables::IS_WIDTH_RESIZABLE = false;
 const bool Variables::IS_HEIGHT_RESIZABLE = false;
 
+// Map member variables.
+const int Variables::MAX_NUM_PLANETS = 20;
+
 // Planet member variables.
 const int Variables::DEFAULT_PLANET_DIAMETER = 50;
 const int Variables::MAX_PLANET_SIZE = 100;
