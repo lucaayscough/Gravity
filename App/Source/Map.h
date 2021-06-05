@@ -27,7 +27,7 @@ private:
     void createSun();
     void createPlanet(int, int);
     void setPlanetID(Planet*);
-    void setupPlanet(Planet*, int x, int y);
+    void setupPlanet(Planet*, int x, int y, juce::ValueTree);
     void destroyPlanet();
 
     // Returns distance between a planet and the sun.

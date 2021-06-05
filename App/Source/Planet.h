@@ -31,29 +31,26 @@ protected:
     // Used to access the generator instantiated in
     // the PluginProcessor.
     AudioContainer* m_AudioContainerPtr;
-    Parameters* m_ParametersPtr;
 
     // Generated sample.
     juce::Array<float> m_Sample;
 
+    juce::ValueTree m_State;
+
 public:
+    // Constructors and destructors.
     Planet();
-    Planet(juce::OwnedArray<Planet>*, AudioContainer*, Parameters*);
+    Planet(juce::OwnedArray<Planet>*, AudioContainer*, juce::ValueTree);
     ~Planet() override;
 
+    // View methods.
     void paint(Graphics&) override;
     void resized() override;
-    
-    // When called the component is redrawn.
     void draw(int, int, int);
-
-    // When called the planet will be resized.
-    // X and Y are calculated such that the planet will remain centred.
     void resizePlanet(int);
 
+    // Interface methods.
     void setDiameter(int);
-    
-    // Sets the map boundaries.
     void setMapBoundaries(int, int);
     void setPosXY(int, int);
 
@@ -61,17 +58,8 @@ public:
     int getClipBoundary();
     float getDistance(int, int, int, int);
     float getDistance(Planet*, Planet*);
-
-    // Returns the the centre X position of the planet,
-    // taking into a account clip boundary.
     int getCentreX(Planet*);
-
-    // Returns the the centre Y position of the planet,
-    // taking into a account clip boundary.
     int getCentreY(Planet*);
-
-    virtual void generateLatents();
-    virtual void generateSample(at::Tensor&);
 
     void updateGraph();
 
@@ -81,22 +69,23 @@ public:
     // Plays sample.
     void playSample();
 
-private:
-    bool hitTest(int, int) override;
-    void mouseDown(const MouseEvent&) override;
-    void mouseUp(const MouseEvent&) override;
-    void mouseDrag(const MouseEvent&) override;
-
-    // If the mouse wheel is moved the diameter of the planet is
-    // modified making sure it is not going over the size limitations.
-    void mouseWheelMove(const MouseEvent&, const MouseWheelDetails&) override;
-    void visibilityChanged() override;
+    // Allocates storage to array that holds sample.
+    void allocateStorage();
 
     void checkCollision();
     void checkBounds();
 
-    // Allocates storage to array that holds sample.
-    void allocateStorage();
+    virtual void generateLatents();
+    virtual void generateSample(at::Tensor&);
+
+private:
+    // Controller methods.
+    bool hitTest(int, int) override;
+    void mouseDown(const MouseEvent&) override;
+    void mouseUp(const MouseEvent&) override;
+    void mouseDrag(const MouseEvent&) override;
+    void mouseWheelMove(const MouseEvent&, const MouseWheelDetails&) override;
+    void visibilityChanged() override;
 
     JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR(Planet)
 };

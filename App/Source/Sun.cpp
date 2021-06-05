@@ -10,8 +10,8 @@
 
 Sun::Sun(){}
 
-Sun::Sun(juce::OwnedArray<Planet>* planets_ptr, AudioContainer* audiocontainer_ptr, Parameters* parameters_ptr)
-    : Planet(planets_ptr, audiocontainer_ptr, parameters_ptr){}
+Sun::Sun(juce::OwnedArray<Planet>* planets_ptr, AudioContainer* audiocontainer_ptr, juce::ValueTree state)
+    : Planet(planets_ptr, audiocontainer_ptr, state){}
 
 Sun::~Sun(){}
 
@@ -34,7 +34,7 @@ void Sun::draw(){
 //------------------------------------------------------------//
 // Interface methods.
 
-int Sun::getDiameter(){return m_ParametersPtr->rootNode.getChildWithName(Parameters::sunType).getProperty(Parameters::diameterProp);}
+int Sun::getDiameter(){return m_State.getProperty(Parameters::diameterProp);}
 
 
 //------------------------------------------------------------//

@@ -26,7 +26,7 @@ struct Parameters{
 
     // Restructuring methods.
     void addSunNode();
-    void addPlanetNode(const juce::String&);
+    void addPlanetNode();
     void removePlanetNode(const juce::String&);
 
     // Tensor operations.

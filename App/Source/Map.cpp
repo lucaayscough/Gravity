@@ -9,7 +9,7 @@ Map::Map(){}
 Map::Map(AudioContainer* audiocontainer_ptr, Parameters* parameters_ptr):
     m_AudioContainerPtr(audiocontainer_ptr),
     m_ParametersPtr(parameters_ptr),
-    m_Sun(&m_Planets, m_AudioContainerPtr, m_ParametersPtr){}
+    m_Sun(&m_Planets, m_AudioContainerPtr, m_ParametersPtr->rootNode.getChild(0)){}
 
 Map::~Map(){}
 
@@ -43,14 +43,18 @@ void Map::createSun(){
 void Map::createPlanet(int x, int y){
     Logger::writeToLog("\nCreating planet...");
 
+    // Create planet node.
+    m_ParametersPtr->addPlanetNode();
+    juce::ValueTree node = m_ParametersPtr->rootNode.getChild(m_ParametersPtr->rootNode.getNumChildren() - 1);
+
     // Instantiate planet inside planets array.
-    m_Planets.add(new Planet(&m_Planets, m_AudioContainerPtr, m_ParametersPtr));
+    m_Planets.add(new Planet(&m_Planets, m_AudioContainerPtr, node));
     
     // Update number of planets.
     m_NumPlanets = m_Planets.size();
 
     // Extra setup for planet object.
-    setupPlanet(m_Planets[m_NumPlanets - 1], x, y);
+    setupPlanet(m_Planets[m_NumPlanets - 1], x, y, node);
 
     // Run latent mixture algorithm.
     mixLatents();
@@ -76,9 +80,9 @@ void Map::setPlanetID(Planet* planet){
     planet->setComponentID(randomID);
 }
 
-void Map::setupPlanet(Planet* planet, int x, int y){
+void Map::setupPlanet(Planet* planet, int x, int y, juce::ValueTree node){
     setPlanetID(planet);
-    m_ParametersPtr->addPlanetNode(planet->getComponentID());
+    node.setProperty(Parameters::idProp, planet->getComponentID(), nullptr);
 
     addAndMakeVisible(planet);
 

@@ -43,9 +43,8 @@ void Parameters::addSunNode(){
     rootNode.addChild(sunNode, -1, nullptr);
 }
 
-void Parameters::addPlanetNode(const juce::String& id){
+void Parameters::addPlanetNode(){
     juce::ValueTree planetNode(planetType);
-    planetNode.setProperty(idProp, id, nullptr);
     planetNode.setProperty(diameterProp, Variables::DEFAULT_PLANET_DIAMETER, nullptr);
     rootNode.addChild(planetNode, -1, nullptr);
 }

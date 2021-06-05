@@ -8,10 +8,10 @@
 
 Planet::Planet(){}
 
-Planet::Planet(juce::OwnedArray<Planet>* planets_ptr, AudioContainer* audiocontainer_ptr, Parameters* parameters_ptr):
+Planet::Planet(juce::OwnedArray<Planet>* planets_ptr, AudioContainer* audiocontainer_ptr, juce::ValueTree state):
     m_PlanetsPtr(planets_ptr),
     m_AudioContainerPtr(audiocontainer_ptr),
-    m_ParametersPtr(parameters_ptr){
+    m_State(state){
     allocateStorage();
 
     // Generate random sample.
@@ -31,7 +31,7 @@ Planet::~Planet(){}
 
 
 //--------------------------------------------------//
-// Public methods.
+// View methods.
 
 void Planet::paint(Graphics& g){
     g.setColour(juce::Colours::red);
@@ -64,7 +64,7 @@ void Planet::resizePlanet(int diameter){
     //updateGraph();
 }
 
-void Planet::setDiameter(int diameter){m_ParametersPtr->rootNode.getChildWithProperty(Parameters::idProp, getComponentID()).setProperty(Parameters::diameterProp, diameter, nullptr);}
+void Planet::setDiameter(int diameter){m_State.setProperty(Parameters::diameterProp, diameter, nullptr);}
 
 void Planet::setMapBoundaries(int width, int height){
     m_MapWidth = width;
@@ -76,7 +76,7 @@ void Planet::setPosXY(int x, int y){
     m_PosY = y;
 }
 
-int Planet::getDiameter(){return m_ParametersPtr->rootNode.getChildWithProperty(Parameters::idProp, getComponentID()).getProperty(Parameters::diameterProp);}
+int Planet::getDiameter(){return m_State.getProperty(Parameters::diameterProp);}
 int Planet::getClipBoundary(){return Variables::CLIP_BOUNDARY;}
 
 float Planet::getDistance(int xa, int ya, int xb, int yb){  
