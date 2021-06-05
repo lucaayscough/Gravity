@@ -64,13 +64,14 @@ void Planet::resizePlanet(int diameter){
 }
 
 void Planet::setDiameter(int diameter){m_State.setProperty(Parameters::diameterProp, diameter, nullptr);}
-
 void Planet::setPosXY(int x, int y){
-    m_PosX = x;
-    m_PosY = y;
+    m_State.setProperty(Parameters::posXProp, x, nullptr);
+    m_State.setProperty(Parameters::posXProp, y, nullptr);
 }
 
 int Planet::getDiameter(){return m_State.getProperty(Parameters::diameterProp);}
+int Planet::getPosX(){return m_State.getProperty(Parameters::posXProp);}
+int Planet::getPosY(){return m_State.getProperty(Parameters::posYProp);}
 int Planet::getMapWidth(){return m_State.getProperty(Parameters::mapWidthProp);}
 int Planet::getMapHeight(){return m_State.getProperty(Parameters::mapHeightProp);}
 int Planet::getClipBoundary(){return Variables::CLIP_BOUNDARY;}
@@ -203,7 +204,7 @@ void Planet::checkCollision(){
         minDistance = (sunDiameter + getDiameter()) / 2;
 
         if(distance <= minDistance){
-            draw(getDiameter(), m_PosX, m_PosY);
+            draw(getDiameter(), getPosX(), getPosY());
         }
     }
 
@@ -223,7 +224,7 @@ void Planet::checkCollision(){
             minDistance = (planet->getDiameter() + getDiameter()) / 2;
 
             if(distance <= minDistance){
-                draw(getDiameter(), m_PosX, m_PosY);
+                draw(getDiameter(), getPosX(), getPosY());
             }
         }
     }

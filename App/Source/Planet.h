@@ -16,10 +16,6 @@ public:
 private:
     juce::ComponentDragger m_Dragger;
 
-    // Collision safety.
-    int m_PosX;
-    int m_PosY;
-
 protected:
     // Pointer to array containing planets.
     juce::OwnedArray<Planet>* m_PlanetsPtr;
@@ -59,7 +55,8 @@ private:
 
 public:
     virtual int getDiameter();
-
+    virtual int getPosX();
+    virtual int getPosY();
     int getMapWidth();
     int getMapHeight();
     int getClipBoundary();
