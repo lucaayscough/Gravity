@@ -66,7 +66,7 @@ void Planet::resizePlanet(int diameter){
 void Planet::setDiameter(int diameter){m_State.setProperty(Parameters::diameterProp, diameter, nullptr);}
 void Planet::setPosXY(int x, int y){
     m_State.setProperty(Parameters::posXProp, x, nullptr);
-    m_State.setProperty(Parameters::posXProp, y, nullptr);
+    m_State.setProperty(Parameters::posYProp, y, nullptr);
 }
 
 int Planet::getDiameter(){return m_State.getProperty(Parameters::diameterProp);}

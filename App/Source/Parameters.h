@@ -33,5 +33,5 @@ struct Parameters{
 
     // Tensor operations.
     void generateLatents(ValueTree);
-    void generateSample(ValueTree, at::Tensor);
+    void generateSample(juce::ValueTree, at::Tensor);
 };

@@ -1,6 +1,15 @@
 #pragma once
 
 
+struct ReferenceCountedTensor: public ReferenceCountedObject{
+    ReferenceCountedTensor(at::Tensor t):
+    tensor(t){}
+    at::Tensor tensor;
+    using Ptr = ReferenceCountedObjectPtr<ReferenceCountedTensor>;
+    at::Tensor& getTensor(){return tensor;}
+};
+
+
 class Generator{
 public:
     static const int M_NUM_SAMPLES = 131072;

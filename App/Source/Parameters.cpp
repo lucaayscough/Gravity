@@ -7,7 +7,6 @@
 juce::Identifier Parameters::sunType("Sun");
 juce::Identifier Parameters::planetType("Planet");
 
-
 //------------------------------------------------------------//
 // Property identifiers.
 
@@ -24,7 +23,6 @@ juce::Identifier Parameters::latentsProp("Latents");
 juce::Identifier Parameters::lerpLatentsProp("Interpolated Latents");
 juce::Identifier Parameters::sampleProp("Sample");
 
-
 //------------------------------------------------------------//
 // Constructors and destructors.
 
@@ -34,7 +32,6 @@ Parameters::Parameters(juce::ValueTree v):
 }
 
 Parameters::~Parameters(){}
-
 
 //------------------------------------------------------------//
 // Structuring methods.
@@ -46,9 +43,11 @@ void Parameters::addSunNode(){
 }
 
 void Parameters::addPlanetNode(){
-    juce::ValueTree planetNode(planetType);
-    planetNode.setProperty(diameterProp, Variables::DEFAULT_PLANET_DIAMETER, nullptr);
-    rootNode.addChild(planetNode, -1, nullptr);
+    juce::ValueTree newNode(planetType);
+    newNode.setProperty(diameterProp, Variables::DEFAULT_PLANET_DIAMETER, nullptr);
+    generateLatents(newNode);
+    generateSample(newNode, ((ReferenceCountedTensor*)newNode.getProperty(latentsProp).getObject())->getTensor());
+    rootNode.addChild(newNode, -1, nullptr);
 }
 
 void Parameters::removePlanetNode(const juce::String& id){
@@ -59,6 +58,15 @@ void Parameters::removePlanetNode(const juce::String& id){
     }
 }
 
-
 //------------------------------------------------------------//
 // Tensor operations.
+
+void Parameters::generateLatents(juce::ValueTree node){
+    ReferenceCountedTensor::Ptr latents = new ReferenceCountedTensor(Generator::generateLatents());
+    node.setProperty(latentsProp, juce::var(latents), nullptr);
+    
+}
+
+void Parameters::generateSample(juce::ValueTree node, at::Tensor tensor){
+    //node.setProperty(sampleProp, Generator::generateSample(tensor), nullptr);
+}
