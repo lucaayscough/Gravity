@@ -39,7 +39,7 @@ private:
     float getForceVector(Planet*, Planet*);
 
     // Mixes all latents.
-    void mixLatents();
+    //void mixLatents();
 
     // Controller methods.
     void mouseUp(const MouseEvent&) override;

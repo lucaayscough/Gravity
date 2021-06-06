@@ -20,5 +20,5 @@ public:
     ~Generator();
 
     static at::Tensor generateLatents();
-    static juce::Array<float> generateSample(at::Tensor&);
+    static juce::var generateSample(at::Tensor&);
 };

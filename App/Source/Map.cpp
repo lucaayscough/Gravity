@@ -45,7 +45,8 @@ void Map::createPlanet(int x, int y){
     setupPlanet(m_Planets[m_NumPlanets - 1], x, y, node);
 
     // Run latent mixture algorithm.
-    mixLatents();
+    // TODO:
+    //mixLatents();
 }
 
 void Map::setPlanetID(Planet* planet){
@@ -142,7 +143,7 @@ float Map::getForceVector(Planet* planet_a, Planet* planet_b){
     
     return (m / pow(r, 2.0f));
 }
-
+/*
 void Map::mixLatents(){
     Logger::writeToLog("Latents being mixed.");
 
@@ -172,11 +173,8 @@ void Map::mixLatents(){
         Logger::writeToLog("Force: " + std::to_string(forceVector));
         m_Sun.m_LerpLatents = at::lerp(m_Sun.m_LerpLatents, planet_a->m_LerpLatents, forceVector);
     }
-
-    m_Sun.generateSample(m_Sun.m_LerpLatents);
-    m_Sun.addSample();
 }
-
+*/
 void Map::mouseUp(const MouseEvent& e){}
 
 void Map::mouseDoubleClick(const MouseEvent& e){
@@ -195,5 +193,5 @@ void Map::mouseDoubleClick(const MouseEvent& e){
 
 void Map::valueChanged(juce::Value& value){
     destroyPlanet();
-    mixLatents();
+    //mixLatents();
 }

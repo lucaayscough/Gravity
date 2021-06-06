@@ -25,7 +25,7 @@ at::Tensor Generator::generateLatents(){
     return output;
 }
 
-juce::Array<float> Generator::generateSample(at::Tensor& latents){
+juce::var Generator::generateSample(at::Tensor& latents){
     torch::NoGradGuard no_grad;
 
     // Create input tensor with latents.
@@ -35,12 +35,11 @@ juce::Array<float> Generator::generateSample(at::Tensor& latents){
     // Forward input to module.
     at::Tensor output = generator_module.forward(inputs).toTensor();
 
-    juce::Array<float> sample;
-    sample.ensureStorageAllocated(M_NUM_SAMPLES);
+    juce::var sample;
 
     // Copy tensor to array.
     for(int i = 0; i < M_NUM_SAMPLES; i++){
-        sample.insert(i, output[0][0][i].item<float>());
+        sample.append(output[0][0][i].item<float>());
     }
 
     return sample;

@@ -12,12 +12,7 @@ Planet::Planet(juce::OwnedArray<Planet>* planets_ptr, AudioContainer* audioconta
     m_PlanetsPtr(planets_ptr),
     m_AudioContainerPtr(audiocontainer_ptr),
     m_State(state){
-    allocateStorage();
-
-    // Generate random sample.
-    generateLatents();
-    generateSample(m_Latents);
-
+    
     // Listener value used to determine when to destroy the planet.
     m_Destroy.setValue(false);
 
@@ -59,6 +54,7 @@ void Planet::resizePlanet(int diameter){
     setDiameter(diameter);
     draw(diameter, new_x, new_y);
 
+    // TODO:
     // NEED A WAY TO UPDATE GRAPH WHEN DONE ZOOMING IN ON SOUND
     //updateGraph();
 }
@@ -102,9 +98,6 @@ int Planet::getCentreY(Planet* planet){
     return planet->getY() + ((planet->getDiameter() + planet->getClipBoundary()) / 2);
 }
 
-void Planet::generateLatents(){m_Latents = Generator::generateLatents();}
-void Planet::generateSample(at::Tensor& latents){m_Sample = Generator::generateSample(latents);}
-
 void Planet::updateGraph(){
     m_LerpGraph.setValue(true);
     m_LerpGraph.setValue(false);
@@ -112,7 +105,15 @@ void Planet::updateGraph(){
 
 void Planet::addSample(){
     m_AudioContainerPtr->audio.clear();
-    m_AudioContainerPtr->audio.addArray(m_Sample);
+
+    juce::Array<float> sample;
+    sample.ensureStorageAllocated(Generator::M_NUM_SAMPLES);
+
+    juce::Array<var>* values = m_State.getProperty(Parameters::sampleProp).getArray();
+    for(int i = 0; i < Generator::M_NUM_SAMPLES; i++)
+        sample.insert(i, (*values)[i]);
+
+    m_AudioContainerPtr->audio.addArray(sample);
 }
 
 void Planet::playSample(){
@@ -141,8 +142,8 @@ void Planet::mouseUp(const MouseEvent& e){
         if(e.getNumberOfClicks() > 1){
             Logger::writeToLog("Generating sample...");
 
-            generateLatents();
-            generateSample(m_Latents);
+            // TODO:
+            // NEED TO GENERATE NEW SAMPLE.
 
             Logger::writeToLog("Sample generated.");
         }
@@ -184,9 +185,7 @@ void Planet::mouseWheelMove(const MouseEvent& e, const MouseWheelDetails& w){
     }
 }
 
-void Planet::visibilityChanged(){
-    Logger::writeToLog("Visibility changed.");
-}
+void Planet::visibilityChanged(){}
 
 void Planet::checkCollision(){
     int centrePosX = getCentreX(this);
@@ -247,5 +246,3 @@ void Planet::checkBounds(){
     if(getY() + getDiameter() + (getClipBoundary() / 2) > getMapHeight())
         draw(getDiameter(), getX(), getMapHeight() - getDiameter() - (getClipBoundary() / 2));
 }
-
-void Planet::allocateStorage(){m_Sample.ensureStorageAllocated(Generator::M_NUM_SAMPLES);}

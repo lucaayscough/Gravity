@@ -39,6 +39,8 @@ Parameters::~Parameters(){}
 void Parameters::addSunNode(){
     juce::ValueTree sunNode(sunType);
     sunNode.setProperty(diameterProp, Variables::SUN_DIAMETER, nullptr);
+    generateLatents(sunNode);
+    generateSample(sunNode, ((ReferenceCountedTensor*)sunNode.getProperty(latentsProp).getObject())->getTensor());
     rootNode.addChild(sunNode, -1, nullptr);
 }
 
@@ -68,5 +70,5 @@ void Parameters::generateLatents(juce::ValueTree node){
 }
 
 void Parameters::generateSample(juce::ValueTree node, at::Tensor tensor){
-    //node.setProperty(sampleProp, Generator::generateSample(tensor), nullptr);
+    node.setProperty(sampleProp, Generator::generateSample(tensor), nullptr);
 }

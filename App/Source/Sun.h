@@ -24,12 +24,6 @@ public:
     int getDiameter() override;
 
 //--------------------------------------------------//
-// Temporary methods.
-
-    void generateLatents() override;
-    void generateSample(at::Tensor&) override;
-
-//--------------------------------------------------//
 // Controller methods.
 
 private:

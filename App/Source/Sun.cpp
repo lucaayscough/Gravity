@@ -36,13 +36,6 @@ void Sun::draw(){
 
 int Sun::getDiameter(){return m_State.getProperty(Parameters::diameterProp);}
 
-
-//------------------------------------------------------------//
-// Temporary methods.
-
-void Sun::generateLatents(){m_Latents = Generator::generateLatents();}
-void Sun::generateSample(at::Tensor& latents){m_Sample = Generator::generateSample(latents);}
-
 //------------------------------------------------------------//
 // Controller methods.
 
@@ -57,9 +50,9 @@ bool Sun::hitTest(int x, int y){
 void Sun::mouseDown(const MouseEvent& e){
     if(e.getNumberOfClicks() > 1 && e.mods.isLeftButtonDown()){
         Logger::writeToLog("Generating sample...");
-
-        generateLatents();
-        generateSample(m_Latents);
+        
+        // TODO:
+        // NEED TO GENERATE NEW SAMPLE.
 
         Logger::writeToLog("Sample generated.");
     }

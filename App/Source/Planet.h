@@ -10,7 +10,6 @@ public:
     juce::Value m_LerpGraph;
 
     // Generated latents.
-    at::Tensor m_Latents;
     at::Tensor m_LerpLatents;
 
 private:
@@ -23,9 +22,6 @@ protected:
     // Used to access the generator instantiated in
     // the PluginProcessor.
     AudioContainer* m_AudioContainerPtr;
-
-    // Generated sample.
-    juce::Array<float> m_Sample;
 
     juce::ValueTree m_State;
 
@@ -71,10 +67,6 @@ public:
 
     void checkCollision();
     void checkBounds();
-
-    void allocateStorage();
-    virtual void generateLatents();
-    virtual void generateSample(at::Tensor&);
 
 //--------------------------------------------------//
 // Controller methods.
