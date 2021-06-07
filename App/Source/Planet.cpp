@@ -18,8 +18,6 @@ Planet::Planet(juce::OwnedArray<Planet>* planets_ptr, AudioContainer* audioconta
 
     // Listener used to detect when lerp graph needs recalculating.
     m_LerpGraph.setValue(false);
-
-    setPosXY(getX(), getY());
 }
 
 Planet::~Planet(){}
@@ -35,9 +33,8 @@ void Planet::paint(Graphics& g){
 
 void Planet::resized(){}
 
-void Planet::draw(int diameter, int x, int y){
-    setBounds(x, y, diameter + getClipBoundary(), diameter + getClipBoundary());
-}
+void Planet::draw(){setBounds(getX(), getY(), getDiameter() + getClipBoundary(), getDiameter() + getClipBoundary());}
+void Planet::draw(int diameter, int x, int y){setBounds(x, y, diameter + getClipBoundary(), diameter + getClipBoundary());}
 
 void Planet::resizePlanet(int diameter){
     int new_x;
@@ -65,6 +62,11 @@ void Planet::setPosXY(int x, int y){
     m_State.setProperty(Parameters::posYProp, y, nullptr);
 }
 
+void Planet::setCentrePosXY(int x, int y){
+    m_State.setProperty(Parameters::posCentreXProp, x, nullptr);
+    m_State.setProperty(Parameters::posCentreYProp, y, nullptr);
+}
+
 int Planet::getDiameter(){return m_State.getProperty(Parameters::diameterProp);}
 int Planet::getPosX(){return m_State.getProperty(Parameters::posXProp);}
 int Planet::getPosY(){return m_State.getProperty(Parameters::posYProp);}
@@ -90,13 +92,9 @@ float Planet::getDistance(Planet* planet_a, Planet* planet_b){
     return sqrt(a + b);
 }
 
-int Planet::getCentreX(Planet* planet){
-    return planet->getX() + ((planet->getDiameter() + planet->getClipBoundary()) / 2);
-}
+int Planet::getCentreX(Planet* planet){return planet->getX() + ((planet->getDiameter() + planet->getClipBoundary()) / 2);}
 
-int Planet::getCentreY(Planet* planet){
-    return planet->getY() + ((planet->getDiameter() + planet->getClipBoundary()) / 2);
-}
+int Planet::getCentreY(Planet* planet){return planet->getY() + ((planet->getDiameter() + planet->getClipBoundary()) / 2);}
 
 void Planet::updateGraph(){
     m_LerpGraph.setValue(true);
@@ -172,6 +170,7 @@ void Planet::mouseDrag(const MouseEvent& e){
     checkCollision();
     checkBounds();
     setPosXY(getX(), getY());
+    setCentrePosXY(getCentreX(this), getCentreY(this));
 }
 
 void Planet::mouseWheelMove(const MouseEvent& e, const MouseWheelDetails& w){    

@@ -16,12 +16,16 @@ public:
 
     void paint(Graphics& g) override;
     void resized() override;
-    void draw();
+    void draw() override;
 
 //--------------------------------------------------//
-// Interface methods.
+    // Interface methods.
+
+    void setPosXY(int, int) override;
 
     int getDiameter() override;
+    int getCentreX(Planet*) override;
+    int getCentreY(Planet*) override;
 
 //--------------------------------------------------//
 // Controller methods.

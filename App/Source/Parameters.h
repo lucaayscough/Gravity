@@ -32,6 +32,17 @@ struct Parameters{
     void removePlanetNode(const juce::String&);
 
     // Tensor operations.
-    void generateLatents(ValueTree);
+    void generateLatents(juce::ValueTree);
+    void generateLerpLatents(juce::ValueTree);
     void generateSample(juce::ValueTree, at::Tensor);
+    void mixLatents();
+
+    // Get methods.
+    at::Tensor getLatents(juce::ValueTree, juce::Identifier&);
+    juce::String getID(juce::ValueTree);
+    float getDistance(juce::ValueTree, juce::ValueTree);
+    float getForceVector(juce::ValueTree, juce::ValueTree);
+
+    // Set methods.
+    void setLatents(juce::ValueTree, juce::Identifier&, at::Tensor&);
 };

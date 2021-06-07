@@ -23,6 +23,8 @@ void Map::resized(){createSun();}
 void Map::createSun(){
     addAndMakeVisible(m_Sun);
     m_Sun.draw();
+    m_Sun.setPosXY(m_Sun.getX(), m_Sun.getY());
+    m_Sun.setCentrePosXY(m_Sun.getCentreX(&m_Sun), m_Sun.getCentreY(&m_Sun));
     m_Sun.addSample();
 }
 
@@ -45,8 +47,7 @@ void Map::createPlanet(int x, int y){
     setupPlanet(m_Planets[m_NumPlanets - 1], x, y, node);
 
     // Run latent mixture algorithm.
-    // TODO:
-    //mixLatents();
+    mixLatents();
 }
 
 void Map::setPlanetID(Planet* planet){
@@ -82,7 +83,9 @@ void Map::setupPlanet(Planet* planet, int x, int y, juce::ValueTree node){
         x - (planet->getDiameter() / 2) - (planet->getClipBoundary() / 2),
         y - (planet->getDiameter() / 2) - (planet->getClipBoundary() / 2)
     );
-    
+
+    planet->setPosXY(planet->getX(), planet->getY());
+    planet->setCentrePosXY(planet->getCentreX(planet), planet->getCentreY(planet));
 }
 
 void Map::destroyPlanet(){
@@ -143,38 +146,9 @@ float Map::getForceVector(Planet* planet_a, Planet* planet_b){
     
     return (m / pow(r, 2.0f));
 }
-/*
-void Map::mixLatents(){
-    Logger::writeToLog("Latents being mixed.");
 
-    float forceVector;
-    Planet* planet_a;
-    Planet* planet_b;
+void Map::mixLatents(){m_ParametersPtr->mixLatents();}
 
-    m_Sun.m_LerpLatents = m_Sun.m_Latents;
-
-    for(int i = 0; i < m_Planets.size(); i++){
-        planet_a = m_Planets[i];
-        planet_a->m_LerpLatents = planet_a->m_Latents;
-
-        for(int j = 1; j < m_Planets.size(); j++){
-            planet_b = m_Planets[j];
-            if(planet_a->getComponentID() == planet_b->getComponentID()){continue;}
-            
-            forceVector = getForceVector(planet_a, planet_b);
-            planet_a->m_LerpLatents = at::lerp(planet_a->m_LerpLatents, planet_b->m_Latents, forceVector);
-        }
-    }
-
-    for(int i = 0; i < m_Planets.size(); i++){
-        planet_a = m_Planets[i];
-
-        forceVector = getForceVector(m_Sun, planet_a);
-        Logger::writeToLog("Force: " + std::to_string(forceVector));
-        m_Sun.m_LerpLatents = at::lerp(m_Sun.m_LerpLatents, planet_a->m_LerpLatents, forceVector);
-    }
-}
-*/
 void Map::mouseUp(const MouseEvent& e){}
 
 void Map::mouseDoubleClick(const MouseEvent& e){
@@ -193,5 +167,5 @@ void Map::mouseDoubleClick(const MouseEvent& e){
 
 void Map::valueChanged(juce::Value& value){
     destroyPlanet();
-    //mixLatents();
+    mixLatents();
 }

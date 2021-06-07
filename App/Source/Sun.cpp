@@ -34,7 +34,10 @@ void Sun::draw(){
 //------------------------------------------------------------//
 // Interface methods.
 
+void Sun::setPosXY(int, int){}
 int Sun::getDiameter(){return m_State.getProperty(Parameters::diameterProp);}
+int Sun::getCentreX(Planet* planet){return planet->getX() + (planet->getDiameter() / 2);}
+int Sun::getCentreY(Planet* planet){return planet->getY() + (planet->getDiameter() / 2);}
 
 //------------------------------------------------------------//
 // Controller methods.

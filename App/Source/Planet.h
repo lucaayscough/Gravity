@@ -39,7 +39,10 @@ public:
 
     void paint(Graphics&) override;
     void resized() override;
-    void draw(int, int, int);
+    virtual void draw();
+    virtual void draw(int, int, int);
+
+private:
     void resizePlanet(int);
 
 //--------------------------------------------------//
@@ -47,24 +50,39 @@ public:
 
 private:
     void setDiameter(int);
-    void setPosXY(int, int);
+
+public:
+    virtual void setPosXY(int, int);
+    virtual void setCentrePosXY(int, int);
 
 public:
     virtual int getDiameter();
     virtual int getPosX();
     virtual int getPosY();
+
+private:
     int getMapWidth();
     int getMapHeight();
+
+public:
     int getClipBoundary();
+
+private:
     float getDistance(int, int, int, int);
     float getDistance(Planet*, Planet*);
-    int getCentreX(Planet*);
-    int getCentreY(Planet*);
 
+public:
+    virtual int getCentreX(Planet*);
+    virtual int getCentreY(Planet*);
+
+private:
     void updateGraph();
-    void addSample();
-    void playSample();
 
+public:
+    virtual void addSample();
+    virtual void playSample();
+
+private:
     void checkCollision();
     void checkBounds();
 
