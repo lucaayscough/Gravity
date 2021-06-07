@@ -91,6 +91,7 @@ float Planet::getDistance(Planet* planet_a, Planet* planet_b){
 int Planet::getCentreX(Planet* planet){return planet->getX() + ((planet->getDiameter() + planet->getClipBoundary()) / 2);}
 int Planet::getCentreY(Planet* planet){return planet->getY() + ((planet->getDiameter() + planet->getClipBoundary()) / 2);}
 void Planet::updateGraph(){m_State.setProperty(Parameters::updateGraphSignal, true, nullptr);}
+void Planet::generateSample(){m_State.setProperty(Parameters::generateSampleSignal, true, nullptr);}
 
 void Planet::addSample(){
     m_AudioContainerPtr->audio.clear();
@@ -125,7 +126,7 @@ void Planet::mouseDown(const MouseEvent& e){m_Dragger.startDraggingComponent(thi
 void Planet::mouseUp(const MouseEvent& e){
     if(e.mods.isLeftButtonDown()){
         // Generates new sample if double clicked with left mouse button.
-        if(e.getNumberOfClicks() > 1){m_State.setProperty(Parameters::generateSampleSignal, true, nullptr);}
+        if(e.getNumberOfClicks() > 5){generateSample();}
         
         // Plays sample if clicked once with left mouse button.
         else if(e.getNumberOfClicks() == 1 && e.mouseWasClicked()){

@@ -68,7 +68,8 @@ private:
 public:
     virtual int getCentreX(Planet*);
     virtual int getCentreY(Planet*);
-    void updateGraph();
+    virtual void updateGraph();
+    virtual void generateSample();
 
 public:
     virtual void addSample();

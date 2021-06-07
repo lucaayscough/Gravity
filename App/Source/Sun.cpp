@@ -52,12 +52,7 @@ bool Sun::hitTest(int x, int y){
 
 void Sun::mouseDown(const MouseEvent& e){
     if(e.getNumberOfClicks() > 1 && e.mods.isLeftButtonDown()){
-        Logger::writeToLog("Generating sample...");
-        
-        // TODO:
-        // NEED TO GENERATE NEW SAMPLE.
-
-        Logger::writeToLog("Sample generated.");
+        generateSample();
     }
 
     else if(e.mods.isLeftButtonDown() && e.mouseWasClicked()){

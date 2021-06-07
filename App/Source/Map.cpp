@@ -11,7 +11,11 @@ Map::Map(AudioContainer* audiocontainer_ptr, Parameters* parameters_ptr):
     m_ParametersPtr(parameters_ptr),
     m_Sun(&m_Planets, m_AudioContainerPtr, m_ParametersPtr->rootNode.getChild(0)){}
 
-Map::~Map(){}
+Map::~Map(){
+    for(int i = 0; i < m_Planets.size(); i++){
+        m_Planets[i]->m_Destroy.removeListener(this);
+    }
+}
 
 
 //--------------------------------------------------//
@@ -90,10 +94,7 @@ void Map::destroyPlanet(){
     for(int i = 0; i < m_Planets.size(); i++){
         if(m_Planets[i]->m_Destroy == true){
             m_ParametersPtr->removePlanetNode(m_Planets[i]->getComponentID());
-            // Remove planet from array and delete.
             m_Planets.remove(i, true);
-
-            // Reduce number of planets counter.
             m_NumPlanets -= 1;
         }
     }

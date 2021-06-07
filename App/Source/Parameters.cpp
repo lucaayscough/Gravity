@@ -27,7 +27,7 @@ juce::Identifier Parameters::sampleProp("Sample");
 // Callback signalers.
 
 juce::Identifier Parameters::updateGraphSignal("Update Graph");
-juce::Identifier Parameters::generateSampleSignal("Update Graph");
+juce::Identifier Parameters::generateSampleSignal("Generate Sample");
 
 //------------------------------------------------------------//
 // Constructors and destructors.
