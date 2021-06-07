@@ -1,7 +1,7 @@
 #pragma once
 
 
-struct Parameters{
+struct Parameters: public juce::ValueTree::Listener{
     juce::ValueTree rootNode;
 
     // Type identifiers.
@@ -22,9 +22,13 @@ struct Parameters{
     static juce::Identifier lerpLatentsProp;
     static juce::Identifier sampleProp;
 
+    // Callback signalers.
+    static juce::Identifier updateGraphSignal;
+    static juce::Identifier generateSampleSignal;
+
     // Constructors and destructors.
     Parameters(juce::ValueTree);
-    ~Parameters();
+    ~Parameters() override;
 
     // Restructuring methods.
     void addSunNode();
@@ -35,6 +39,7 @@ struct Parameters{
     void generateLatents(juce::ValueTree);
     void generateLerpLatents(juce::ValueTree);
     void generateSample(juce::ValueTree, at::Tensor);
+    void generateNewSample(juce::ValueTree);
     void mixLatents();
 
     // Get methods.
@@ -45,4 +50,7 @@ struct Parameters{
 
     // Set methods.
     void setLatents(juce::ValueTree, juce::Identifier&, at::Tensor&);
+
+    // Callback methods.
+    void valueTreePropertyChanged(juce::ValueTree&, const juce::Identifier&) override;
 };

@@ -4,13 +4,7 @@
 class Planet: public juce::Component{
 public:
     // Value used to activate planet destruction.
-    juce::Value m_Destroy;  
-
-    // Value used to activate lerp graph calculation.
-    juce::Value m_LerpGraph;
-
-    // Generated latents.
-    at::Tensor m_LerpLatents;
+    juce::Value m_Destroy;
 
 private:
     juce::ComponentDragger m_Dragger;
@@ -74,8 +68,6 @@ private:
 public:
     virtual int getCentreX(Planet*);
     virtual int getCentreY(Planet*);
-
-private:
     void updateGraph();
 
 public:

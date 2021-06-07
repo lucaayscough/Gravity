@@ -45,9 +45,6 @@ void Map::createPlanet(int x, int y){
 
     // Extra setup for planet object.
     setupPlanet(m_Planets[m_NumPlanets - 1], x, y, node);
-
-    // Run latent mixture algorithm.
-    mixLatents();
 }
 
 void Map::setPlanetID(Planet* planet){
@@ -76,7 +73,6 @@ void Map::setupPlanet(Planet* planet, int x, int y, juce::ValueTree node){
 
     // Add listener for planet destruction request and lerp graph.
     planet->m_Destroy.addListener(this);
-    planet->m_LerpGraph.addListener(this);
     
     planet->draw(
         planet->getDiameter(),
@@ -86,6 +82,7 @@ void Map::setupPlanet(Planet* planet, int x, int y, juce::ValueTree node){
 
     planet->setPosXY(planet->getX(), planet->getY());
     planet->setCentrePosXY(planet->getCentreX(planet), planet->getCentreY(planet));
+    planet->updateGraph();
 }
 
 void Map::destroyPlanet(){
@@ -127,28 +124,6 @@ float Map::getDistance(Planet* planet_a, Planet* planet_b){
     return sqrt(a + b);
 }
 
-float Map::getForceVector(Sun& sun, Planet* planet){
-    float r = getDistance(sun, planet);
-    float m = ((float)sun.getDiameter() * (float)planet->getDiameter());
-    
-    Logger::writeToLog("Width: " + std::to_string(getWidth()));
-    Logger::writeToLog("Distance: " + std::to_string(r));
-    
-    return (m / pow(r, 2.0f));
-}
-
-float Map::getForceVector(Planet* planet_a, Planet* planet_b){
-    float r = getDistance(planet_a, planet_b);
-    float m = ((float)planet_a->getDiameter() * (float)planet_b->getDiameter());
-    
-    Logger::writeToLog("Width: " + std::to_string(getWidth()));
-    Logger::writeToLog("Distance: " + std::to_string(r));
-    
-    return (m / pow(r, 2.0f));
-}
-
-void Map::mixLatents(){m_ParametersPtr->mixLatents();}
-
 void Map::mouseUp(const MouseEvent& e){}
 
 void Map::mouseDoubleClick(const MouseEvent& e){
@@ -167,5 +142,4 @@ void Map::mouseDoubleClick(const MouseEvent& e){
 
 void Map::valueChanged(juce::Value& value){
     destroyPlanet();
-    mixLatents();
 }

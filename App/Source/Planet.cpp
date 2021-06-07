@@ -15,9 +15,6 @@ Planet::Planet(juce::OwnedArray<Planet>* planets_ptr, AudioContainer* audioconta
     
     // Listener value used to determine when to destroy the planet.
     m_Destroy.setValue(false);
-
-    // Listener used to detect when lerp graph needs recalculating.
-    m_LerpGraph.setValue(false);
 }
 
 Planet::~Planet(){}
@@ -32,7 +29,6 @@ void Planet::paint(Graphics& g){
 }
 
 void Planet::resized(){}
-
 void Planet::draw(){setBounds(getX(), getY(), getDiameter() + getClipBoundary(), getDiameter() + getClipBoundary());}
 void Planet::draw(int diameter, int x, int y){setBounds(x, y, diameter + getClipBoundary(), diameter + getClipBoundary());}
 
@@ -93,13 +89,8 @@ float Planet::getDistance(Planet* planet_a, Planet* planet_b){
 }
 
 int Planet::getCentreX(Planet* planet){return planet->getX() + ((planet->getDiameter() + planet->getClipBoundary()) / 2);}
-
 int Planet::getCentreY(Planet* planet){return planet->getY() + ((planet->getDiameter() + planet->getClipBoundary()) / 2);}
-
-void Planet::updateGraph(){
-    m_LerpGraph.setValue(true);
-    m_LerpGraph.setValue(false);
-}
+void Planet::updateGraph(){m_State.setProperty(Parameters::updateGraphSignal, true, nullptr);}
 
 void Planet::addSample(){
     m_AudioContainerPtr->audio.clear();
@@ -129,22 +120,12 @@ bool Planet::hitTest(int x, int y){
     return sqrt(a + b) <= getDiameter() / 2;
 }
 
-void Planet::mouseDown(const MouseEvent& e){
-    // Starts dragging component.
-    m_Dragger.startDraggingComponent(this, e);
-}
+void Planet::mouseDown(const MouseEvent& e){m_Dragger.startDraggingComponent(this, e);}
 
 void Planet::mouseUp(const MouseEvent& e){
     if(e.mods.isLeftButtonDown()){
         // Generates new sample if double clicked with left mouse button.
-        if(e.getNumberOfClicks() > 1){
-            Logger::writeToLog("Generating sample...");
-
-            // TODO:
-            // NEED TO GENERATE NEW SAMPLE.
-
-            Logger::writeToLog("Sample generated.");
-        }
+        if(e.getNumberOfClicks() > 1){m_State.setProperty(Parameters::generateSampleSignal, true, nullptr);}
         
         // Plays sample if clicked once with left mouse button.
         else if(e.getNumberOfClicks() == 1 && e.mouseWasClicked()){
@@ -152,9 +133,8 @@ void Planet::mouseUp(const MouseEvent& e){
             playSample();
         }
 
-        else if(e.mouseWasDraggedSinceMouseDown()){
-            updateGraph();
-        }
+        // Updates latent mixture graph if there has been a dragging motion.
+        else if(e.mouseWasDraggedSinceMouseDown()){updateGraph();}
     }
     
     // Destroys planet if clicked with right mouse button.
@@ -176,12 +156,8 @@ void Planet::mouseDrag(const MouseEvent& e){
 void Planet::mouseWheelMove(const MouseEvent& e, const MouseWheelDetails& w){    
     Logger::writeToLog("Wheel moved.");
 
-    if(w.deltaY > 0.0f && getDiameter() < Variables::MAX_PLANET_SIZE){
-        resizePlanet(getDiameter() + Variables::SIZE_MODIFIER);
-    }
-    else if(w.deltaY < 0.0f && getDiameter() > Variables::MIN_PLANET_SIZE){
-        resizePlanet(getDiameter() - Variables::SIZE_MODIFIER);
-    }
+    if(w.deltaY > 0.0f && getDiameter() < Variables::MAX_PLANET_SIZE){resizePlanet(getDiameter() + Variables::SIZE_MODIFIER);}
+    else if(w.deltaY < 0.0f && getDiameter() > Variables::MIN_PLANET_SIZE){resizePlanet(getDiameter() - Variables::SIZE_MODIFIER);}
 }
 
 void Planet::visibilityChanged(){}
@@ -201,9 +177,7 @@ void Planet::checkCollision(){
         distance = getDistance(centrePosX, centrePosY, centreXSun, centreYSun);
         minDistance = (sunDiameter + getDiameter()) / 2;
 
-        if(distance <= minDistance){
-            draw(getDiameter(), getPosX(), getPosY());
-        }
+        if(distance <= minDistance){draw(getDiameter(), getPosX(), getPosY());}
     }
 
     Planet* planet;
@@ -221,9 +195,7 @@ void Planet::checkCollision(){
             distance = getDistance(centrePosX, centrePosY, centrePosX2, centrePosY2);
             minDistance = (planet->getDiameter() + getDiameter()) / 2;
 
-            if(distance <= minDistance){
-                draw(getDiameter(), getPosX(), getPosY());
-            }
+            if(distance <= minDistance){draw(getDiameter(), getPosX(), getPosY());}
         }
     }
 }

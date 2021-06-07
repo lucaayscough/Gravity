@@ -35,11 +35,6 @@ private:
     int getMaxNumPlanets();
     float getDistance(Sun&, Planet*);
     float getDistance(Planet*, Planet*);
-    float getForceVector(Sun&, Planet*);
-    float getForceVector(Planet*, Planet*);
-
-    // Mixes all latents.
-    void mixLatents();
 
     // Controller methods.
     void mouseUp(const MouseEvent&) override;

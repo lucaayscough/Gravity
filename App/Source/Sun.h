@@ -19,7 +19,7 @@ public:
     void draw() override;
 
 //--------------------------------------------------//
-    // Interface methods.
+// Interface methods.
 
     void setPosXY(int, int) override;
 

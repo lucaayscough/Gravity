@@ -24,14 +24,23 @@ juce::Identifier Parameters::lerpLatentsProp("Interpolated Latents");
 juce::Identifier Parameters::sampleProp("Sample");
 
 //------------------------------------------------------------//
+// Callback signalers.
+
+juce::Identifier Parameters::updateGraphSignal("Update Graph");
+juce::Identifier Parameters::generateSampleSignal("Update Graph");
+
+//------------------------------------------------------------//
 // Constructors and destructors.
 
 Parameters::Parameters(juce::ValueTree v):
     rootNode(v){
+    rootNode.addListener(this);
     addSunNode();
 }
 
-Parameters::~Parameters(){}
+Parameters::~Parameters(){
+    rootNode.removeListener(this);
+}
 
 //------------------------------------------------------------//
 // Structuring methods.
@@ -39,19 +48,19 @@ Parameters::~Parameters(){}
 void Parameters::addSunNode(){
     juce::ValueTree sunNode(sunType);
     sunNode.setProperty(diameterProp, Variables::SUN_DIAMETER, nullptr);
-    generateLatents(sunNode);
-    generateLerpLatents(sunNode);
-    generateSample(sunNode, getLatents(sunNode, lerpLatentsProp));
+    sunNode.setProperty(updateGraphSignal, false, nullptr);
+    sunNode.setProperty(generateSampleSignal, false, nullptr);
+    generateNewSample(sunNode);
     rootNode.addChild(sunNode, -1, nullptr);
 }
 
 void Parameters::addPlanetNode(){
-    juce::ValueTree newNode(planetType);
-    newNode.setProperty(diameterProp, Variables::DEFAULT_PLANET_DIAMETER, nullptr);
-    generateLatents(newNode);
-    generateLerpLatents(newNode);
-    generateSample(newNode, getLatents(newNode, latentsProp));
-    rootNode.addChild(newNode, -1, nullptr);
+    juce::ValueTree planetNode(planetType);
+    planetNode.setProperty(diameterProp, Variables::DEFAULT_PLANET_DIAMETER, nullptr);
+    planetNode.setProperty(updateGraphSignal, false, nullptr);
+    planetNode.setProperty(generateSampleSignal, false, nullptr);
+    generateNewSample(planetNode);
+    rootNode.addChild(planetNode, -1, nullptr);
 }
 
 void Parameters::removePlanetNode(const juce::String& id){
@@ -66,20 +75,23 @@ void Parameters::removePlanetNode(const juce::String& id){
 // Tensor operations.
 
 void Parameters::generateLatents(juce::ValueTree node){
-    if(node.hasProperty(latentsProp)){node.removeProperty(lerpLatentsProp, nullptr);}
     ReferenceCountedTensor::Ptr latents = new ReferenceCountedTensor(Generator::generateLatents());
     node.setProperty(latentsProp, juce::var(latents), nullptr);
 }
 
 void Parameters::generateLerpLatents(juce::ValueTree node){
-    if(node.hasProperty(lerpLatentsProp)){node.removeProperty(lerpLatentsProp, nullptr);}
     ReferenceCountedTensor::Ptr lerpLatents = new ReferenceCountedTensor(getLatents(node, latentsProp));
     node.setProperty(lerpLatentsProp, juce::var(lerpLatents), nullptr);
 }
 
 void Parameters::generateSample(juce::ValueTree node, at::Tensor tensor){
-    if(node.hasProperty(sampleProp)){node.removeProperty(sampleProp, nullptr);}
     node.setProperty(sampleProp, Generator::generateSample(tensor), nullptr);
+}
+
+void Parameters::generateNewSample(juce::ValueTree node){
+    generateLatents(node);
+    generateLerpLatents(node);
+    generateSample(node, getLatents(node, latentsProp));
 }
 
 void Parameters::mixLatents(){
@@ -146,8 +158,28 @@ float Parameters::getForceVector(juce::ValueTree node_a, juce::ValueTree node_b)
 // Set methods.
 
 void Parameters::setLatents(juce::ValueTree node, juce::Identifier& id, at::Tensor& latents){
-    if(node.hasProperty(id)){node.removeProperty(id, nullptr);}
     ReferenceCountedTensor::Ptr lerpLatents = new ReferenceCountedTensor(latents);
     node.setProperty(lerpLatentsProp, juce::var(lerpLatents), nullptr);
     node.setProperty(id, juce::var(lerpLatents), nullptr);
+}
+
+//------------------------------------------------------------//
+// Callback methods.
+
+void Parameters::valueTreePropertyChanged(juce::ValueTree& node, const juce::Identifier& id){
+    if(id == generateSampleSignal){
+        if((bool)node.getProperty(id) == true){
+            generateNewSample(node);
+            node.setProperty(id, false, nullptr);
+            Logger::writeToLog("New Sample.");
+        }
+    }
+
+    if(id == updateGraphSignal){
+        if((bool)node.getProperty(id) == true){
+            mixLatents();
+            node.setProperty(id, false, nullptr);
+            Logger::writeToLog("Update Graph.");
+        }
+    }
 }
