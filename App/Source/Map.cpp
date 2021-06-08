@@ -7,7 +7,28 @@
 Map::Map(AudioContainer* audiocontainer_ptr, Parameters& parameters):
     m_AudioContainerPtr(audiocontainer_ptr),
     m_ParametersRef(parameters),
-    m_Sun(&m_Planets, m_AudioContainerPtr, m_ParametersRef.rootNode.getChildWithName(Parameters::sunType)){}
+    m_Sun(&m_Planets, m_AudioContainerPtr, m_ParametersRef.rootNode.getChildWithName(Parameters::sunType)){
+    if(getNumPlanets() > 0){
+        for(int i = 0; i < getNumPlanets(); i++){
+            // Create planet node.
+            juce::ValueTree node = m_ParametersRef.rootPlanetNode.getChild(i);
+
+            // Instantiate planet inside planets array.
+            m_Planets.add(new Planet(&m_Planets, m_AudioContainerPtr, node));
+            
+            juce::String id = node.getProperty(Parameters::idProp);
+            // Extra setup for planet object.
+            m_Planets[i]->setID(id);
+
+            addAndMakeVisible(m_Planets[i]);
+
+            // Add listener for planet destruction request and lerp graph.
+            m_Planets[i]->m_Destroy.addListener(this);
+            
+            m_Planets[i]->draw();
+        }
+    }
+}
 
 Map::~Map(){
     for(int i = 0; i < m_Planets.size(); i++){

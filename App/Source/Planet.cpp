@@ -29,7 +29,7 @@ void Planet::paint(Graphics& g){
 }
 
 void Planet::resized(){}
-void Planet::draw(){setBounds(getX(), getY(), getDiameter() + getClipBoundary(), getDiameter() + getClipBoundary());}
+void Planet::draw(){setBounds(getPosX(), getPosY(), getDiameter() + getClipBoundary(), getDiameter() + getClipBoundary());}
 void Planet::draw(int diameter, int x, int y){setBounds(x, y, diameter + getClipBoundary(), diameter + getClipBoundary());}
 
 void Planet::resizePlanet(int diameter){
