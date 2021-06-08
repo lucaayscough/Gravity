@@ -52,7 +52,16 @@ void Planet::resizePlanet(int diameter){
     //updateGraph();
 }
 
+void Planet::setID(juce::String& id){
+    m_State.setProperty(Parameters::idProp, id, nullptr);
+    setComponentID(id);
+}
 void Planet::setDiameter(int diameter){m_State.setProperty(Parameters::diameterProp, diameter, nullptr);}
+void Planet::setMapSize(int width, int height){
+    m_State.setProperty(Parameters::mapWidthProp, width, nullptr);
+    m_State.setProperty(Parameters::mapHeightProp, height, nullptr);
+}
+
 void Planet::setPosXY(int x, int y){
     m_State.setProperty(Parameters::posXProp, x, nullptr);
     m_State.setProperty(Parameters::posYProp, y, nullptr);
@@ -126,7 +135,7 @@ void Planet::mouseDown(const MouseEvent& e){m_Dragger.startDraggingComponent(thi
 void Planet::mouseUp(const MouseEvent& e){
     if(e.mods.isLeftButtonDown()){
         // Generates new sample if double clicked with left mouse button.
-        if(e.getNumberOfClicks() > 5){generateSample();}
+        if(e.getNumberOfClicks() > 1){generateSample();}
         
         // Plays sample if clicked once with left mouse button.
         else if(e.getNumberOfClicks() == 1 && e.mouseWasClicked()){

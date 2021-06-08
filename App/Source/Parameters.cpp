@@ -4,6 +4,7 @@
 //------------------------------------------------------------//
 // Type identifiers.
 
+juce::Identifier Parameters::rootPlanetType("Root Planet");
 juce::Identifier Parameters::sunType("Sun");
 juce::Identifier Parameters::planetType("Planet");
 
@@ -33,9 +34,10 @@ juce::Identifier Parameters::generateSampleSignal("Generate Sample");
 // Constructors and destructors.
 
 Parameters::Parameters(juce::ValueTree v):
-    rootNode(v){
-    rootNode.addListener(this);
+    rootNode(v), rootPlanetNode(rootPlanetType){
     addSunNode();
+    rootNode.addListener(this);
+    rootNode.addChild(rootPlanetNode, -1, nullptr);
 }
 
 Parameters::~Parameters(){
@@ -60,13 +62,13 @@ void Parameters::addPlanetNode(){
     planetNode.setProperty(updateGraphSignal, false, nullptr);
     planetNode.setProperty(generateSampleSignal, false, nullptr);
     generateNewSample(planetNode);
-    rootNode.addChild(planetNode, -1, nullptr);
+    rootPlanetNode.addChild(planetNode, -1, nullptr);
 }
 
 void Parameters::removePlanetNode(const juce::String& id){
-    for(int i = 0; i < rootNode.getNumChildren(); i++){
-        if(rootNode.getChild(i).getProperty(idProp) == id){
-            rootNode.removeChild(i, nullptr);
+    for(int i = 0; i < rootPlanetNode.getNumChildren(); i++){
+        if(rootPlanetNode.getChild(i).getProperty(idProp) == id){
+            rootPlanetNode.removeChild(i, nullptr);
         }
     }
 }
@@ -98,18 +100,18 @@ void Parameters::mixLatents(){
     Logger::writeToLog("Latents being mixed.");
 
     float forceVector;
-    auto sun = rootNode.getChild(0);
+    auto sun = rootNode.getChildWithName(sunType);
 
     generateLerpLatents(sun);
 
-    for(int i = 1; i < rootNode.getNumChildren(); i++){
-        auto planet_a = rootNode.getChild(i);
+    for(int i = 0; i < rootPlanetNode.getNumChildren(); i++){
+        auto planet_a = rootPlanetNode.getChild(i);
         generateLerpLatents(planet_a);
 
-        for(int j = 1; j < rootNode.getNumChildren(); j++){
+        for(int j = 0; j < rootPlanetNode.getNumChildren(); j++){
             if(i == j){continue;}
 
-            auto planet_b = rootNode.getChild(j);
+            auto planet_b = rootPlanetNode.getChild(j);
             if(getID(planet_a) == getID(planet_b)){continue;}
             
             forceVector = getForceVector(planet_a, planet_b);
@@ -118,8 +120,8 @@ void Parameters::mixLatents(){
         }
     }
 
-    for(int i = 1; i < rootNode.getNumChildren(); i++){
-        auto planet = rootNode.getChild(i);
+    for(int i = 0; i < rootPlanetNode.getNumChildren(); i++){
+        auto planet = rootPlanetNode.getChild(i);
 
         forceVector = getForceVector(sun, planet);
         Logger::writeToLog("Force: " + std::to_string(forceVector));

@@ -3,8 +3,10 @@
 
 struct Parameters: public juce::ValueTree::Listener{
     juce::ValueTree rootNode;
+    juce::ValueTree rootPlanetNode;
 
     // Type identifiers.
+    static juce::Identifier rootPlanetType;
     static juce::Identifier sunType;
     static juce::Identifier planetType;
 

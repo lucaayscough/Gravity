@@ -42,14 +42,13 @@ private:
 //--------------------------------------------------//
 // Interface methods.
 
-private:
-    void setDiameter(int);
-
 public:
+    void setID(juce::String&);
+    void setDiameter(int);
+    void setMapSize(int, int);
     virtual void setPosXY(int, int);
     virtual void setCentrePosXY(int, int);
 
-public:
     virtual int getDiameter();
     virtual int getPosX();
     virtual int getPosY();

@@ -4,7 +4,7 @@
 AudioPluginAudioProcessorEditor::AudioPluginAudioProcessorEditor(AudioPluginAudioProcessor& p):
     AudioProcessorEditor(&p),
     processorRef(p),
-    m_Map(&processorRef.m_AudioContainer, &processorRef.parameters)
+    m_Map(&processorRef.m_AudioContainer, processorRef.parameters)
 {
     juce::ignoreUnused (processorRef);
     addAndMakeVisible(m_Map);

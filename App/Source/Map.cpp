@@ -4,19 +4,16 @@
 //--------------------------------------------------//
 // Constructors and destructors.
 
-Map::Map(){}
-
-Map::Map(AudioContainer* audiocontainer_ptr, Parameters* parameters_ptr):
+Map::Map(AudioContainer* audiocontainer_ptr, Parameters& parameters):
     m_AudioContainerPtr(audiocontainer_ptr),
-    m_ParametersPtr(parameters_ptr),
-    m_Sun(&m_Planets, m_AudioContainerPtr, m_ParametersPtr->rootNode.getChild(0)){}
+    m_ParametersRef(parameters),
+    m_Sun(&m_Planets, m_AudioContainerPtr, m_ParametersRef.rootNode.getChildWithName(Parameters::sunType)){}
 
 Map::~Map(){
     for(int i = 0; i < m_Planets.size(); i++){
         m_Planets[i]->m_Destroy.removeListener(this);
     }
 }
-
 
 //--------------------------------------------------//
 // Public methods.
@@ -32,46 +29,25 @@ void Map::createSun(){
     m_Sun.addSample();
 }
 
-
 //--------------------------------------------------//
 // Private methods.
 
 void Map::createPlanet(int x, int y){
     // Create planet node.
-    m_ParametersPtr->addPlanetNode();
-    juce::ValueTree node = m_ParametersPtr->rootNode.getChild(m_ParametersPtr->rootNode.getNumChildren() - 1);
+    m_ParametersRef.addPlanetNode();
+    juce::ValueTree node = m_ParametersRef.rootPlanetNode.getChild(m_ParametersRef.rootPlanetNode.getNumChildren() - 1);
 
     // Instantiate planet inside planets array.
     m_Planets.add(new Planet(&m_Planets, m_AudioContainerPtr, node));
-    
-    // Update number of planets.
-    m_NumPlanets = m_Planets.size();
 
     // Extra setup for planet object.
-    setupPlanet(m_Planets[m_NumPlanets - 1], x, y, node);
-}
-
-void Map::setPlanetID(Planet* planet){
-    // Generate random ID for component.
-    auto randomID = juce::String(juce::Random::getSystemRandom().nextInt(100001));    
-
-    // Check if ID is unique.
-    for(int i = 0; i < m_NumPlanets - 1; i++){
-        if(planet->getComponentID() == randomID){
-            while(planet->getComponentID() == randomID){
-                randomID = juce::String(juce::Random::getSystemRandom().nextInt(100000)); 
-            }
-        }
-    }
-
-    planet->setComponentID(randomID);
+    setupPlanet(m_Planets[getNumPlanets() - 1], x, y, node);
 }
 
 void Map::setupPlanet(Planet* planet, int x, int y, juce::ValueTree node){
-    setPlanetID(planet);
-    node.setProperty(Parameters::idProp, planet->getComponentID(), nullptr);
-    node.setProperty(Parameters::mapWidthProp, getWidth(), nullptr);
-    node.setProperty(Parameters::mapHeightProp, getHeight(), nullptr);
+    juce::String id = generateRandomID();
+    planet->setID(id);
+    planet->setMapSize(getWidth(), getHeight());
 
     addAndMakeVisible(planet);
 
@@ -89,18 +65,34 @@ void Map::setupPlanet(Planet* planet, int x, int y, juce::ValueTree node){
     planet->updateGraph();
 }
 
+juce::String Map::generateRandomID(){
+    // Generate random ID for component.
+    auto randomID = juce::String(juce::Random::getSystemRandom().nextInt(100001));    
+
+    // Check if ID is unique.
+    for(int i = 0; i < getNumPlanets() - 1; i++){
+        if(m_Planets[i]->getComponentID() == randomID){
+            while(m_Planets[i]->getComponentID() == randomID){
+                randomID = juce::String(juce::Random::getSystemRandom().nextInt(100000)); 
+            }
+        }
+    }
+
+    return randomID;
+}
+
 void Map::destroyPlanet(){
     // For each planet check to see if it has been set for destruction.
     for(int i = 0; i < m_Planets.size(); i++){
         if(m_Planets[i]->m_Destroy == true){
-            m_ParametersPtr->removePlanetNode(m_Planets[i]->getComponentID());
+            m_ParametersRef.removePlanetNode(m_Planets[i]->getComponentID());
             m_Planets.remove(i, true);
-            m_NumPlanets -= 1;
         }
     }
 }
 
 int Map::getMaxNumPlanets(){return Variables::MAX_NUM_PLANETS;}
+int Map::getNumPlanets(){return m_ParametersRef.rootPlanetNode.getNumChildren();}
 
 float Map::getDistance(Sun& sun, Planet* planet){
     int centrePlanetX = planet->getCentreX(planet);
@@ -134,7 +126,7 @@ void Map::mouseDoubleClick(const MouseEvent& e){
         int eventX = e.getMouseDownX();
         int eventY = e.getMouseDownY();
 
-        if(m_NumPlanets < getMaxNumPlanets())
+        if(getNumPlanets() < getMaxNumPlanets())
             createPlanet(eventX, eventY);
         else
             Logger::writeToLog("Maximum number of planets reached.");

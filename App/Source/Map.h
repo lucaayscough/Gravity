@@ -6,18 +6,16 @@ private:
 
     // Planet container and variables.
     OwnedArray<Planet> m_Planets;
-    int m_NumPlanets = 0;
 
     AudioContainer* m_AudioContainerPtr;
-    Parameters* m_ParametersPtr;
+    Parameters& m_ParametersRef;
 
     // Sun container.
     Sun m_Sun;
 
 public:
     // Constructors and destructors.
-    Map();
-    Map(AudioContainer*, Parameters*);
+    Map(AudioContainer*, Parameters&);
     ~Map() override;
 
 private:
@@ -27,12 +25,13 @@ private:
     
     void createSun();
     void createPlanet(int, int);
-    void setPlanetID(Planet*);
     void setupPlanet(Planet*, int x, int y, juce::ValueTree);
+    juce::String generateRandomID();
     void destroyPlanet();
 
     // Interface methods
     int getMaxNumPlanets();
+    int getNumPlanets();
     float getDistance(Sun&, Planet*);
     float getDistance(Planet*, Planet*);
 
