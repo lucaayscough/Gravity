@@ -4,7 +4,7 @@
 //------------------------------------------------------------//
 // Type identifiers.
 
-juce::Identifier Parameters::rootPlanetType("Root Planet");
+juce::Identifier Parameters::rootPlanetType("Root_Planet");
 juce::Identifier Parameters::sunType("Sun");
 juce::Identifier Parameters::planetType("Planet");
 
@@ -12,23 +12,23 @@ juce::Identifier Parameters::planetType("Planet");
 // Property identifiers.
 
 juce::Identifier Parameters::idProp("ID");
-juce::Identifier Parameters::mapWidthProp("Map Width");
-juce::Identifier Parameters::mapHeightProp("Map Height");
+juce::Identifier Parameters::mapWidthProp("Map_Width");
+juce::Identifier Parameters::mapHeightProp("Map_Height");
 juce::Identifier Parameters::diameterProp("Diameter");
-juce::Identifier Parameters::posXProp("Position X");
-juce::Identifier Parameters::posYProp("Position Y");
-juce::Identifier Parameters::posCentreXProp("Position Centre X");
-juce::Identifier Parameters::posCentreYProp("Position Centre Y");
+juce::Identifier Parameters::posXProp("Position_X");
+juce::Identifier Parameters::posYProp("Position_Y");
+juce::Identifier Parameters::posCentreXProp("Position_Centre_X");
+juce::Identifier Parameters::posCentreYProp("Position_Centre_Y");
 juce::Identifier Parameters::colourProp("Colour");
 juce::Identifier Parameters::latentsProp("Latents");
-juce::Identifier Parameters::lerpLatentsProp("Interpolated Latents");
+juce::Identifier Parameters::lerpLatentsProp("Interpolated_Latents");
 juce::Identifier Parameters::sampleProp("Sample");
 
 //------------------------------------------------------------//
 // Callback signalers.
 
-juce::Identifier Parameters::updateGraphSignal("Update Graph");
-juce::Identifier Parameters::generateSampleSignal("Generate Sample");
+juce::Identifier Parameters::updateGraphSignal("Update_Graph");
+juce::Identifier Parameters::generateSampleSignal("Generate_Sample");
 
 //------------------------------------------------------------//
 // Constructors and destructors.

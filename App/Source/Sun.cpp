@@ -61,6 +61,6 @@ void Sun::mouseDown(const MouseEvent& e){
     }
 }
 
-void Sun::mouseUp(const MouseEvent& e){}
-void Sun::mouseDrag(const MouseEvent& e){}
-void Sun::mouseWheelMove(const MouseEvent& e, const MouseWheelDetails& w){}
+void Sun::mouseUp(const MouseEvent& e){juce::ignoreUnused(e);}
+void Sun::mouseDrag(const MouseEvent& e){juce::ignoreUnused(e);}
+void Sun::mouseWheelMove(const MouseEvent& e, const MouseWheelDetails& w){juce::ignoreUnused(e, w);}

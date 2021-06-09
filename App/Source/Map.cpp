@@ -66,6 +66,7 @@ void Map::createPlanet(int x, int y){
 }
 
 void Map::setupPlanet(Planet* planet, int x, int y, juce::ValueTree node){
+    juce::ignoreUnused(node);
     juce::String id = generateRandomID();
     planet->setID(id);
     planet->setMapSize(getWidth(), getHeight());
@@ -138,7 +139,7 @@ float Map::getDistance(Planet* planet_a, Planet* planet_b){
     return sqrt(a + b);
 }
 
-void Map::mouseUp(const MouseEvent& e){}
+void Map::mouseUp(const MouseEvent& e){juce::ignoreUnused(e);}
 
 void Map::mouseDoubleClick(const MouseEvent& e){
     Logger::writeToLog("Detected double click.");
@@ -155,5 +156,6 @@ void Map::mouseDoubleClick(const MouseEvent& e){
 }
 
 void Map::valueChanged(juce::Value& value){
+    juce::ignoreUnused(value);
     destroyPlanet();
 }

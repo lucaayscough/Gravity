@@ -17,7 +17,7 @@ AudioPluginAudioProcessorEditor::AudioPluginAudioProcessorEditor(AudioPluginAudi
 AudioPluginAudioProcessorEditor::~AudioPluginAudioProcessorEditor(){}
 
 //==============================================================================
-void AudioPluginAudioProcessorEditor::paint(juce::Graphics& g){}
+void AudioPluginAudioProcessorEditor::paint(juce::Graphics& g){juce::ignoreUnused(g);}
 
 void AudioPluginAudioProcessorEditor::resized(){
     auto r = getLocalBounds();

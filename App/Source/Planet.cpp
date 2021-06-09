@@ -163,7 +163,8 @@ void Planet::mouseDrag(const MouseEvent& e){
     setCentrePosXY(getCentreX(this), getCentreY(this));
 }
 
-void Planet::mouseWheelMove(const MouseEvent& e, const MouseWheelDetails& w){    
+void Planet::mouseWheelMove(const MouseEvent& e, const MouseWheelDetails& w){
+    juce::ignoreUnused(e);
     Logger::writeToLog("Wheel moved.");
 
     if(w.deltaY > 0.0f && getDiameter() < Variables::MAX_PLANET_SIZE){resizePlanet(getDiameter() + Variables::SIZE_MODIFIER);}

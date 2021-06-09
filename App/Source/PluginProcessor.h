@@ -43,7 +43,6 @@ public:
     AudioContainer m_AudioContainer;
 
     // ValueTreeState variables.
-    juce::Identifier parametersId;
     juce::AudioProcessorValueTreeState valueTreeState;
     Parameters parameters;
 
