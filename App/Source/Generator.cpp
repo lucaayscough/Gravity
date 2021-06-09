@@ -1,9 +1,20 @@
 #include "Headers.h"
 
 
-torch::jit::script::Module Generator::generator_module = torch::jit::load("/Users/lucaayscough/dev/AdversarialAudio/Generator/scripted_modules/generator_module.pt");
-torch::jit::script::Module Generator::mapper_module = torch::jit::load("/Users/lucaayscough/dev/AdversarialAudio/Generator/scripted_modules/mapper_module.pt");
-
+torch::jit::script::Module Generator::generator_module = torch::jit::load(
+    #ifdef _WIN64
+        "C:\\Program Files\\AdversarialAudio\\generator_module.pt"
+    #else
+        "/Users/lucaayscough/dev/AdversarialAudio/Generator/scripted_modules/generator_module.pt"
+    #endif
+);
+torch::jit::script::Module Generator::mapper_module = torch::jit::load(
+    #ifdef _WIN64
+        "C:\\Program Files\\AdversarialAudio\\mapper_module.pt"
+    #else
+        "/Users/lucaayscough/dev/AdversarialAudio/Generator/scripted_modules/mapper_module.pt"
+    #endif
+);
 
 //------------------------------------------------------------//
 // Constructors and destructors.
