@@ -34,7 +34,6 @@ void Parameters::addSunNode(){
     // Listeners.
     sunNode.setProperty(updateGraphSignal, false, nullptr);
     sunNode.setProperty(generateSampleSignal, false, nullptr);
-    sunNode.addListener(this);
 
     // Sample.
     generateNewSample(sunNode);
@@ -243,10 +242,6 @@ void Parameters::valueTreePropertyChanged(juce::ValueTree& node, const juce::Ide
             node.setProperty(id, false, nullptr);
             Logger::writeToLog("Update graph.");
         }
-    }
-
-    if(id == isActiveProp){
-        
     }
 }
 
