@@ -4,15 +4,17 @@
 //--------------------------------------------------//
 // Constructors and destructors.
 
-Planet::Planet(juce::OwnedArray<Planet>& planets_ref, AudioContainer* audiocontainer_ptr, Parameters& parameters_ref):
-    m_PlanetsRef(planets_ref),
-    m_AudioContainerPtr(audiocontainer_ptr),
-    m_ParametersRef(parameters_ref){
+Planet::Planet(juce::OwnedArray<Planet>& planets_ref, AudioContainer* audiocontainer_ptr, Parameters& parameters_ref)
+    :   m_PlanetsRef(planets_ref),
+        m_AudioContainerPtr(audiocontainer_ptr),
+        m_ParametersRef(parameters_ref){
+    Logger::writeToLog("Planet created.");
+    
     // Listener value used to determine when to destroy the planet.
     m_Destroy.setValue(false);
 }
 
-Planet::~Planet(){}
+Planet::~Planet(){Logger::writeToLog("Planet destroyed.");}
 
 //--------------------------------------------------//
 // View methods.

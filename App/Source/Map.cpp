@@ -4,38 +4,22 @@
 //--------------------------------------------------//
 // Constructors and destructors.
 
-Map::Map(AudioContainer* audiocontainer_ptr, Parameters& parameters):
-    m_AudioContainerPtr(audiocontainer_ptr),
-    m_ParametersRef(parameters),
-    m_Sun(m_Planets, m_AudioContainerPtr, m_ParametersRef){
-    
-    // TODO:
-    // Cleanup this mess.
-    
-    if(getNumPlanets() > 0){
-        for(int i = 0; i < getNumPlanets(); i++){
-            // Create planet node.
-            juce::ValueTree node = m_ParametersRef.getRootPlanetNode().getChild(i);
+Map::Map(AudioContainer* audiocontainer_ptr, Parameters& parameters)
+    :   m_AudioContainerPtr(audiocontainer_ptr),
+        m_ParametersRef(parameters),
+        m_Sun(m_Planets, m_AudioContainerPtr, m_ParametersRef){
+    Logger::writeToLog("Map created!");
 
-            // Instantiate planet inside planets array.
-            m_Planets.add(new Planet(m_Planets, m_AudioContainerPtr, m_ParametersRef));
-            
-            m_Planets[i]->setComponentID(node.getProperty(Parameters::idProp));
-
-            addAndMakeVisible(m_Planets[i]);
-
-            // Add listener for planet destruction request and lerp graph.
-            m_Planets[i]->m_Destroy.addListener(this);
-            
-            m_Planets[i]->draw();
-        }
-    }
+    m_ParametersRef.updateMap.addListener(this);
+    if(getNumPlanets() > 0){rebuildPlanets();}
 }
 
 Map::~Map(){
     for(int i = 0; i < m_Planets.size(); i++){
         m_Planets[i]->m_Destroy.removeListener(this);
     }
+
+    Logger::writeToLog("Map destroyed!");
 }
 
 //--------------------------------------------------//
@@ -97,6 +81,25 @@ void Map::destroyPlanet(){
     }
 }
 
+void Map::rebuildPlanets(){
+    for(int i = 0; i < getNumPlanets(); i++){
+        // Create planet node.
+        juce::ValueTree node = m_ParametersRef.getRootPlanetNode().getChild(i);
+
+        // Instantiate planet inside planets array.
+        m_Planets.add(new Planet(m_Planets, m_AudioContainerPtr, m_ParametersRef));
+        
+        m_Planets[i]->setComponentID(node.getProperty(Parameters::idProp));
+
+        addAndMakeVisible(m_Planets[i]);
+
+        // Add listener for planet destruction request and lerp graph.
+        m_Planets[i]->m_Destroy.addListener(this);
+        
+        m_Planets[i]->draw();
+    }
+}
+
 int Map::getMaxNumPlanets(){return Variables::MAX_NUM_PLANETS;}
 int Map::getNumPlanets(){return m_ParametersRef.getRootPlanetNode().getNumChildren();}
 
@@ -142,4 +145,8 @@ void Map::mouseDoubleClick(const MouseEvent& e){
 void Map::valueChanged(juce::Value& value){
     juce::ignoreUnused(value);
     destroyPlanet();
+    if(m_ParametersRef.updateMap.getValue() == juce::var(true)){
+        rebuildPlanets();
+        m_ParametersRef.updateMap.setValue(false);
+    }
 }

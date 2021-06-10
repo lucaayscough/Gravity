@@ -9,7 +9,6 @@ Sun::Sun(juce::OwnedArray<Planet>& planets_ref, AudioContainer* audiocontainer_p
 
 Sun::~Sun(){}
 
-
 //------------------------------------------------------------//
 // View methods.
 

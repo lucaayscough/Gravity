@@ -1,11 +1,12 @@
 #include "Headers.h"
 
 
-AudioPluginAudioProcessorEditor::AudioPluginAudioProcessorEditor(AudioPluginAudioProcessor& p):
-    AudioProcessorEditor(&p),
-    processorRef(p),
-    m_Map(&processorRef.m_AudioContainer, processorRef.m_Parameters){
-    Logger::writeToLog("Construct editor.");
+AudioPluginAudioProcessorEditor::AudioPluginAudioProcessorEditor(AudioPluginAudioProcessor& p)
+    :   AudioProcessorEditor(&p),
+        processorRef(p),
+        m_Map(&processorRef.m_AudioContainer, processorRef.m_Parameters){
+    Logger::writeToLog("Editor created.");
+    
     addAndMakeVisible(m_Map);
 
     // Main window.
@@ -13,7 +14,7 @@ AudioPluginAudioProcessorEditor::AudioPluginAudioProcessorEditor(AudioPluginAudi
     setResizable(M_IS_WIDTH_RESIZABLE, M_IS_HEIGHT_RESIZABLE);
 }
 
-AudioPluginAudioProcessorEditor::~AudioPluginAudioProcessorEditor(){}
+AudioPluginAudioProcessorEditor::~AudioPluginAudioProcessorEditor(){Logger::writeToLog("Editor destroyed.");}
 
 //==============================================================================
 void AudioPluginAudioProcessorEditor::paint(juce::Graphics& g){juce::ignoreUnused(g);}

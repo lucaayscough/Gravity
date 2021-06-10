@@ -27,6 +27,7 @@ private:
     void createPlanet(int, int);
     void setupPlanet(Planet*, int x, int y, juce::ValueTree);
     void destroyPlanet();
+    void rebuildPlanets();
 
     // Interface methods
     int getMaxNumPlanets();

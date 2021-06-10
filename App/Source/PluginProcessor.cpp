@@ -140,7 +140,6 @@ void AudioPluginAudioProcessor::getStateInformation(juce::MemoryBlock& destData)
         m_Parameters.clearSamples(stateCopy);
         std::unique_ptr<juce::XmlElement> xml(stateCopy.createXml());
         copyXmlToBinary(*xml, destData);
-        Logger::writeToLog("Get State");
     }
     else{m_Parameters.isInit = true;}
 }
@@ -157,10 +156,7 @@ void AudioPluginAudioProcessor::setStateInformation(const void* data, int sizeIn
 
 void AudioPluginAudioProcessor::rebuildState(){
     m_Parameters.rebuildSamples();
-
-    Logger::writeToLog("\n\nAfter: " + m_ValueTreeState.state.getChildWithName(Parameters::sunType).getProperty(Parameters::seedProp).toString());
-    Logger::writeToLog("After: " + m_Parameters.rootNode.getChildWithName(Parameters::sunType).getProperty(Parameters::seedProp).toString());
-
+    m_Parameters.updateMap.setValue(true);
 }
 
 //------------------------------------------------------------//

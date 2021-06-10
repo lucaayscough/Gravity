@@ -34,17 +34,23 @@ juce::Identifier Parameters::generateSampleSignal("Generate_Sample");
 //------------------------------------------------------------//
 // Constructors and destructors.
 
-Parameters::Parameters(juce::ValueTree v):
-    rootNode(v){
+Parameters::Parameters(juce::ValueTree v)
+    :   rootNode(v){
+    Logger::writeToLog("Parameters created!");
+    
+    // Basic elements.
     addSunNode();
-    rootNode.addListener(this);
     juce::ValueTree rootPlanetNode(rootPlanetType);
     rootNode.addChild(rootPlanetNode, -1, nullptr);
-    Logger::writeToLog("Parameters set.");
+    
+    // Listeners.
+    rootNode.addListener(this);
+    updateMap.setValue(false);
 }
 
 Parameters::~Parameters(){
     rootNode.removeListener(this);
+    Logger::writeToLog("Parameters destroyed!");
 }
 
 //------------------------------------------------------------//
@@ -99,8 +105,6 @@ void Parameters::clearSamples(juce::ValueTree node){
     node.getChildWithName(sunType).removeProperty(latentsProp, nullptr);
     node.getChildWithName(sunType).removeProperty(lerpLatentsProp, nullptr);
     node.getChildWithName(sunType).removeProperty(sampleProp, nullptr);
-
-    Logger::writeToLog("Clearing" + node.getChildWithName(sunType).getProperty(seedProp).toString());
 }
 
 void Parameters::rebuildSamples(){
@@ -117,7 +121,7 @@ void Parameters::rebuildSamples(){
     generateLerpLatents(rootNode.getChildWithName(sunType));
     generateSample(rootNode.getChildWithName(sunType), getLatents(rootNode.getChildWithName(sunType), latentsProp));
 
-    Logger::writeToLog("Loading " + rootNode.getChildWithName(sunType).getProperty(seedProp).toString());
+    mixLatents();
 }
 
 //------------------------------------------------------------//
@@ -145,8 +149,6 @@ void Parameters::generateNewSample(juce::ValueTree node){
 }
 
 void Parameters::mixLatents(){
-    Logger::writeToLog("Latents being mixed.");
-
     float forceVector;
 
     generateLerpLatents(getSunNode());
@@ -171,7 +173,6 @@ void Parameters::mixLatents(){
         auto planet = getRootPlanetNode().getChild(i);
 
         forceVector = getForceVector(getSunNode(), planet);
-        Logger::writeToLog("Force: " + std::to_string(forceVector));
         at::Tensor newLatents = at::lerp(getLatents(getSunNode(), lerpLatentsProp), getLatents(planet, lerpLatentsProp), forceVector);
         setLatents(getSunNode(), lerpLatentsProp, newLatents);
     }
@@ -223,7 +224,7 @@ void Parameters::setRandomID(juce::ValueTree node){
     }
 
     // Set ID.
-    node.setProperty(idProp, -1, nullptr);
+    node.setProperty(idProp, randomID, nullptr);
 }
 
 
@@ -247,7 +248,7 @@ void Parameters::valueTreePropertyChanged(juce::ValueTree& node, const juce::Ide
         if((bool)node.getProperty(id) == true){
             generateNewSample(node);
             node.setProperty(id, false, nullptr);
-            Logger::writeToLog("New Sample.");
+            Logger::writeToLog("New sample.");
         }
     }
 
@@ -255,11 +256,7 @@ void Parameters::valueTreePropertyChanged(juce::ValueTree& node, const juce::Ide
         if((bool)node.getProperty(id) == true){
             mixLatents();
             node.setProperty(id, false, nullptr);
-            Logger::writeToLog("Update Graph.");
+            Logger::writeToLog("Update graph.");
         }
-    }
-
-    if(id == seedProp){
-        Logger::writeToLog("seed changed.");
     }
 }

@@ -25,7 +25,6 @@ Generator::~Generator(){}
 at::Tensor Generator::generateLatents(std::int64_t seed){
     torch::NoGradGuard no_grad;
     torch::manual_seed((std::uint64_t)seed);
-    Logger::writeToLog("Generator " + std::to_string((std::uint64_t)seed));
 
     // Create random input tensor.
     std::vector<torch::jit::IValue> inputs;

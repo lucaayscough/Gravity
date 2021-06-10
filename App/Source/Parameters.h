@@ -29,6 +29,7 @@ struct Parameters: public juce::ValueTree::Listener{
     static juce::Identifier generateSampleSignal;
 
     bool isInit = false;
+    juce::Value updateMap;
 
     // Constructors and destructors.
     Parameters(juce::ValueTree);
