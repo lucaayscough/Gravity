@@ -11,14 +11,14 @@ private:
 
 protected:
     juce::OwnedArray<Planet>& m_PlanetsRef;
-    AudioContainer* m_AudioContainerPtr;
+    AudioContainer& m_AudioContainerRef;
     Parameters& m_ParametersRef;
 
 //--------------------------------------------------//
 // Constructors and destructors.
 
 public:
-    Planet(juce::OwnedArray<Planet>&, AudioContainer*, Parameters&);
+    Planet(juce::OwnedArray<Planet>&, AudioContainer&, Parameters&);
     ~Planet() override;
 
 //--------------------------------------------------//
@@ -64,7 +64,6 @@ public:
     virtual void generateSample();
 
 public:
-    virtual void addSample();
     virtual void playSample();
 
 private:

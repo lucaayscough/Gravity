@@ -4,7 +4,7 @@
 AudioPluginAudioProcessorEditor::AudioPluginAudioProcessorEditor(AudioPluginAudioProcessor& p)
     :   AudioProcessorEditor(&p),
         processorRef(p),
-        m_Map(&processorRef.m_AudioContainer, processorRef.m_Parameters){
+        m_Map(processorRef.m_AudioContainer, processorRef.m_Parameters){
     Logger::writeToLog("Editor created.");
     
     addAndMakeVisible(m_Map);

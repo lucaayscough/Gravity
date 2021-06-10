@@ -2,50 +2,20 @@
 
 
 //------------------------------------------------------------//
-// Type identifiers.
-
-juce::Identifier Parameters::sunType("Sun");
-juce::Identifier Parameters::rootPlanetType("Root_Planet");
-juce::Identifier Parameters::planetType("Planet");
-
-//------------------------------------------------------------//
-// Property identifiers.
-
-juce::Identifier Parameters::idProp("ID");
-juce::Identifier Parameters::mapWidthProp("Map_Width");
-juce::Identifier Parameters::mapHeightProp("Map_Height");
-juce::Identifier Parameters::diameterProp("Diameter");
-juce::Identifier Parameters::posXProp("Position_X");
-juce::Identifier Parameters::posYProp("Position_Y");
-juce::Identifier Parameters::posCentreXProp("Position_Centre_X");
-juce::Identifier Parameters::posCentreYProp("Position_Centre_Y");
-juce::Identifier Parameters::colourProp("Colour");
-juce::Identifier Parameters::seedProp("Seed");
-juce::Identifier Parameters::latentsProp("Latents");
-juce::Identifier Parameters::lerpLatentsProp("Interpolated_Latents");
-juce::Identifier Parameters::sampleProp("Sample");
-
-//------------------------------------------------------------//
-// Callback signalers.
-
-juce::Identifier Parameters::updateGraphSignal("Update_Graph");
-juce::Identifier Parameters::generateSampleSignal("Generate_Sample");
-
-//------------------------------------------------------------//
 // Constructors and destructors.
 
 Parameters::Parameters(juce::ValueTree v)
     :   rootNode(v){
     Logger::writeToLog("Parameters created!");
-    
+
+    // Listeners.
+    rootNode.addListener(this);
+    updateMap.setValue(false);
+
     // Basic elements.
     addSunNode();
     juce::ValueTree rootPlanetNode(rootPlanetType);
     rootNode.addChild(rootPlanetNode, -1, nullptr);
-    
-    // Listeners.
-    rootNode.addListener(this);
-    updateMap.setValue(false);
 }
 
 Parameters::~Parameters(){
@@ -59,6 +29,7 @@ Parameters::~Parameters(){
 void Parameters::addSunNode(){
     juce::ValueTree sunNode(sunType);
     sunNode.setProperty(diameterProp, Variables::SUN_DIAMETER, nullptr);
+    sunNode.setProperty(idProp, SUN_ID, nullptr);
 
     // Listeners.
     sunNode.setProperty(updateGraphSignal, false, nullptr);
@@ -68,6 +39,7 @@ void Parameters::addSunNode(){
     // Sample.
     generateNewSample(sunNode);
     rootNode.addChild(sunNode, -1, nullptr);
+    setActivePlanet(sunNode);
 }
 
 void Parameters::addPlanetNode(){
@@ -183,6 +155,13 @@ void Parameters::mixLatents(){
 //------------------------------------------------------------//
 // Get methods.
 
+juce::ValueTree Parameters::getActivePlanet(){
+    if(getSunNode().getProperty(isActiveProp)){return getSunNode();}
+    for(int i = 0; i < getRootPlanetNode().getNumChildren(); i++){
+        if(getRootPlanetNode().getChild(i).getProperty(isActiveProp)){return getRootPlanetNode().getChild(i);}
+    }
+}
+
 juce::ValueTree Parameters::getSunNode(){return rootNode.getChildWithName(sunType);}
 juce::ValueTree Parameters::getRootPlanetNode(){return rootNode.getChildWithName(rootPlanetType);}
 std::int64_t Parameters::getSeed(juce::ValueTree node){return node.getProperty(seedProp);}
@@ -210,6 +189,13 @@ float Parameters::getForceVector(juce::ValueTree node_a, juce::ValueTree node_b)
 //------------------------------------------------------------//
 // Set methods.
 
+void Parameters::setActivePlanet(juce::ValueTree node){
+    for(int i = 0; i < getRootPlanetNode().getNumChildren(); i++){getRootPlanetNode().getChild(i).setProperty(isActiveProp, false, nullptr);}
+    getSunNode().setProperty(isActiveProp, false, nullptr);
+
+    node.setProperty(isActiveProp, true, nullptr);
+}
+
 void Parameters::setRandomID(juce::ValueTree node){
     // Generate random ID for component.
     auto randomID = juce::String(juce::Random::getSystemRandom().nextInt(1000));    
@@ -226,7 +212,6 @@ void Parameters::setRandomID(juce::ValueTree node){
     // Set ID.
     node.setProperty(idProp, randomID, nullptr);
 }
-
 
 void Parameters::setRandomSeed(juce::ValueTree node){
     std::int64_t seed = juce::Random::getSystemRandom().nextInt64();
@@ -259,4 +244,40 @@ void Parameters::valueTreePropertyChanged(juce::ValueTree& node, const juce::Ide
             Logger::writeToLog("Update graph.");
         }
     }
+
+    if(id == isActiveProp){
+        
+    }
 }
+
+//------------------------------------------------------------//
+// Type identifiers.
+
+juce::Identifier Parameters::sunType("Sun");
+juce::Identifier Parameters::rootPlanetType("Root_Planet");
+juce::Identifier Parameters::planetType("Planet");
+
+//------------------------------------------------------------//
+// Property identifiers.
+
+juce::Identifier Parameters::idProp("ID");
+juce::Identifier Parameters::isActiveProp("Is_Active");
+juce::Identifier Parameters::mapWidthProp("Map_Width");
+juce::Identifier Parameters::mapHeightProp("Map_Height");
+juce::Identifier Parameters::diameterProp("Diameter");
+juce::Identifier Parameters::posXProp("Position_X");
+juce::Identifier Parameters::posYProp("Position_Y");
+juce::Identifier Parameters::posCentreXProp("Position_Centre_X");
+juce::Identifier Parameters::posCentreYProp("Position_Centre_Y");
+juce::Identifier Parameters::colourProp("Colour");
+juce::Identifier Parameters::seedProp("Seed");
+juce::Identifier Parameters::latentsProp("Latents");
+juce::Identifier Parameters::lerpLatentsProp("Interpolated_Latents");
+juce::Identifier Parameters::sampleProp("Sample");
+
+//------------------------------------------------------------//
+// Callback signalers.
+
+juce::Identifier Parameters::updateGraphSignal("Update_Graph");
+juce::Identifier Parameters::generateSampleSignal("Generate_Sample");
+

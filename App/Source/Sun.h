@@ -7,7 +7,7 @@ class Sun : public Planet{
 // Constructors and destructors.
 
 public:
-    Sun(juce::OwnedArray<Planet>&, AudioContainer*, Parameters&);
+    Sun(juce::OwnedArray<Planet>&, AudioContainer&, Parameters&);
     ~Sun() override;
 
 //--------------------------------------------------//

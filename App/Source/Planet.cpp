@@ -4,9 +4,9 @@
 //--------------------------------------------------//
 // Constructors and destructors.
 
-Planet::Planet(juce::OwnedArray<Planet>& planets_ref, AudioContainer* audiocontainer_ptr, Parameters& parameters_ref)
+Planet::Planet(juce::OwnedArray<Planet>& planets_ref, AudioContainer& audiocontainer_ref, Parameters& parameters_ref)
     :   m_PlanetsRef(planets_ref),
-        m_AudioContainerPtr(audiocontainer_ptr),
+        m_AudioContainerRef(audiocontainer_ref),
         m_ParametersRef(parameters_ref){
     Logger::writeToLog("Planet created.");
     
@@ -96,23 +96,11 @@ int Planet::getCentreY(Planet* planet){return planet->getY() + ((planet->getDiam
 void Planet::updateGraph(){getState().setProperty(Parameters::updateGraphSignal, true, nullptr);}
 void Planet::generateSample(){getState().setProperty(Parameters::generateSampleSignal, true, nullptr);}
 
-void Planet::addSample(){
-    m_AudioContainerPtr->audio.clear();
-
-    juce::Array<float> sample;
-    sample.ensureStorageAllocated(Generator::M_NUM_SAMPLES);
-
-    juce::Array<var>* values = getState().getProperty(Parameters::sampleProp).getArray();
-    for(int i = 0; i < Generator::M_NUM_SAMPLES; i++)
-        sample.insert(i, (*values)[i]);
-
-    m_AudioContainerPtr->audio.addArray(sample);
-}
-
 void Planet::playSample(){
     Logger::writeToLog("Playing audio...");
-    m_AudioContainerPtr->sampleIndex.clear();
-    m_AudioContainerPtr->playAudio = true;
+    m_ParametersRef.setActivePlanet(getState());
+    m_AudioContainerRef.sampleIndex.clear();
+    m_AudioContainerRef.playAudio = true;
 }
 
 //--------------------------------------------------//
@@ -132,10 +120,7 @@ void Planet::mouseUp(const MouseEvent& e){
         if(e.getNumberOfClicks() > 1){generateSample();}
         
         // Plays sample if clicked once with left mouse button.
-        else if(e.getNumberOfClicks() == 1 && e.mouseWasClicked()){
-            addSample();
-            playSample();
-        }
+        else if(e.getNumberOfClicks() == 1 && e.mouseWasClicked()){playSample();}
 
         // Updates latent mixture graph if there has been a dragging motion.
         else if(e.mouseWasDraggedSinceMouseDown()){updateGraph();}

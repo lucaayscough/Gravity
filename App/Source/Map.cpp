@@ -4,10 +4,10 @@
 //--------------------------------------------------//
 // Constructors and destructors.
 
-Map::Map(AudioContainer* audiocontainer_ptr, Parameters& parameters)
-    :   m_AudioContainerPtr(audiocontainer_ptr),
-        m_ParametersRef(parameters),
-        m_Sun(m_Planets, m_AudioContainerPtr, m_ParametersRef){
+Map::Map(AudioContainer& audiocontainer_ref, Parameters& parameters_ref)
+    :   m_AudioContainerRef(audiocontainer_ref),
+        m_ParametersRef(parameters_ref),
+        m_Sun(m_Planets, m_AudioContainerRef, m_ParametersRef){
     Logger::writeToLog("Map created!");
 
     m_ParametersRef.updateMap.addListener(this);
@@ -23,7 +23,7 @@ Map::~Map(){
 }
 
 //--------------------------------------------------//
-// Public methods.
+// View methods.
 
 void Map::paint(Graphics& g){g.fillAll(juce::Colours::black);}
 void Map::resized(){createSun();}
@@ -37,14 +37,14 @@ void Map::createSun(){
 
 //--------------------------------------------------//
 // Private methods.
-
+ 
 void Map::createPlanet(int x, int y){
     // Create planet node.
     m_ParametersRef.addPlanetNode();
     juce::ValueTree node = m_ParametersRef.getRootPlanetNode().getChild(m_ParametersRef.getRootPlanetNode().getNumChildren() - 1);
 
     // Instantiate planet inside planets array.
-    m_Planets.add(new Planet(m_Planets, m_AudioContainerPtr, m_ParametersRef));
+    m_Planets.add(new Planet(m_Planets, m_AudioContainerRef, m_ParametersRef));
 
     // Extra setup for planet object.
     setupPlanet(m_Planets[getNumPlanets() - 1], x, y, node);
@@ -87,7 +87,7 @@ void Map::rebuildPlanets(){
         juce::ValueTree node = m_ParametersRef.getRootPlanetNode().getChild(i);
 
         // Instantiate planet inside planets array.
-        m_Planets.add(new Planet(m_Planets, m_AudioContainerPtr, m_ParametersRef));
+        m_Planets.add(new Planet(m_Planets, m_AudioContainerRef, m_ParametersRef));
         
         m_Planets[i]->setComponentID(node.getProperty(Parameters::idProp));
 
@@ -145,6 +145,7 @@ void Map::mouseDoubleClick(const MouseEvent& e){
 void Map::valueChanged(juce::Value& value){
     juce::ignoreUnused(value);
     destroyPlanet();
+    
     if(m_ParametersRef.updateMap.getValue() == juce::var(true)){
         rebuildPlanets();
         m_ParametersRef.updateMap.setValue(false);

@@ -4,8 +4,8 @@
 //------------------------------------------------------------//
 // Constructors and destructors.
 
-Sun::Sun(juce::OwnedArray<Planet>& planets_ref, AudioContainer* audiocontainer_ptr, Parameters& parameters_ref)
-    : Planet(planets_ref, audiocontainer_ptr, parameters_ref){}
+Sun::Sun(juce::OwnedArray<Planet>& planets_ref, AudioContainer& audiocontainer_ref, Parameters& parameters_ref)
+    : Planet(planets_ref, audiocontainer_ref, parameters_ref){}
 
 Sun::~Sun(){}
 
@@ -51,7 +51,6 @@ void Sun::mouseDown(const MouseEvent& e){
     }
 
     else if(e.mods.isLeftButtonDown() && e.mouseWasClicked()){
-        addSample();
         playSample();
     }
 }

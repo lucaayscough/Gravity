@@ -2,20 +2,9 @@
 
 
 class Map: public juce::Component, public juce::Value::Listener{
-private:
-
-    // Planet container and variables.
-    OwnedArray<Planet> m_Planets;
-
-    AudioContainer* m_AudioContainerPtr;
-    Parameters& m_ParametersRef;
-
-    // Sun container.
-    Sun m_Sun;
-
 public:
     // Constructors and destructors.
-    Map(AudioContainer*, Parameters&);
+    Map(AudioContainer&, Parameters&);
     ~Map() override;
 
 private:
@@ -39,6 +28,11 @@ private:
     void mouseUp(const MouseEvent&) override;
     void mouseDoubleClick(const MouseEvent&) override;
     void valueChanged(juce::Value&) override;
+
+    OwnedArray<Planet> m_Planets;
+    AudioContainer& m_AudioContainerRef;
+    Parameters& m_ParametersRef;
+    Sun m_Sun;
 
     JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR(Map)
 };

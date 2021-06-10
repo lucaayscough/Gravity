@@ -3,17 +3,18 @@
 
 //==============================================================================
 AudioPluginAudioProcessor::AudioPluginAudioProcessor()
-     : AudioProcessor (BusesProperties()
-                     #if ! JucePlugin_IsMidiEffect
-                      #if ! JucePlugin_IsSynth
-                       .withInput  ("Input",  juce::AudioChannelSet::stereo(), true)
-                      #endif
-                       .withOutput ("Output", juce::AudioChannelSet::stereo(), true)
-                     #endif
-                       ),
-                       m_ValueTreeState(*this, nullptr, getName(), {}),
-                       m_Parameters(m_ValueTreeState.state)
-                       {}
+    :   AudioProcessor(BusesProperties()
+            #if ! JucePlugin_IsMidiEffect
+                #if ! JucePlugin_IsSynth
+                    .withInput  ("Input",  juce::AudioChannelSet::stereo(), true)
+                #endif
+                .withOutput ("Output", juce::AudioChannelSet::stereo(), true)
+            #endif
+        ),
+        m_ValueTreeState(*this, nullptr, getName(), {}),
+        m_Parameters(m_ValueTreeState.state){
+    m_ValueTreeState.state.addListener(this);
+}
 
 AudioPluginAudioProcessor::~AudioPluginAudioProcessor(){}
 
@@ -48,7 +49,6 @@ double AudioPluginAudioProcessor::getTailLengthSeconds() const {return 0.0;}
 int AudioPluginAudioProcessor::getNumPrograms(){return 1;}
 int AudioPluginAudioProcessor::getCurrentProgram(){return 0;}
 void AudioPluginAudioProcessor::setCurrentProgram (int index){juce::ignoreUnused (index);}
-
 const juce::String AudioPluginAudioProcessor::getProgramName (int index){
     juce::ignoreUnused (index);
     return {};
@@ -57,19 +57,11 @@ const juce::String AudioPluginAudioProcessor::getProgramName (int index){
 void AudioPluginAudioProcessor::changeProgramName (int index, const juce::String& newName){juce::ignoreUnused (index, newName);}
 
 //==============================================================================
-void AudioPluginAudioProcessor::prepareToPlay (double sampleRate, int samplesPerBlock)
-{
-    // Use this method as the place to do any pre-playback
-    // initialisation that you need..
+void AudioPluginAudioProcessor::prepareToPlay (double sampleRate, int samplesPerBlock){
     juce::ignoreUnused (sampleRate, samplesPerBlock);
 }
 
-void AudioPluginAudioProcessor::releaseResources()
-{
-    // When playback stops, you can use this as an opportunity to free up any
-    // spare memory, etc.
-}
-
+void AudioPluginAudioProcessor::releaseResources(){}
 bool AudioPluginAudioProcessor::isBusesLayoutSupported (const BusesLayout& layouts) const
 {
   #if JucePlugin_IsMidiEffect
@@ -94,11 +86,7 @@ bool AudioPluginAudioProcessor::isBusesLayoutSupported (const BusesLayout& layou
   #endif
 }
 
-void AudioPluginAudioProcessor::processBlock (juce::AudioBuffer<float>& buffer,
-                                              juce::MidiBuffer& midiMessages)
-{
-    juce::ignoreUnused (midiMessages);
-
+void AudioPluginAudioProcessor::processBlock(juce::AudioBuffer<float>& buffer, juce::MidiBuffer& midiMessages){
     juce::ScopedNoDenormals noDenormals;
     int totalNumInputChannels  = getTotalNumInputChannels();
     int totalNumOutputChannels = getTotalNumOutputChannels();
@@ -185,6 +173,35 @@ void AudioPluginAudioProcessor::playAudio(juce::AudioBuffer<float>& buffer, int 
 void AudioPluginAudioProcessor::stopAudio(){
     m_AudioContainer.sampleIndex.clear();
     m_AudioContainer.playAudio = false;
+}
+
+void AudioPluginAudioProcessor::playSample(){
+    m_AudioContainer.sampleIndex.clear();
+    m_AudioContainer.playAudio = true;
+}
+
+void AudioPluginAudioProcessor::addSample(juce::ValueTree node){
+    m_AudioContainer.audio.clear();
+
+    juce::Array<float> sample;
+    sample.ensureStorageAllocated(Generator::M_NUM_SAMPLES);
+
+    juce::Array<var>* values = node.getProperty(Parameters::sampleProp).getArray();
+    for(int i = 0; i < Generator::M_NUM_SAMPLES; i++)
+        sample.insert(i, (*values)[i]);
+
+    m_AudioContainer.audio.addArray(sample);
+}
+
+//------------------------------------------------------------//
+// Callback methods.
+
+void AudioPluginAudioProcessor::valueTreePropertyChanged(juce::ValueTree& node, const juce::Identifier& id){
+    if(id == Parameters::isActiveProp){
+        if(node.getProperty(Parameters::isActiveProp)){
+            addSample(node);
+        }
+    }
 }
 
 //==============================================================================
