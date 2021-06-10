@@ -7,18 +7,20 @@
 Map::Map(AudioContainer* audiocontainer_ptr, Parameters& parameters):
     m_AudioContainerPtr(audiocontainer_ptr),
     m_ParametersRef(parameters),
-    m_Sun(&m_Planets, m_AudioContainerPtr, m_ParametersRef.rootNode.getChildWithName(Parameters::sunType)){
+    m_Sun(m_Planets, m_AudioContainerPtr, m_ParametersRef){
+    
+    // TODO:
+    // Cleanup this mess.
+    
     if(getNumPlanets() > 0){
         for(int i = 0; i < getNumPlanets(); i++){
             // Create planet node.
-            juce::ValueTree node = m_ParametersRef.rootPlanetNode.getChild(i);
+            juce::ValueTree node = m_ParametersRef.getRootPlanetNode().getChild(i);
 
             // Instantiate planet inside planets array.
-            m_Planets.add(new Planet(&m_Planets, m_AudioContainerPtr, node));
+            m_Planets.add(new Planet(m_Planets, m_AudioContainerPtr, m_ParametersRef));
             
-            juce::String id = node.getProperty(Parameters::idProp);
-            // Extra setup for planet object.
-            m_Planets[i]->setID(id);
+            m_Planets[i]->setComponentID(node.getProperty(Parameters::idProp));
 
             addAndMakeVisible(m_Planets[i]);
 
@@ -47,7 +49,6 @@ void Map::createSun(){
     m_Sun.draw();
     m_Sun.setPosXY(m_Sun.getX(), m_Sun.getY());
     m_Sun.setCentrePosXY(m_Sun.getCentreX(&m_Sun), m_Sun.getCentreY(&m_Sun));
-    m_Sun.addSample();
 }
 
 //--------------------------------------------------//
@@ -56,26 +57,23 @@ void Map::createSun(){
 void Map::createPlanet(int x, int y){
     // Create planet node.
     m_ParametersRef.addPlanetNode();
-    juce::ValueTree node = m_ParametersRef.rootPlanetNode.getChild(m_ParametersRef.rootPlanetNode.getNumChildren() - 1);
+    juce::ValueTree node = m_ParametersRef.getRootPlanetNode().getChild(m_ParametersRef.getRootPlanetNode().getNumChildren() - 1);
 
     // Instantiate planet inside planets array.
-    m_Planets.add(new Planet(&m_Planets, m_AudioContainerPtr, node));
+    m_Planets.add(new Planet(m_Planets, m_AudioContainerPtr, m_ParametersRef));
 
     // Extra setup for planet object.
     setupPlanet(m_Planets[getNumPlanets() - 1], x, y, node);
 }
 
 void Map::setupPlanet(Planet* planet, int x, int y, juce::ValueTree node){
-    juce::ignoreUnused(node);
-    juce::String id = generateRandomID();
-    planet->setID(id);
-    planet->setMapSize(getWidth(), getHeight());
+    // ID
+    planet->setComponentID(node.getProperty(Parameters::idProp));
 
+    // Visibility.
+    planet->setMapSize(getWidth(), getHeight());
     addAndMakeVisible(planet);
 
-    // Add listener for planet destruction request and lerp graph.
-    planet->m_Destroy.addListener(this);
-    
     planet->draw(
         planet->getDiameter(),
         x - (planet->getDiameter() / 2) - (planet->getClipBoundary() / 2),
@@ -84,23 +82,9 @@ void Map::setupPlanet(Planet* planet, int x, int y, juce::ValueTree node){
 
     planet->setPosXY(planet->getX(), planet->getY());
     planet->setCentrePosXY(planet->getCentreX(planet), planet->getCentreY(planet));
+
+    planet->m_Destroy.addListener(this);
     planet->updateGraph();
-}
-
-juce::String Map::generateRandomID(){
-    // Generate random ID for component.
-    auto randomID = juce::String(juce::Random::getSystemRandom().nextInt(100001));    
-
-    // Check if ID is unique.
-    for(int i = 0; i < getNumPlanets() - 1; i++){
-        if(m_Planets[i]->getComponentID() == randomID){
-            while(m_Planets[i]->getComponentID() == randomID){
-                randomID = juce::String(juce::Random::getSystemRandom().nextInt(100000)); 
-            }
-        }
-    }
-
-    return randomID;
 }
 
 void Map::destroyPlanet(){
@@ -114,7 +98,7 @@ void Map::destroyPlanet(){
 }
 
 int Map::getMaxNumPlanets(){return Variables::MAX_NUM_PLANETS;}
-int Map::getNumPlanets(){return m_ParametersRef.rootPlanetNode.getNumChildren();}
+int Map::getNumPlanets(){return m_ParametersRef.getRootPlanetNode().getNumChildren();}
 
 float Map::getDistance(Sun& sun, Planet* planet){
     int centrePlanetX = planet->getCentreX(planet);

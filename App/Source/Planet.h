@@ -10,22 +10,15 @@ private:
     juce::ComponentDragger m_Dragger;
 
 protected:
-    // Pointer to array containing planets.
-    juce::OwnedArray<Planet>* m_PlanetsPtr;
-
-    // Used to access the generator instantiated in
-    // the PluginProcessor.
+    juce::OwnedArray<Planet>& m_PlanetsRef;
     AudioContainer* m_AudioContainerPtr;
-
-    juce::ValueTree m_State;
-
+    Parameters& m_ParametersRef;
 
 //--------------------------------------------------//
 // Constructors and destructors.
 
 public:
-    Planet();
-    Planet(juce::OwnedArray<Planet>*, AudioContainer*, juce::ValueTree);
+    Planet(juce::OwnedArray<Planet>&, AudioContainer*, Parameters&);
     ~Planet() override;
 
 //--------------------------------------------------//
@@ -43,12 +36,12 @@ private:
 // Interface methods.
 
 public:
-    void setID(juce::String&);
     void setDiameter(int);
     void setMapSize(int, int);
     virtual void setPosXY(int, int);
     virtual void setCentrePosXY(int, int);
 
+    virtual juce::ValueTree getState();
     virtual int getDiameter();
     virtual int getPosX();
     virtual int getPosY();

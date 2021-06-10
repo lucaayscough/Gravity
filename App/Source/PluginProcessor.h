@@ -36,15 +36,16 @@ public:
     void changeProgramName (int index, const juce::String& newName) override;
 
     //==============================================================================
-    void getStateInformation (juce::MemoryBlock& destData) override;
-    void setStateInformation (const void* data, int sizeInBytes) override;
+    void getStateInformation(juce::MemoryBlock& destData) override;
+    void setStateInformation(const void* data, int sizeInBytes) override;
+    void rebuildState();
 
     Generator m_Generator;
     AudioContainer m_AudioContainer;
 
     // ValueTreeState variables.
-    juce::AudioProcessorValueTreeState valueTreeState;
-    Parameters parameters;
+    juce::AudioProcessorValueTreeState m_ValueTreeState;
+    Parameters m_Parameters;
 
 private:
     void playAudio(juce::AudioBuffer<float>&, int, int);

@@ -4,9 +4,8 @@
 AudioPluginAudioProcessorEditor::AudioPluginAudioProcessorEditor(AudioPluginAudioProcessor& p):
     AudioProcessorEditor(&p),
     processorRef(p),
-    m_Map(&processorRef.m_AudioContainer, processorRef.parameters)
-{
-    juce::ignoreUnused (processorRef);
+    m_Map(&processorRef.m_AudioContainer, processorRef.m_Parameters){
+    Logger::writeToLog("Construct editor.");
     addAndMakeVisible(m_Map);
 
     // Main window.

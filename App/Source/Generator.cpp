@@ -22,9 +22,10 @@ torch::jit::script::Module Generator::mapper_module = torch::jit::load(
 Generator::Generator(){}
 Generator::~Generator(){}
 
-at::Tensor Generator::generateLatents(){
+at::Tensor Generator::generateLatents(std::int64_t seed){
     torch::NoGradGuard no_grad;
-    //torch::manual_seed(1);
+    torch::manual_seed((std::uint64_t)seed);
+    Logger::writeToLog("Generator " + std::to_string((std::uint64_t)seed));
 
     // Create random input tensor.
     std::vector<torch::jit::IValue> inputs;

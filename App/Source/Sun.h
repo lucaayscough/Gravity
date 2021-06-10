@@ -7,8 +7,7 @@ class Sun : public Planet{
 // Constructors and destructors.
 
 public:
-    Sun();
-    Sun(juce::OwnedArray<Planet>*, AudioContainer*, juce::ValueTree);
+    Sun(juce::OwnedArray<Planet>&, AudioContainer*, Parameters&);
     ~Sun() override;
 
 //--------------------------------------------------//
@@ -23,6 +22,7 @@ public:
 
     void setPosXY(int, int) override;
 
+    juce::ValueTree getState() override;
     int getDiameter() override;
     int getCentreX(Planet*) override;
     int getCentreY(Planet*) override;

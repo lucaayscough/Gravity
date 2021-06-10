@@ -11,8 +11,8 @@ AudioPluginAudioProcessor::AudioPluginAudioProcessor()
                        .withOutput ("Output", juce::AudioChannelSet::stereo(), true)
                      #endif
                        ),
-                       valueTreeState(*this, nullptr, getName(), {}),
-                       parameters(valueTreeState.state)
+                       m_ValueTreeState(*this, nullptr, getName(), {}),
+                       m_Parameters(m_ValueTreeState.state)
                        {}
 
 AudioPluginAudioProcessor::~AudioPluginAudioProcessor(){}
@@ -129,30 +129,38 @@ void AudioPluginAudioProcessor::processBlock (juce::AudioBuffer<float>& buffer,
 }
 
 //==============================================================================
-bool AudioPluginAudioProcessor::hasEditor() const{
-    return true; // (change this to false if you choose to not supply an editor)
-}
+bool AudioPluginAudioProcessor::hasEditor() const{return true;}
 
-juce::AudioProcessorEditor* AudioPluginAudioProcessor::createEditor(){
-    return new AudioPluginAudioProcessorEditor (*this);
-}
+juce::AudioProcessorEditor* AudioPluginAudioProcessor::createEditor(){return new AudioPluginAudioProcessorEditor (*this);}
 
 //==============================================================================
 void AudioPluginAudioProcessor::getStateInformation(juce::MemoryBlock& destData){
-    juce::ignoreUnused (destData);
-
-    std::unique_ptr<juce::XmlElement> xml (valueTreeState.state.createXml());
-    copyXmlToBinary(*xml, destData);
+    if(m_Parameters.isInit){
+        auto stateCopy = m_ValueTreeState.state.createCopy();
+        m_Parameters.clearSamples(stateCopy);
+        std::unique_ptr<juce::XmlElement> xml(stateCopy.createXml());
+        copyXmlToBinary(*xml, destData);
+        Logger::writeToLog("Get State");
+    }
+    else{m_Parameters.isInit = true;}
 }
 
 void AudioPluginAudioProcessor::setStateInformation(const void* data, int sizeInBytes){
-    juce::ignoreUnused (data, sizeInBytes);
+    std::unique_ptr<juce::XmlElement> xmlState(getXmlFromBinary(data, sizeInBytes));
+    if (xmlState.get() != nullptr){
+        if (xmlState->hasTagName(m_ValueTreeState.state.getType())){
+            m_ValueTreeState.state.copyPropertiesAndChildrenFrom(juce::ValueTree::fromXml(*xmlState), nullptr);
+            rebuildState();
+        }
+    }
+}
 
-    std::unique_ptr<juce::XmlElement> xmlState (getXmlFromBinary (data, sizeInBytes));
- 
-    if (xmlState.get() != nullptr)
-        if (xmlState->hasTagName (valueTreeState.state.getType()))
-            valueTreeState.replaceState (juce::ValueTree::fromXml (*xmlState));
+void AudioPluginAudioProcessor::rebuildState(){
+    m_Parameters.rebuildSamples();
+
+    Logger::writeToLog("\n\nAfter: " + m_ValueTreeState.state.getChildWithName(Parameters::sunType).getProperty(Parameters::seedProp).toString());
+    Logger::writeToLog("After: " + m_Parameters.rootNode.getChildWithName(Parameters::sunType).getProperty(Parameters::seedProp).toString());
+
 }
 
 //------------------------------------------------------------//
@@ -185,6 +193,4 @@ void AudioPluginAudioProcessor::stopAudio(){
 
 //==============================================================================
 // This creates new instances of the plugin.
-juce::AudioProcessor* JUCE_CALLTYPE createPluginFilter(){
-    return new AudioPluginAudioProcessor();
-}
+juce::AudioProcessor* JUCE_CALLTYPE createPluginFilter(){return new AudioPluginAudioProcessor();}

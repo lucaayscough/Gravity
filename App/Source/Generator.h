@@ -19,6 +19,6 @@ public:
     Generator();
     ~Generator();
 
-    static at::Tensor generateLatents();
+    static at::Tensor generateLatents(std::int64_t);
     static juce::var generateSample(at::Tensor&);
 };

@@ -3,11 +3,10 @@
 
 struct Parameters: public juce::ValueTree::Listener{
     juce::ValueTree rootNode;
-    juce::ValueTree rootPlanetNode;
 
     // Type identifiers.
-    static juce::Identifier rootPlanetType;
     static juce::Identifier sunType;
+    static juce::Identifier rootPlanetType;
     static juce::Identifier planetType;
 
     // Property identifiers.
@@ -20,6 +19,7 @@ struct Parameters: public juce::ValueTree::Listener{
     static juce::Identifier posCentreXProp;
     static juce::Identifier posCentreYProp;
     static juce::Identifier colourProp;
+    static juce::Identifier seedProp;
     static juce::Identifier latentsProp;
     static juce::Identifier lerpLatentsProp;
     static juce::Identifier sampleProp;
@@ -27,6 +27,8 @@ struct Parameters: public juce::ValueTree::Listener{
     // Callback signalers.
     static juce::Identifier updateGraphSignal;
     static juce::Identifier generateSampleSignal;
+
+    bool isInit = false;
 
     // Constructors and destructors.
     Parameters(juce::ValueTree);
@@ -36,21 +38,29 @@ struct Parameters: public juce::ValueTree::Listener{
     void addSunNode();
     void addPlanetNode();
     void removePlanetNode(const juce::String&);
+    void clearSamples(juce::ValueTree);
+    void rebuildSamples();
 
     // Tensor operations.
     void generateLatents(juce::ValueTree);
     void generateLerpLatents(juce::ValueTree);
     void generateSample(juce::ValueTree, at::Tensor);
+    void generateOldSample(juce::ValueTree);
     void generateNewSample(juce::ValueTree);
     void mixLatents();
 
     // Get methods.
+    juce::ValueTree getSunNode();
+    juce::ValueTree getRootPlanetNode();
+    std::int64_t getSeed(juce::ValueTree);
     at::Tensor getLatents(juce::ValueTree, juce::Identifier&);
     juce::String getID(juce::ValueTree);
     float getDistance(juce::ValueTree, juce::ValueTree);
     float getForceVector(juce::ValueTree, juce::ValueTree);
 
     // Set methods.
+    void setRandomID(juce::ValueTree);
+    void setRandomSeed(juce::ValueTree);
     void setLatents(juce::ValueTree, juce::Identifier&, at::Tensor&);
 
     // Callback methods.

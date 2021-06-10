@@ -1,18 +1,13 @@
 #include "Headers.h"
 
 
-// Main Planet class.
-
 //--------------------------------------------------//
 // Constructors and destructors.
 
-Planet::Planet(){}
-
-Planet::Planet(juce::OwnedArray<Planet>* planets_ptr, AudioContainer* audiocontainer_ptr, juce::ValueTree state):
-    m_PlanetsPtr(planets_ptr),
+Planet::Planet(juce::OwnedArray<Planet>& planets_ref, AudioContainer* audiocontainer_ptr, Parameters& parameters_ref):
+    m_PlanetsRef(planets_ref),
     m_AudioContainerPtr(audiocontainer_ptr),
-    m_State(state){
-    
+    m_ParametersRef(parameters_ref){
     // Listener value used to determine when to destroy the planet.
     m_Destroy.setValue(false);
 }
@@ -52,31 +47,28 @@ void Planet::resizePlanet(int diameter){
     //updateGraph();
 }
 
-void Planet::setID(juce::String& id){
-    m_State.setProperty(Parameters::idProp, id, nullptr);
-    setComponentID(id);
-}
-void Planet::setDiameter(int diameter){m_State.setProperty(Parameters::diameterProp, diameter, nullptr);}
+void Planet::setDiameter(int diameter){getState().setProperty(Parameters::diameterProp, diameter, nullptr);}
 void Planet::setMapSize(int width, int height){
-    m_State.setProperty(Parameters::mapWidthProp, width, nullptr);
-    m_State.setProperty(Parameters::mapHeightProp, height, nullptr);
+    getState().setProperty(Parameters::mapWidthProp, width, nullptr);
+    getState().setProperty(Parameters::mapHeightProp, height, nullptr);
 }
 
 void Planet::setPosXY(int x, int y){
-    m_State.setProperty(Parameters::posXProp, x, nullptr);
-    m_State.setProperty(Parameters::posYProp, y, nullptr);
+    getState().setProperty(Parameters::posXProp, x, nullptr);
+    getState().setProperty(Parameters::posYProp, y, nullptr);
 }
 
 void Planet::setCentrePosXY(int x, int y){
-    m_State.setProperty(Parameters::posCentreXProp, x, nullptr);
-    m_State.setProperty(Parameters::posCentreYProp, y, nullptr);
+    getState().setProperty(Parameters::posCentreXProp, x, nullptr);
+    getState().setProperty(Parameters::posCentreYProp, y, nullptr);
 }
 
-int Planet::getDiameter(){return m_State.getProperty(Parameters::diameterProp);}
-int Planet::getPosX(){return m_State.getProperty(Parameters::posXProp);}
-int Planet::getPosY(){return m_State.getProperty(Parameters::posYProp);}
-int Planet::getMapWidth(){return m_State.getProperty(Parameters::mapWidthProp);}
-int Planet::getMapHeight(){return m_State.getProperty(Parameters::mapHeightProp);}
+juce::ValueTree Planet::getState(){return m_ParametersRef.getRootPlanetNode().getChildWithProperty(Parameters::idProp, getComponentID());}
+int Planet::getDiameter(){return getState().getProperty(Parameters::diameterProp);}
+int Planet::getPosX(){return getState().getProperty(Parameters::posXProp);}
+int Planet::getPosY(){return getState().getProperty(Parameters::posYProp);}
+int Planet::getMapWidth(){return getState().getProperty(Parameters::mapWidthProp);}
+int Planet::getMapHeight(){return getState().getProperty(Parameters::mapHeightProp);}
 int Planet::getClipBoundary(){return Variables::CLIP_BOUNDARY;}
 
 float Planet::getDistance(int xa, int ya, int xb, int yb){  
@@ -99,8 +91,8 @@ float Planet::getDistance(Planet* planet_a, Planet* planet_b){
 
 int Planet::getCentreX(Planet* planet){return planet->getX() + ((planet->getDiameter() + planet->getClipBoundary()) / 2);}
 int Planet::getCentreY(Planet* planet){return planet->getY() + ((planet->getDiameter() + planet->getClipBoundary()) / 2);}
-void Planet::updateGraph(){m_State.setProperty(Parameters::updateGraphSignal, true, nullptr);}
-void Planet::generateSample(){m_State.setProperty(Parameters::generateSampleSignal, true, nullptr);}
+void Planet::updateGraph(){getState().setProperty(Parameters::updateGraphSignal, true, nullptr);}
+void Planet::generateSample(){getState().setProperty(Parameters::generateSampleSignal, true, nullptr);}
 
 void Planet::addSample(){
     m_AudioContainerPtr->audio.clear();
@@ -108,7 +100,7 @@ void Planet::addSample(){
     juce::Array<float> sample;
     sample.ensureStorageAllocated(Generator::M_NUM_SAMPLES);
 
-    juce::Array<var>* values = m_State.getProperty(Parameters::sampleProp).getArray();
+    juce::Array<var>* values = getState().getProperty(Parameters::sampleProp).getArray();
     for(int i = 0; i < Generator::M_NUM_SAMPLES; i++)
         sample.insert(i, (*values)[i]);
 
@@ -194,9 +186,9 @@ void Planet::checkCollision(){
     Planet* planet;
     int centrePosX2, centrePosY2;
 
-    for(int i = 0; i < m_PlanetsPtr->size(); i++){
+    for(int i = 0; i < m_PlanetsRef.size(); i++){
         // Variable for ease of use.
-        planet = (*m_PlanetsPtr)[i];
+        planet = m_PlanetsRef[i];
 
         // Avoid self collision testing.
         if(planet->getComponentID() != getComponentID()){

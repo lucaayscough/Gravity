@@ -1,17 +1,11 @@
 #include "Headers.h"
 
 
-// Sun class which inherits from the parent Planet class.
-// Movement is disabled and position is fixed.
-
-
 //------------------------------------------------------------//
 // Constructors and destructors.
 
-Sun::Sun(){}
-
-Sun::Sun(juce::OwnedArray<Planet>* planets_ptr, AudioContainer* audiocontainer_ptr, juce::ValueTree state)
-    : Planet(planets_ptr, audiocontainer_ptr, state){}
+Sun::Sun(juce::OwnedArray<Planet>& planets_ref, AudioContainer* audiocontainer_ptr, Parameters& parameters_ref)
+    : Planet(planets_ref, audiocontainer_ptr, parameters_ref){}
 
 Sun::~Sun(){}
 
@@ -35,7 +29,9 @@ void Sun::draw(){
 // Interface methods.
 
 void Sun::setPosXY(int, int){}
-int Sun::getDiameter(){return m_State.getProperty(Parameters::diameterProp);}
+
+juce::ValueTree Sun::getState(){return m_ParametersRef.getSunNode();}
+int Sun::getDiameter(){return getState().getProperty(Parameters::diameterProp);}
 int Sun::getCentreX(Planet* planet){return planet->getX() + (planet->getDiameter() / 2);}
 int Sun::getCentreY(Planet* planet){return planet->getY() + (planet->getDiameter() / 2);}
 

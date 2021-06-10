@@ -26,7 +26,6 @@ private:
     void createSun();
     void createPlanet(int, int);
     void setupPlanet(Planet*, int x, int y, juce::ValueTree);
-    juce::String generateRandomID();
     void destroyPlanet();
 
     // Interface methods
