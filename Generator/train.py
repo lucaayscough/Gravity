@@ -26,37 +26,19 @@ class Train:
 
         # Learning
         learning_rate,
-        
-        # Generator
-        use_linear_upsampling,
-        use_pixel_norm,
-        use_instance_norm,
-        use_style,
-        use_noise,
-        use_ema,
-        ema_beta = 0.999,
 
-        # Discriminator
-        use_linear_downsampling = False,
-
-        # Model
-        z_dim = 512,                  
-        scale_factor = 4,            
-        depth = None,   
-        num_filters = 512,
-        kernel_size = 9,
-        stride = 1,
-        padding = 1,
-        dilation = 1,
-        start_size = None,
-        use_self_attention = False,
-        
+        # Model        
+        scale_factor,       
+        depth,
+        num_filters,
+        start_size,
+     
         # Setup
-        num_channels = None,
-        sample_rate = None,
-        save_every = 1,
-        num_workers = 1,
-        device = "cpu"
+        num_channels,
+        sample_rate,
+        save_every,
+        num_workers,
+        device
     ):
         # Iteration
         self.restart_from_iter = restart_from_iter
@@ -71,28 +53,18 @@ class Train:
         self.learning_rate = learning_rate
 
         # Generator
-        self.use_linear_upsampling = use_linear_upsampling
-        self.use_pixel_norm = use_pixel_norm
-        self.use_instance_norm = use_instance_norm
-        self.use_style = use_style
-        self.use_noise = use_noise
-        self.use_ema = use_ema
-        self.ema_beta = ema_beta
-
-        # Discriminator
-        self.use_linear_downsampling = use_linear_downsampling
+        self.ema_beta = 0.999
 
         # Model
-        self.z_dim = z_dim
+        self.z_dim = 512
         self.scale_factor = scale_factor
         self.depth = depth
         self.num_filters = num_filters
-        self.kernel_size = kernel_size
-        self.stride = stride
-        self.padding = padding
-        self.dilation = dilation
+        self.kernel_size = 9
+        self.stride = 1
+        self.padding = 4
+        self.dilation = 1
         self.start_size = start_size
-        self.use_self_attention = use_self_attention
 
         # Setup
         self.num_channels = num_channels
@@ -113,14 +85,12 @@ class Train:
             self._load_state()
         else:
             self.start_epoch = 1
-            
+        
+        # Creates a shadow copy of the generator.
+        self.netG_shadow = copy.deepcopy(self.netG)
 
-        if self.use_ema:
-            # Creates a shadow copy of the generator.
-            self.netG_shadow = copy.deepcopy(self.netG)
-
-            # Initialize the generator shadow weights equal to generator.
-            self._update_average(beta = 0)
+        # Initialize the generator shadow weights equal to generator.
+        self._update_average(beta = 0)
 
         self.dataset = AudioFolder(self.datadir)
         self._training_loop()
@@ -140,12 +110,6 @@ class Train:
             depth = self.depth,
             num_channels = self.num_channels,
             scale_factor = self.scale_factor,
-            use_linear_upsampling = self.use_linear_upsampling,
-            use_self_attention = self.use_self_attention,
-            use_pixel_norm = self.use_pixel_norm,
-            use_instance_norm = self.use_instance_norm,
-            use_style = self.use_style,
-            use_noise = self.use_noise,
             start_size = self.start_size
         ).to(self.device)
         
@@ -159,8 +123,6 @@ class Train:
             num_channels = self.num_channels,
             scale_factor = self.scale_factor,
             start_size = self.start_size,
-            use_linear_downsampling = self.use_linear_downsampling,
-            use_self_attention = self.use_self_attention
         ).to(self.device)
 
 
@@ -259,9 +221,8 @@ class Train:
 
                 self._train_discriminator(real)
                 self._train_generator()
-
-                if self.use_ema:
-                    self._update_average(beta = self.ema_beta)
+                 
+                self._update_average(beta = self.ema_beta)
                 
                 # Log State
                 print(
@@ -334,14 +295,6 @@ class Train:
 # Update exponential moving average of generator.
 
     def _update_average(self, beta):
-        """
-        update the model_target using exponential moving averages
-        :param model_tgt: target model
-        :param model_src: source model
-        :param beta: value of decay beta
-        :return: None (updates the target model)
-        """
-
         # utility function for toggling the gradient requirements of the models
         def toggle_grad(model, requires_grad):
             for p in model.parameters():

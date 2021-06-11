@@ -145,13 +145,6 @@ class MiniBatchStdDev(nn.Module):
         return f"group_size={self.group_size}"
 
     def forward(self, x, alpha: float = 1e-8):
-        """
-        forward pass of the layer
-        Args:
-            x: input activation volume
-            alpha: small number for numerical stability
-        Returns: y => x appended with standard deviation constant map
-        """
         batch_size, channels, samples = x.shape
         if batch_size > self.group_size:
             assert batch_size % self.group_size == 0, (
@@ -162,52 +155,15 @@ class MiniBatchStdDev(nn.Module):
         else:
             group_size = batch_size
 
-        # reshape x into a more amenable sized tensor
         y = torch.reshape(x, [group_size, -1, channels, samples])
-
-        # indicated shapes are after performing the operation
-        # [G x M x C x H x W] Subtract mean over groups
         y = y - y.mean(dim=0, keepdim=True)
-
-        # [M x C x H x W] Calc standard deviation over the groups
         y = torch.sqrt(y.square().mean(dim=0, keepdim=False) + alpha)
-
-        # [M x 1 x 1 x 1]  Take average over feature_maps and pixels.
         y = y.mean(dim=[1, 2], keepdim=True)
-
-        # [B x 1 x H x W]  Replicate over group and pixels
         y = y.repeat(group_size, 1, samples)
-
-        # [B x (C + 1) x H x W]  Append as new feature_map.
         y = torch.cat([x, y], 1)
 
         # return the computed values:
         return y
-
-# ------------------------------------------------------------
-# Self-attention layer.
-
-class SelfAttention(nn.Module):
-    def __init__(self, in_channel):
-        super().__init__()
-
-        self.query = nn.Conv1d(in_channel, in_channel // 8, 1)
-        self.key = nn.Conv1d(in_channel, in_channel // 8, 1)
-        self.value = nn.Conv1d(in_channel, in_channel, 1)
-
-        self.gamma = nn.Parameter(torch.tensor(0.0))
-
-    def forward(self, x):
-        shape = x.shape
-        x_copy = x
-        query = self.query(x_copy).permute(0, 2, 1)
-        key = self.key(x_copy)
-        value = self.value(x_copy)
-        query_key = torch.bmm(query, key)
-        attn = nn.functional.softmax(query_key, 1)
-        attn = torch.bmm(value, attn)
-        out = self.gamma * attn + x
-        return out
 
 # ------------------------------------------------------------
 # Blocks composed of low level network components.
@@ -218,44 +174,21 @@ class SelfAttention(nn.Module):
 class LayerEpilogue(nn.Module):
     def __init__(
         self,
-        use_pixel_norm,
-        use_noise,
-        use_instance_norm,
-        use_style,
         channels
     ):
         super().__init__()
 
-        self.use_instance_norm = use_instance_norm
-        self.use_pixel_norm = use_pixel_norm
-        self.use_noise = use_noise
-        self.use_style = use_style
-
-        if use_instance_norm:
-            self.instance_norm = nn.InstanceNorm1d(channels)
-
-        if use_noise:
-            self.apply_noise = ApplyNoise(channels)
-
-        if use_style:
-            self.style_mod = StyleMod(channels)
+        self.instance_norm = nn.InstanceNorm1d(channels)
+        self.apply_noise = ApplyNoise(channels)
+        self.style_mod = StyleMod(channels)
         
         self.l_relu = nn.LeakyReLU(0.2)
     
     def forward(self, x, latent_w, noise = None):
-        if self.use_noise:
-            self.apply_noise(x, noise)
-        
+        self.apply_noise(x, noise)
         x = self.l_relu(x)
-
-        if self.use_pixel_norm:
-            x = self.pixel_norm(x)
-
-        if self.use_instance_norm:
-            x = self.instance_norm(x)
-
-        if self.use_style:
-            x = self.style_mod(x, latent_w)
+        x = self.instance_norm(x)
+        x = self.style_mod(x, latent_w)
         
         return x
 
@@ -272,57 +205,28 @@ class GenGeneralConvBlock(nn.Module):
         padding,
         dilation,
         scale_factor,
-        use_pixel_norm,
-        use_instance_norm,
-        use_style,
-        use_noise,
-        use_linear_upsampling,
-        use_self_attention,
         bias = True,
     ):
         super().__init__()
         self.scale_factor = scale_factor
-        self.use_linear_upsampling = use_linear_upsampling
-        self.use_self_attention = use_self_attention
         
         self.conv_block_1 = EqualizedConv1d(in_channels = in_channels, out_channels = in_channels, kernel_size = kernel_size, stride = stride, padding = padding, dilation = dilation, bias = bias)
         self.conv_block_2 = EqualizedConv1d(in_channels = in_channels, out_channels = out_channels, kernel_size = kernel_size, stride = stride, padding = padding, dilation = dilation, bias = bias)
-        
-        if self.use_linear_upsampling:
-            self.linear_upsampling = nn.Upsample(scale_factor = self.scale_factor, mode = 'linear')
 
         self.layer_epilogue_1 = LayerEpilogue(
-            use_pixel_norm = use_pixel_norm,
-            use_noise = use_noise,
-            use_instance_norm = use_instance_norm,
-            use_style = use_style,
             channels = in_channels,
         )
 
         self.layer_epilogue_2 = LayerEpilogue(
-            use_pixel_norm = use_pixel_norm,
-            use_noise = use_noise,
-            use_instance_norm = use_instance_norm,
-            use_style = use_style,
             channels = out_channels,
         )
-                
-        if self.use_self_attention:
-            self.self_attention = SelfAttention(in_channels)
     
     def forward(self, x, latent_w, noise = None):
-        if self.use_linear_upsampling:
-            x = self.linear_upsampling(x)
-        else:
-            x = interpolate(x, scale_factor = self.scale_factor)
+        x = interpolate(x, scale_factor = self.scale_factor)
 
         # First block
         x = self.conv_block_1(x)
         x = self.layer_epilogue_1(x, latent_w[:, 0], noise)
-        
-        # Self attention module
-        if self.use_self_attention:
-            x = self.self_attention(x)
 
         # Second block
         x = self.conv_block_2(x)
@@ -342,32 +246,19 @@ class DisGeneralConvBlock(nn.Module):
         padding,
         dilation,
         scale_factor,
-        use_linear_downsampling,
-        use_self_attention,
         bias = True
     ):
         super().__init__()
-        
-        self.use_self_attention = use_self_attention
 
         self.conv_block_1 = EqualizedConv1d(in_channels = in_channels, out_channels = in_channels, kernel_size = kernel_size, stride = stride, padding = padding, dilation = dilation, bias = bias)
         self.conv_block_2 = EqualizedConv1d(in_channels = in_channels, out_channels = out_channels, kernel_size = kernel_size, stride = stride, padding = padding, dilation = dilation, bias = bias)
 
-        if self.use_self_attention:
-            self.self_attention = SelfAttention(in_channels)
-
-        if use_linear_downsampling:
-            self.down_sampler = nn.Upsample(scale_factor = 1 / scale_factor, mode = 'linear')
-        else:
-            self.down_sampler = nn.AvgPool1d(scale_factor)
+        self.down_sampler = nn.AvgPool1d(scale_factor)
         
         self.l_relu = nn.LeakyReLU(0.2)
     
     def forward(self, x):
         x = self.l_relu(self.conv_block_1(x))
-
-        if self.use_self_attention:
-            x = self.self_attention(x)
 
         x = self.l_relu(self.conv_block_2(x))
         x = self.down_sampler(x)
@@ -387,13 +278,9 @@ class DisFinalConvBlock(nn.Module):
         padding,
         dilation,
         scale_factor,
-        use_linear_downsampling,
-        use_self_attention,
         bias = True
     ):
         super().__init__()
-
-        self.use_self_attention = use_self_attention
         
         in_channels += 1
         out_channels += 1
@@ -430,21 +317,12 @@ class DisFinalConvBlock(nn.Module):
         )
 
         self.l_relu = nn.LeakyReLU(0.2)
-
-        if self.use_self_attention:
-            self.self_attention = SelfAttention(in_channels)
         
-        if use_linear_downsampling:
-            self.down_sampler = nn.Upsample(scale_factor = 1 / scale_factor, mode = 'linear')
-        else:
-            self.down_sampler = nn.AvgPool1d(scale_factor)
+        self.down_sampler = nn.AvgPool1d(scale_factor)
     
     def forward(self, x):
         x = self.mini_batch(x)
         x = self.l_relu(self.conv_block_1(x))
-
-        if self.use_self_attention:
-            x = self.self_attention(x)
 
         x = self.l_relu(self.conv_block_2(x))
         x = self.conv_block_3(x)
@@ -498,13 +376,11 @@ class MappingNetwork(nn.Module):
         broadcast,
         depth = 8,
         z_dim = 512,
-        use_pixel_norm = True,
         use_leaky_relu = True,
         lrmul = 0.01,
     ):
         super().__init__()
         
-        self.use_pixel_norm = use_pixel_norm
         self.use_leaky_relu = use_leaky_relu
         self.broadcast = broadcast
 
@@ -516,16 +392,14 @@ class MappingNetwork(nn.Module):
         self.layers.append(EqualizedLinear(in_channels = z_dim, out_channels = z_dim, lrmul = lrmul))
 
         # Normalization layer.
-        if self.use_pixel_norm:
-            self.pixel_norm = PixelNorm()
+        self.pixel_norm = PixelNorm()
         
         # Non-linearity layer.
         if self.use_leaky_relu:
             self.leaky_relu = nn.LeakyReLU(0.2)
 
     def forward(self, x):
-        if self.use_pixel_norm:
-            x = self.pixel_norm(x)
+        x = self.pixel_norm(x)
 
         for layer in self.layers:
             x = layer(x)
@@ -551,12 +425,6 @@ class Generator(nn.Module):
         depth,
         num_channels,
         scale_factor,
-        use_linear_upsampling,
-        use_self_attention,
-        use_pixel_norm,
-        use_instance_norm,
-        use_style,
-        use_noise,
         start_size
     ):
         super().__init__()
@@ -566,7 +434,6 @@ class Generator(nn.Module):
         self.depth = depth
         self.num_channels = num_channels
         self.scale_factor = scale_factor
-        self.use_linear_upsampling = use_linear_upsampling
         
         self.constant_input = ConstantInput(nf, start_size)
 
@@ -591,12 +458,6 @@ class Generator(nn.Module):
                     padding = padding,
                     dilation = dilation,
                     scale_factor = self.scale_factor,
-                    use_pixel_norm = use_pixel_norm,
-                    use_instance_norm = use_instance_norm,
-                    use_style = use_style,
-                    use_noise = use_noise,
-                    use_linear_upsampling = use_linear_upsampling,
-                    use_self_attention = use_self_attention
                 )
             )
             n = n // 2
@@ -679,8 +540,6 @@ class Discriminator(nn.Module):
         num_channels,
         scale_factor,
         start_size,
-        use_linear_downsampling,
-        use_self_attention
     ):
         super().__init__()
         
@@ -693,8 +552,6 @@ class Discriminator(nn.Module):
         self.num_channels = num_channels
         self.scale_factor = scale_factor
         self.start_size = start_size
-        self.use_linear_downsampling = use_linear_downsampling
-        self.use_self_attention = use_self_attention
 
         # Main discriminator convolution blocks.
         self.layers = nn.ModuleList([])
@@ -710,8 +567,6 @@ class Discriminator(nn.Module):
                     padding = self.padding,
                     dilation = self.dilation,
                     scale_factor = self.scale_factor,
-                    use_linear_downsampling = self.use_linear_downsampling,
-                    use_self_attention = self.use_self_attention
                 )
             )
             n = n * 2
@@ -727,8 +582,6 @@ class Discriminator(nn.Module):
                 padding = self.padding,
                 dilation = self.dilation,
                 scale_factor = self.start_size,
-                use_linear_downsampling = self.use_linear_downsampling,
-                use_self_attention = self.use_self_attention
             )
         )
         
