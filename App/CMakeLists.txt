@@ -1,7 +1,7 @@
 cmake_minimum_required(VERSION 3.10)
 
 # Project name.
-project(AdversarialAudio)
+project(Gravity)
 
 # Juce and Source.
 add_subdirectory(Dependencies/JUCE)
