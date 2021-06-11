@@ -6,9 +6,9 @@
 
 #include <torch/torch.h>
 #include <torch/script.h>
-#include "Generator.h"
 
 #include "AudioContainer.h"
+#include "Generator.h"
 #include "Variables.h"
 #include "Parameters.h"
 

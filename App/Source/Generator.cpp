@@ -49,7 +49,7 @@ juce::var Generator::generateSample(at::Tensor& latents){
     juce::var sample;
 
     // Copy tensor to array.
-    for(int i = 0; i < M_NUM_SAMPLES; i++){
+    for(int i = 0; i < AudioContainer::NUM_SAMPLES; i++){
         sample.append(output[0][0][i].item<float>());
     }
 

@@ -155,10 +155,11 @@ void Parameters::mixLatents(){
 // Get methods.
 
 juce::ValueTree Parameters::getActivePlanet(){
-    if(getSunNode().getProperty(isActiveProp)){return getSunNode();}
     for(int i = 0; i < getRootPlanetNode().getNumChildren(); i++){
         if(getRootPlanetNode().getChild(i).getProperty(isActiveProp)){return getRootPlanetNode().getChild(i);}
     }
+    
+    return getSunNode();
 }
 
 juce::ValueTree Parameters::getSunNode(){return rootNode.getChildWithName(sunType);}
