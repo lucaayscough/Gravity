@@ -1,7 +1,7 @@
 #pragma once
 
 
-class Map: public juce::Component, public juce::Value::Listener{
+class Map: public juce::Component, public juce::Value::Listener, juce::ValueTree::Listener{
 public:
     // Constructors and destructors.
     Map(AudioContainer&, Parameters&);
@@ -27,8 +27,13 @@ private:
     // Controller methods.
     void mouseUp(const MouseEvent&) override;
     void mouseDoubleClick(const MouseEvent&) override;
-    void valueChanged(juce::Value&) override;
 
+    // Callback methods.
+    void valueChanged(juce::Value&) override;
+    void valueTreePropertyChanged(juce::ValueTree&, const juce::Identifier&) override;
+
+private:
+    // Member variables.
     OwnedArray<Planet> m_Planets;
     AudioContainer& m_AudioContainerRef;
     Parameters& m_ParametersRef;

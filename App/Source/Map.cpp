@@ -10,11 +10,16 @@ Map::Map(AudioContainer& audiocontainer_ref, Parameters& parameters_ref)
         m_Sun(m_Planets, m_AudioContainerRef, m_ParametersRef){
     Logger::writeToLog("Map created!");
 
+    m_ParametersRef.rootNode.addListener(this);
     m_ParametersRef.updateMap.addListener(this);
+
     if(getNumPlanets() > 0){rebuildPlanets();}
 }
 
 Map::~Map(){
+    m_ParametersRef.rootNode.removeListener(this);
+    m_ParametersRef.updateMap.removeListener(this);
+
     for(int i = 0; i < m_Planets.size(); i++){
         m_Planets[i]->m_Destroy.removeListener(this);
     }
@@ -142,6 +147,8 @@ void Map::mouseDoubleClick(const MouseEvent& e){
     }
 }
 
+//
+
 void Map::valueChanged(juce::Value& value){
     juce::ignoreUnused(value);
     destroyPlanet();
@@ -150,4 +157,8 @@ void Map::valueChanged(juce::Value& value){
         rebuildPlanets();
         m_ParametersRef.updateMap.setValue(false);
     }
+}
+
+void Map::valueTreePropertyChanged(juce::ValueTree& node, const juce::Identifier& id){
+    if(id == Parameters::isActiveProp){repaint();}
 }

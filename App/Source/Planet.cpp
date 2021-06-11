@@ -20,9 +20,18 @@ Planet::~Planet(){Logger::writeToLog("Planet destroyed.");}
 // View methods.
 
 void Planet::paint(Graphics& g){
-    g.setColour(juce::Colours::red);
+    if(getState().getProperty(Parameters::isActiveProp)){
+        g.setColour(juce::Colours::green);
+        Logger::writeToLog("green");
+    }
+    else{
+        g.setColour(juce::Colours::red);
+        Logger::writeToLog("red");
+    }
+    
     draw(getDiameter(), getX(), getY());
     g.fillEllipse(getClipBoundary() / 2, getClipBoundary() / 2, getDiameter(), getDiameter());
+    Logger::writeToLog("sdsd");
 }
 
 void Planet::resized(){}
