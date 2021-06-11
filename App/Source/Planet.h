@@ -2,10 +2,6 @@
 
 
 class Planet: public juce::Component{
-public:
-    // Value used to activate planet destruction.
-    juce::Value m_Destroy;
-
 private:
     juce::ComponentDragger m_Dragger;
 

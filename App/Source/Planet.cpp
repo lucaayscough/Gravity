@@ -9,9 +9,6 @@ Planet::Planet(juce::OwnedArray<Planet>& planets_ref, AudioContainer& audioconta
         m_AudioContainerRef(audiocontainer_ref),
         m_ParametersRef(parameters_ref){
     Logger::writeToLog("Planet created.");
-    
-    // Listener value used to determine when to destroy the planet.
-    m_Destroy.setValue(false);
 }
 
 Planet::~Planet(){Logger::writeToLog("Planet destroyed.");}
@@ -137,9 +134,7 @@ void Planet::mouseUp(const MouseEvent& e){
     
     // Destroys planet if clicked with right mouse button.
     else if(e.mods.isRightButtonDown()){
-        // Initializes planet destruction.
-        m_Destroy.setValue(true);
-        Logger::writeToLog("Set to destroy.");
+        m_ParametersRef.removePlanetNode(getComponentID());
     }
 }
 

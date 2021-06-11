@@ -15,7 +15,7 @@ private:
     void createSun();
     void createPlanet(int, int);
     void setupPlanet(Planet*, int x, int y, juce::ValueTree);
-    void destroyPlanet();
+    void destroyPlanet(juce::String&);
     void rebuildPlanets();
 
     // Interface methods
@@ -31,6 +31,7 @@ private:
     // Callback methods.
     void valueChanged(juce::Value&) override;
     void valueTreePropertyChanged(juce::ValueTree&, const juce::Identifier&) override;
+    void valueTreeChildRemoved(juce::ValueTree&, juce::ValueTree&, int) override;
 
 private:
     // Member variables.

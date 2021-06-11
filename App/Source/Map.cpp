@@ -20,10 +20,6 @@ Map::~Map(){
     m_ParametersRef.rootNode.removeListener(this);
     m_ParametersRef.updateMap.removeListener(this);
 
-    for(int i = 0; i < m_Planets.size(); i++){
-        m_Planets[i]->m_Destroy.removeListener(this);
-    }
-
     Logger::writeToLog("Map destroyed!");
 }
 
@@ -71,19 +67,17 @@ void Map::setupPlanet(Planet* planet, int x, int y, juce::ValueTree node){
 
     planet->setPosXY(planet->getX(), planet->getY());
     planet->setCentrePosXY(planet->getCentreX(planet), planet->getCentreY(planet));
-
-    planet->m_Destroy.addListener(this);
     planet->updateGraph();
 }
 
-void Map::destroyPlanet(){
-    // For each planet check to see if it has been set for destruction.
-    for(int i = 0; i < m_Planets.size(); i++){
-        if(m_Planets[i]->m_Destroy == true){
-            m_ParametersRef.removePlanetNode(m_Planets[i]->getComponentID());
+void Map::destroyPlanet(juce::String& id){
+    for(int i = 0; i < getNumPlanets(); i++){
+        if(m_Planets[i]->getComponentID() == id){
             m_Planets.remove(i, true);
         }
     }
+
+    repaint();
 }
 
 void Map::rebuildPlanets(){
@@ -97,9 +91,6 @@ void Map::rebuildPlanets(){
         m_Planets[i]->setComponentID(node.getProperty(Parameters::idProp));
 
         addAndMakeVisible(m_Planets[i]);
-
-        // Add listener for planet destruction request and lerp graph.
-        m_Planets[i]->m_Destroy.addListener(this);
         
         m_Planets[i]->draw();
     }
@@ -147,11 +138,11 @@ void Map::mouseDoubleClick(const MouseEvent& e){
     }
 }
 
-//
+//--------------------------------------------------//
+// Callback methods.
 
 void Map::valueChanged(juce::Value& value){
     juce::ignoreUnused(value);
-    destroyPlanet();
     
     if(m_ParametersRef.updateMap.getValue() == juce::var(true)){
         rebuildPlanets();
@@ -160,5 +151,14 @@ void Map::valueChanged(juce::Value& value){
 }
 
 void Map::valueTreePropertyChanged(juce::ValueTree& node, const juce::Identifier& id){
+    juce::ignoreUnused(node);
     if(id == Parameters::isActiveProp){repaint();}
+}
+
+void Map::valueTreeChildRemoved(juce::ValueTree& parentNode, juce::ValueTree& removedNode, int index){
+    juce::ignoreUnused(parentNode, index);
+    if(removedNode.getType() == Parameters::planetType){
+        juce::String id = removedNode.getProperty(Parameters::idProp).toString();
+        destroyPlanet(id);
+    }
 }
