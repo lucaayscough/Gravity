@@ -38,6 +38,7 @@ private:
     OwnedArray<Planet> m_Planets;
     AudioContainer& m_AudioContainerRef;
     Parameters& m_ParametersRef;
+    ControlPanel m_ControlPanel;
     Sun m_Sun;
 
     JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR(Map)

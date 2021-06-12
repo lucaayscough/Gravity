@@ -7,8 +7,11 @@
 Map::Map(AudioContainer& audiocontainer_ref, Parameters& parameters_ref)
     :   m_AudioContainerRef(audiocontainer_ref),
         m_ParametersRef(parameters_ref),
-        m_Sun(m_Planets, m_AudioContainerRef, m_ParametersRef){
+        m_ControlPanel(m_ParametersRef),
+        m_Sun(m_Planets, m_AudioContainerRef, m_ParametersRef, m_ControlPanel){
     Logger::writeToLog("Map created!");
+
+    addChildComponent(m_ControlPanel, -1);
 
     m_ParametersRef.rootNode.addListener(this);
     m_ParametersRef.updateMap.addListener(this);
@@ -27,7 +30,10 @@ Map::~Map(){
 // View methods.
 
 void Map::paint(Graphics& g){g.fillAll(juce::Colours::black);}
-void Map::resized(){createSun();}
+void Map::resized(){
+    createSun();
+    m_ControlPanel.setBounds(getLocalBounds());
+}
 
 void Map::createSun(){
     addAndMakeVisible(m_Sun);
@@ -45,7 +51,7 @@ void Map::createPlanet(int x, int y){
     juce::ValueTree node = m_ParametersRef.getRootPlanetNode().getChild(m_ParametersRef.getRootPlanetNode().getNumChildren() - 1);
 
     // Instantiate planet inside planets array.
-    m_Planets.add(new Planet(m_Planets, m_AudioContainerRef, m_ParametersRef));
+    m_Planets.add(new Planet(m_Planets, m_AudioContainerRef, m_ParametersRef, m_ControlPanel));
 
     // Extra setup for planet object.
     setupPlanet(m_Planets[getNumPlanets() - 1], x, y, node);
@@ -86,7 +92,7 @@ void Map::rebuildPlanets(){
         juce::ValueTree node = m_ParametersRef.getRootPlanetNode().getChild(i);
 
         // Instantiate planet inside planets array.
-        m_Planets.add(new Planet(m_Planets, m_AudioContainerRef, m_ParametersRef));
+        m_Planets.add(new Planet(m_Planets, m_AudioContainerRef, m_ParametersRef, m_ControlPanel));
         
         m_Planets[i]->setComponentID(node.getProperty(Parameters::idProp));
 

@@ -4,10 +4,11 @@
 //--------------------------------------------------//
 // Constructors and destructors.
 
-Planet::Planet(juce::OwnedArray<Planet>& planets_ref, AudioContainer& audiocontainer_ref, Parameters& parameters_ref)
+Planet::Planet(juce::OwnedArray<Planet>& planets_ref, AudioContainer& audiocontainer_ref, Parameters& parameters_ref, ControlPanel& controlpanel_ref)
     :   m_PlanetsRef(planets_ref),
         m_AudioContainerRef(audiocontainer_ref),
-        m_ParametersRef(parameters_ref){
+        m_ParametersRef(parameters_ref),
+        m_ControlPanelRef(controlpanel_ref){
     Logger::writeToLog("Planet created.");
 }
 
@@ -19,16 +20,13 @@ Planet::~Planet(){Logger::writeToLog("Planet destroyed.");}
 void Planet::paint(Graphics& g){
     if(getState().getProperty(Parameters::isActiveProp)){
         g.setColour(juce::Colours::green);
-        Logger::writeToLog("green");
     }
     else{
         g.setColour(juce::Colours::red);
-        Logger::writeToLog("red");
     }
     
     draw(getDiameter(), getX(), getY());
     g.fillEllipse(getClipBoundary() / 2, getClipBoundary() / 2, getDiameter(), getDiameter());
-    Logger::writeToLog("sdsd");
 }
 
 void Planet::resized(){}
@@ -42,7 +40,8 @@ void Planet::resizePlanet(int diameter){
     if(diameter > getDiameter()){
         new_x = getX() - (Variables::SIZE_MODIFIER / 2);
         new_y = getY() - (Variables::SIZE_MODIFIER / 2);
-    } else{
+    }
+    else{
         new_x = getX() + (Variables::SIZE_MODIFIER / 2);
         new_y = getY() + (Variables::SIZE_MODIFIER / 2);
     }
@@ -116,6 +115,16 @@ bool Planet::hitTest(int x, int y){
     float a = pow((float)x - ((float)getDiameter() + (float)getClipBoundary()) / 2.0f, 2.0f);
     float b = pow((float)y - ((float)getDiameter() + (float)getClipBoundary()) / 2.0f, 2.0f);
     return sqrt(a + b) <= getDiameter() / 2;
+}
+
+void Planet::mouseEnter(const MouseEvent& e){
+    juce::ignoreUnused(e);
+    m_ControlPanelRef.show(getState());
+}
+
+void Planet::mouseExit(const MouseEvent& e){
+    juce::ignoreUnused(e);
+    m_ControlPanelRef.unshow();
 }
 
 void Planet::mouseDown(const MouseEvent& e){m_Dragger.startDraggingComponent(this, e);}

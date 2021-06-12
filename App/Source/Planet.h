@@ -2,19 +2,11 @@
 
 
 class Planet: public juce::Component{
-private:
-    juce::ComponentDragger m_Dragger;
-
-protected:
-    juce::OwnedArray<Planet>& m_PlanetsRef;
-    AudioContainer& m_AudioContainerRef;
-    Parameters& m_ParametersRef;
-
 //--------------------------------------------------//
 // Constructors and destructors.
 
 public:
-    Planet(juce::OwnedArray<Planet>&, AudioContainer&, Parameters&);
+    Planet(juce::OwnedArray<Planet>&, AudioContainer&, Parameters&, ControlPanel&);
     ~Planet() override;
 
 //--------------------------------------------------//
@@ -71,11 +63,24 @@ private:
 
 private:
     bool hitTest(int, int) override;
+    void mouseEnter(const MouseEvent&) override;
+    void mouseExit(const MouseEvent&) override;
     void mouseDown(const MouseEvent&) override;
     void mouseUp(const MouseEvent&) override;
     void mouseDrag(const MouseEvent&) override;
     void mouseWheelMove(const MouseEvent&, const MouseWheelDetails&) override;
     void visibilityChanged() override;
+
+private:
+    // Member variables.
+    juce::ComponentDragger m_Dragger;
+
+protected:
+    // Member variables.
+    juce::OwnedArray<Planet>& m_PlanetsRef;
+    AudioContainer& m_AudioContainerRef;
+    Parameters& m_ParametersRef;
+    ControlPanel& m_ControlPanelRef;
 
     JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR(Planet)
 };

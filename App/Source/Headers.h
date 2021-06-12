@@ -12,6 +12,7 @@
 #include "Variables.h"
 #include "Parameters.h"
 
+#include "ControlPanel.h"
 #include "Planet.h"
 #include "Sun.h"
 #include "Map.h"

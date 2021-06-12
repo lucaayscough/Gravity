@@ -4,8 +4,10 @@
 //------------------------------------------------------------//
 // Constructors and destructors.
 
-Sun::Sun(juce::OwnedArray<Planet>& planets_ref, AudioContainer& audiocontainer_ref, Parameters& parameters_ref)
-    : Planet(planets_ref, audiocontainer_ref, parameters_ref){}
+Sun::Sun(juce::OwnedArray<Planet>& planets_ref, AudioContainer& audiocontainer_ref, Parameters& parameters_ref, ControlPanel& controlpanel_ref)
+    :   Planet(planets_ref, audiocontainer_ref, parameters_ref, controlpanel_ref){
+    setComponentID(m_ParametersRef.SUN_ID);
+}
 
 Sun::~Sun(){}
 
