@@ -1,6 +1,9 @@
 #include "Headers.h"
 
 
+//------------------------------------------------------------//
+// Constructors and destructors.
+
 AudioPluginAudioProcessorEditor::AudioPluginAudioProcessorEditor(AudioPluginAudioProcessor& p)
     :   AudioProcessorEditor(&p),
         processorRef(p),
@@ -10,13 +13,15 @@ AudioPluginAudioProcessorEditor::AudioPluginAudioProcessorEditor(AudioPluginAudi
     addAndMakeVisible(m_Map);
 
     // Main window.
-    setSize(M_WINDOW_WIDTH, M_WINDOW_HEIGHT);
-    setResizable(M_IS_WIDTH_RESIZABLE, M_IS_HEIGHT_RESIZABLE);
+    setSize(Variables::WINDOW_WIDTH, Variables::WINDOW_HEIGHT);
+    setResizable(Variables::IS_WIDTH_RESIZABLE, Variables::IS_HEIGHT_RESIZABLE);
 }
 
 AudioPluginAudioProcessorEditor::~AudioPluginAudioProcessorEditor(){Logger::writeToLog("Editor destroyed.");}
 
-//==============================================================================
+//------------------------------------------------------------//
+// View methods.
+
 void AudioPluginAudioProcessorEditor::paint(juce::Graphics& g){juce::ignoreUnused(g);}
 
 void AudioPluginAudioProcessorEditor::resized(){
