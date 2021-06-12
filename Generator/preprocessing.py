@@ -40,12 +40,12 @@ class Preprocessing:
             
             # Normalize audio
             rawsound = AudioSegment.from_file(self._post_path + str(counter) + '.wav', "wav")  
-            normalizedsound = effects.normalize(rawsound)  
+            normalizedsound = effects.normalize(rawsound, 2.0)  
             normalizedsound.export(self._post_path + str(counter) + '.wav', format="wav")
 
             counter += 1
     
 
 if __name__ == '__main__':
-    pp = Preprocessing('datasets/dataset/', 'datasets/dataset_4/')
-    pp.process(sample_rate = 44100, fade_out_len = 2000, max_len = 131072)
+    pp = Preprocessing('H:/dev/dataset_maker/dataset/', 'H:/dev/Gravity/Generator/datasets/dataset_5/')
+    pp.process(sample_rate = 44100, fade_out_len = 10000, max_len = 65536)
