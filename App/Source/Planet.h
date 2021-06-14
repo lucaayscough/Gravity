@@ -7,7 +7,9 @@ class Planet: public juce::Component{
 
 public:
     Planet(juce::OwnedArray<Planet>&, AudioContainer&, Parameters&, ControlPanel&);
+    virtual void init();
     ~Planet() override;
+   
 
 //--------------------------------------------------//
 // View methods.
@@ -81,6 +83,8 @@ protected:
     AudioContainer& m_AudioContainerRef;
     Parameters& m_ParametersRef;
     ControlPanel& m_ControlPanelRef;
+
+    juce::GlowEffect m_GlowEffect;
 
     JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR(Planet)
 };

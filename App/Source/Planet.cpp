@@ -9,10 +9,18 @@ Planet::Planet(juce::OwnedArray<Planet>& planets_ref, AudioContainer& audioconta
         m_AudioContainerRef(audiocontainer_ref),
         m_ParametersRef(parameters_ref),
         m_ControlPanelRef(controlpanel_ref){
-    Logger::writeToLog("Planet created.");
+    init();
 }
 
-Planet::~Planet(){Logger::writeToLog("Planet destroyed.");}
+void Planet::init(){
+    Logger::writeToLog("Planet created.");
+    setComponentEffect(&m_GlowEffect);
+}
+
+Planet::~Planet(){
+    setComponentEffect(nullptr);
+    Logger::writeToLog("Planet destroyed.");
+}
 
 //--------------------------------------------------//
 // View methods.
@@ -55,6 +63,7 @@ void Planet::resizePlanet(int diameter){
 }
 
 void Planet::setDiameter(int diameter){getState().setProperty(Parameters::diameterProp, diameter, nullptr);}
+
 void Planet::setMapSize(int width, int height){
     getState().setProperty(Parameters::mapWidthProp, width, nullptr);
     getState().setProperty(Parameters::mapHeightProp, height, nullptr);

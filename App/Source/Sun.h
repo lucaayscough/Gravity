@@ -8,6 +8,7 @@ class Sun : public Planet{
 
 public:
     Sun(juce::OwnedArray<Planet>&, AudioContainer&, Parameters&, ControlPanel&);
+    void init() override;
     ~Sun() override;
 
 //--------------------------------------------------//

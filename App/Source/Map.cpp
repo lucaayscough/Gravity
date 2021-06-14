@@ -30,13 +30,14 @@ Map::~Map(){
 // View methods.
 
 void Map::paint(Graphics& g){g.fillAll(juce::Colours::black);}
+
 void Map::resized(){
     createSun();
     m_ControlPanel.setBounds(getLocalBounds());
 }
 
 void Map::createSun(){
-    addAndMakeVisible(m_Sun);
+    addChildAndSetID(&m_Sun, m_ParametersRef.SUN_ID);
     m_Sun.draw();
     m_Sun.setPosXY(m_Sun.getX(), m_Sun.getY());
     m_Sun.setCentrePosXY(m_Sun.getCentreX(&m_Sun), m_Sun.getCentreY(&m_Sun));
@@ -58,12 +59,9 @@ void Map::createPlanet(int x, int y){
 }
 
 void Map::setupPlanet(Planet* planet, int x, int y, juce::ValueTree node){
-    // ID
-    planet->setComponentID(node.getProperty(Parameters::idProp));
-
     // Visibility.
+    addChildAndSetID(planet, node.getProperty(Parameters::idProp));
     planet->setMapSize(getWidth(), getHeight());
-    addAndMakeVisible(planet);
 
     planet->draw(
         planet->getDiameter(),
