@@ -39,7 +39,6 @@ void ControlPanel::visibilityChanged(){
 }
 
 bool ControlPanel::hitTest(int x, int y){
-    if(getX() < x || getX() + m_Width > x){return true;}
-    else if(getY() < y || getY() + m_Height > y){return true;}
+    if(getX() < x && getX() + m_Width > x && getY() < y && getY() + m_Height > y){return true;}
     else{return false;}
 }
