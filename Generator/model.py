@@ -5,6 +5,7 @@ import numpy as np
 import random
 import math
 
+
 # ------------------------------------------------------------
 # Low level network components.
 
@@ -97,19 +98,31 @@ class ApplyNoise(nn.Module):
 # ------------------------------------------------------------
 # Style modulation layer.
 
-class StyleMod(nn.Module):
-    def __init__(self, channels, latent_size = 512):
-        super(StyleMod, self).__init__()
-        self.lin = EqualizedLinear(latent_size,
-                                   channels * 2,
-                                   gain=1.0)
+class ApplyStyle(nn.Module):
+    def __init__(self, conv, latent_size = 512):
+        super(ApplyStyle, self).__init__()
+        self.conv = conv
+    
+    def forward(self, x, styles, weight):
+        batch_size = x.shape[0]
 
-    def forward(self, x, latent):
-        style = self.lin(latent)  # style => [batch_size, n_channels*2]
+        # Calculate per-sample weights and demodulation coefficients.
+        w = weight.unsqueeze(0)
+        print(w.shape)
+        print(styles.shape)
+        w = w * styles.reshape(batch_size, 1, -1, 1)
+        
+        torch.flip(w, [0, 1, 2, 3])
 
-        shape = [-1, 2, x.size(1)] + (x.dim() - 2) * [1]
-        style = style.view(shape)  # [batch_size, 2, n_channels, ...]
-        x = x * (style[:, 0] + 1.) + style[:, 1]
+        dcoefs = (w.square().sum(dim=[2,3]) + 1e-8).rsqrt()
+
+        w = w * dcoefs.reshape(batch_size, -1, 1, 1) 
+
+        x = x * styles.reshape(batch_size, -1, 1)
+
+        x = self.conv(x)
+        x = x * dcoefs.reshape(batch_size, -1, 1)
+
         return x
 
 # ------------------------------------------------------------
@@ -190,28 +203,6 @@ class MiniBatchStdDev(nn.Module):
 # Blocks composed of low level network components.
 
 # ------------------------------------------------------------
-# Epilogue layer.
-
-class LayerEpilogue(nn.Module):
-    def __init__(
-        self,
-        channels
-    ):
-        super().__init__()
-
-        self.instance_norm = nn.InstanceNorm1d(channels)
-        self.apply_noise = ApplyNoise(channels)
-        self.style_mod = StyleMod(channels)
-    
-    def forward(self, x, latent_w, noise = None):
-        self.apply_noise(x, noise)
-        x = F.leaky_relu(x, 0.2)
-        x = self.instance_norm(x)
-        x = self.style_mod(x, latent_w)
-        
-        return x
-
-# ------------------------------------------------------------
 # General generator block.
 
 class GenGeneralConvBlock(nn.Module):
@@ -232,21 +223,29 @@ class GenGeneralConvBlock(nn.Module):
         self.resample = resample
         
         self.conv_block_1 = EqualizedConv1d(in_channels = in_channels, out_channels = in_channels, kernel_size = kernel_size, stride = stride, padding = padding, dilation = dilation, bias = bias)
-        self.conv_block_2 = EqualizedConv1d(in_channels = in_channels, out_channels = out_channels, kernel_size = kernel_size, stride = stride, padding = padding, dilation = dilation, bias = bias)
+        self.conv_block_2 = EqualizedConv1d(in_channels = in_channels, out_channels = in_channels, kernel_size = kernel_size, stride = stride, padding = padding, dilation = dilation, bias = bias)
+        self.conv_block_3 = EqualizedConv1d(in_channels = in_channels, out_channels = out_channels, kernel_size = kernel_size, stride = stride, padding = padding, dilation = dilation, bias = bias)
 
-        self.layer_epilogue_1 = LayerEpilogue(channels = in_channels)
-        self.layer_epilogue_2 = LayerEpilogue(channels = out_channels)
+        self.weight = torch.nn.Parameter(torch.randn([in_channels, in_channels, kernel_size]))
+
+        self.apply_style_1 = ApplyStyle(conv = self.conv_block_1)
+        self.apply_style_2 = ApplyStyle(conv = self.conv_block_2)
+
+        self.apply_noise_1 = ApplyNoise(in_channels)
+        self.apply_noise_2 = ApplyNoise(in_channels)
     
     def forward(self, x, latent_w, noise = None):
         x = self.resample(x, scale_factor = self.scale_factor)
 
-        # First block
-        x = self.conv_block_1(x)
-        x = self.layer_epilogue_1(x, latent_w[:, 0], noise)
+        x = self.apply_style_1(x, latent_w[:, 0], weight = self.weight)
+        x = self.apply_noise_1(x, noise)
+        x = F.leaky_relu(x, 0.2)
 
-        # Second block
-        x = self.conv_block_2(x)
-        x = self.layer_epilogue_2(x, latent_w[:, 1], noise)
+        x = self.apply_style_2(x, latent_w[:, 1], weight = self.weight)
+        x = self.apply_noise_2(x, noise)
+        x = F.leaky_relu(x, 0.2)
+
+        x = self.conv_block_3(x)
         return x
 
 # ------------------------------------------------------------
