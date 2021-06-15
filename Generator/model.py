@@ -99,17 +99,18 @@ class ApplyNoise(nn.Module):
 # Style modulation layer.
 
 class ApplyStyle(nn.Module):
-    def __init__(self, conv, latent_size = 512):
+    def __init__(self, conv, channels, latent_size = 512):
         super(ApplyStyle, self).__init__()
         self.conv = conv
+        self.lin = EqualizedLinear(latent_size, channels, gain = 1)
     
     def forward(self, x, styles, weight):
         batch_size = x.shape[0]
 
+        styles = self.lin(styles)
+
         # Calculate per-sample weights and demodulation coefficients.
         w = weight.unsqueeze(0)
-        print(w.shape)
-        print(styles.shape)
         w = w * styles.reshape(batch_size, 1, -1, 1)
         
         torch.flip(w, [0, 1, 2, 3])
@@ -228,8 +229,8 @@ class GenGeneralConvBlock(nn.Module):
 
         self.weight = torch.nn.Parameter(torch.randn([in_channels, in_channels, kernel_size]))
 
-        self.apply_style_1 = ApplyStyle(conv = self.conv_block_1)
-        self.apply_style_2 = ApplyStyle(conv = self.conv_block_2)
+        self.apply_style_1 = ApplyStyle(conv = self.conv_block_1, channels = in_channels)
+        self.apply_style_2 = ApplyStyle(conv = self.conv_block_2, channels = in_channels)
 
         self.apply_noise_1 = ApplyNoise(in_channels)
         self.apply_noise_2 = ApplyNoise(in_channels)
