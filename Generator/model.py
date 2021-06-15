@@ -279,7 +279,7 @@ class DisGeneralConvBlock(nn.Module):
         x = self.conv_block_2(x)
         x = F.leaky_relu(x, 0.2)
 
-        x = self.resample(x, scale_factor = 1 / self.scale_factor, direction = "down")
+        x = self.resample(x)
 
         return x
 
@@ -348,7 +348,7 @@ class DisFinalConvBlock(nn.Module):
     
         x = self.conv_block_3(x)
 
-        x = self.resample()
+        x = self.resample(x)
 
         return x
 
@@ -524,11 +524,7 @@ class Generator(nn.Module):
             if i == 0:
                 out = skip
             else:
-                print(out.shape)
-                out = self.resample(x)
-                print(out.shape)
-                print(skip.shape)
-                quit()
+                out = self.resample(out)
                 out = out + skip
             i += 1
 
@@ -627,7 +623,7 @@ class Discriminator(nn.Module):
 
         for i in range(self.depth):
             if i < self.depth - 1:
-                residual = self.res_converters[i](self.resampel(x))
+                residual = self.res_converters[i](self.resample(x))
             else:
                 residual = self.res_converters[i](self.resample(x))
             x = self.layers[i](x)
