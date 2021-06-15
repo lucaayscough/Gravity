@@ -12,3 +12,5 @@ Generator/scripted_modules/generator_module.pt
 .vscode/settings.json
 Generator/scripted_modules/mapper_module.pt
 .DS_Store
+Generator/test.ipynb
+Generator/scripted_modules/checkpoint_118_G.pth.tar
