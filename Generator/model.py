@@ -130,18 +130,19 @@ class Resample(nn.Module):
     def __init__(self, direction):
         super().__init__()
         self.direction = direction
-
-        kernel = torch.tensor([1, 2, 4, 16, 256, 16, 4, 2, 1], dtype = torch.float32, device = "cuda")
-        self.kernel = kernel.expand(1, 1, -1)
+        kernel = [1, 2, 4, 2, 1]
+        kernel = torch.tensor(kernel, dtype = torch.float)
+        kernel = kernel.expand(1, 1, -1)
+        kernel = kernel / kernel.sum()
+        self.register_buffer("kernel", kernel)
 
     def _blur(self, x):
         kernel = self.kernel.expand(x.size(1), -1, -1)
-        kernel = kernel / kernel.sum()
         x = F.conv1d(
             x,
             kernel,
             stride = 1,
-            padding = 4,
+            padding = 2,
             groups = x.size(1)
         )
         return x
