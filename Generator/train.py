@@ -121,7 +121,7 @@ class Train:
             dilation = self.dilation,
             depth = self.depth,
             num_channels = self.num_channels,
-            scale_factor = self.scale_factor,
+            scale_factor = 1 / self.scale_factor,
             start_size = self.start_size,
         ).to(self.device)
 

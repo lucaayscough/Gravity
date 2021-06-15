@@ -1,7 +1,6 @@
 import torch
 import torch.nn as nn
 import torch.nn.functional as F
-from torch.nn.functional import interpolate
 import numpy as np
 import random
 import math
@@ -123,22 +122,45 @@ class PixelNorm(nn.Module):
     def forward(self, x, epsilon: float = 1e-8):
         x = x / (x.pow(2.0).mean(dim = 1, keepdim = True).add(epsilon).sqrt())
         return x
+    
+# ------------------------------------------------------------
+# Resample layers.
+
+class Resample(nn.Module):
+    def __init__(self, direction, scale_factor):
+        super().__init__()
+        self.direction = direction
+        self.scale_factor = scale_factor
+
+        kernel = torch.tensor([1, 2, 4, 16, 256, 16, 4, 2, 1], dtype = torch.float32, device = "cuda")
+        self.kernel = kernel.expand(1, 1, -1)
+
+    def _blur(self, x):
+        kernel = self.kernel.expand(x.size(1), -1, -1)
+        kernel = kernel / kernel.sum()
+        x = F.conv1d(
+            x,
+            kernel,
+            stride = 1,
+            padding = 4,
+            groups = x.size(1)
+        )
+        return x
+
+    def forward(self, x):
+        if self.direction == "up":
+            x = F.interpolate(input = x, scale_factor = self.scale_factor, mode = "linear")
+            x = self._blur(x)
+        else:
+            x = self._blur(x)
+            x = F.interpolate(input = x, scale_factor = self.scale_factor, mode = "linear")
+        return x
 
 # ------------------------------------------------------------
 # Minibatch standard deviation layer for discriminator. Used to increase diversity in generator.
 
 class MiniBatchStdDev(nn.Module):
-    """
-    Minibatch standard deviation layer for the discriminator
-    Args:
-        group_size: Size of each group into which the batch is split
-    """
-
     def __init__(self, group_size = 4) -> None:
-        """
-        Args:
-            group_size: Size of each group into which the batch is split
-        """
         super(MiniBatchStdDev, self).__init__()
         self.group_size = group_size
 
@@ -162,8 +184,6 @@ class MiniBatchStdDev(nn.Module):
         y = y.mean(dim=[1, 2], keepdim=True)
         y = y.repeat(group_size, 1, samples)
         y = torch.cat([x, y], 1)
-
-        # return the computed values:
         return y
 
 # ------------------------------------------------------------
@@ -204,24 +224,21 @@ class GenGeneralConvBlock(nn.Module):
         padding,
         dilation,
         scale_factor,
+        resample,
         bias = True,
     ):
         super().__init__()
         self.scale_factor = scale_factor
+        self.resample = resample
         
         self.conv_block_1 = EqualizedConv1d(in_channels = in_channels, out_channels = in_channels, kernel_size = kernel_size, stride = stride, padding = padding, dilation = dilation, bias = bias)
         self.conv_block_2 = EqualizedConv1d(in_channels = in_channels, out_channels = out_channels, kernel_size = kernel_size, stride = stride, padding = padding, dilation = dilation, bias = bias)
 
-        self.layer_epilogue_1 = LayerEpilogue(
-            channels = in_channels,
-        )
-
-        self.layer_epilogue_2 = LayerEpilogue(
-            channels = out_channels,
-        )
+        self.layer_epilogue_1 = LayerEpilogue(channels = in_channels)
+        self.layer_epilogue_2 = LayerEpilogue(channels = out_channels)
     
     def forward(self, x, latent_w, noise = None):
-        x = interpolate(x, scale_factor = self.scale_factor)
+        x = self.resample(x)
 
         # First block
         x = self.conv_block_1(x)
@@ -245,14 +262,15 @@ class DisGeneralConvBlock(nn.Module):
         padding,
         dilation,
         scale_factor,
+        resample,
         bias = True
     ):
         super().__init__()
+        self.scale_factor = scale_factor
+        self.resample = resample
 
         self.conv_block_1 = EqualizedConv1d(in_channels = in_channels, out_channels = in_channels, kernel_size = kernel_size, stride = stride, padding = padding, dilation = dilation, bias = bias)
         self.conv_block_2 = EqualizedConv1d(in_channels = in_channels, out_channels = out_channels, kernel_size = kernel_size, stride = stride, padding = padding, dilation = dilation, bias = bias)
-
-        self.down_sampler = nn.AvgPool1d(scale_factor)
     
     def forward(self, x):
         x = self.conv_block_1(x)
@@ -261,7 +279,7 @@ class DisGeneralConvBlock(nn.Module):
         x = self.conv_block_2(x)
         x = F.leaky_relu(x, 0.2)
 
-        x = self.down_sampler(x)
+        x = self.resample(x, scale_factor = 1 / self.scale_factor, direction = "down")
 
         return x
 
@@ -279,9 +297,11 @@ class DisFinalConvBlock(nn.Module):
         padding,
         dilation,
         scale_factor,
+        resample,
         bias = True
     ):
         super().__init__()
+        self.resample = resample
         
         in_channels += 1
         out_channels += 1
@@ -316,8 +336,6 @@ class DisFinalConvBlock(nn.Module):
             padding = 0,
             bias = bias
         )
-        
-        self.down_sampler = nn.AvgPool1d(scale_factor)
     
     def forward(self, x):
         x = self.mini_batch(x)
@@ -330,7 +348,7 @@ class DisFinalConvBlock(nn.Module):
     
         x = self.conv_block_3(x)
 
-        x = self.down_sampler(x)
+        x = self.resample()
 
         return x
 
@@ -432,8 +450,8 @@ class Generator(nn.Module):
         self.scale_factor = scale_factor
         
         self.constant_input = ConstantInput(nf, start_size)
-
         self.truncation = Truncation(avg_latent = torch.zeros(z_dim))
+        self.resample = Resample(direction = "up", scale_factor = scale_factor)
         
         # Base network layers
         self.layers = nn.ModuleList([])
@@ -454,6 +472,7 @@ class Generator(nn.Module):
                     padding = padding,
                     dilation = dilation,
                     scale_factor = self.scale_factor,
+                    resample = self.resample
                 )
             )
             n = n // 2
@@ -505,7 +524,11 @@ class Generator(nn.Module):
             if i == 0:
                 out = skip
             else:
-                out = nn.Upsample(scale_factor = self.scale_factor, mode = "linear")(out)
+                print(out.shape)
+                out = self.resample(x)
+                print(out.shape)
+                print(skip.shape)
+                quit()
                 out = out + skip
             i += 1
 
@@ -548,6 +571,7 @@ class Discriminator(nn.Module):
         self.num_channels = num_channels
         self.scale_factor = scale_factor
         self.start_size = start_size
+        self.resample = Resample(scale_factor = scale_factor, direction = "down")
 
         # Main discriminator convolution blocks.
         self.layers = nn.ModuleList([])
@@ -563,6 +587,7 @@ class Discriminator(nn.Module):
                     padding = self.padding,
                     dilation = self.dilation,
                     scale_factor = self.scale_factor,
+                    resample = self.resample
                 )
             )
             n = n * 2
@@ -578,6 +603,7 @@ class Discriminator(nn.Module):
                 padding = self.padding,
                 dilation = self.dilation,
                 scale_factor = self.start_size,
+                resample = self.resample
             )
         )
         
@@ -601,9 +627,9 @@ class Discriminator(nn.Module):
 
         for i in range(self.depth):
             if i < self.depth - 1:
-                residual = self.res_converters[i](nn.Upsample(scale_factor = 1 / self.scale_factor,  mode = "linear")(x))
+                residual = self.res_converters[i](self.resampel(x))
             else:
-                residual = self.res_converters[i](nn.Upsample(scale_factor = 1 / self.start_size,  mode = "linear")(x))
+                residual = self.res_converters[i](self.resample(x))
             x = self.layers[i](x)
             x = (x + residual) * (1 / math.sqrt(2))
         
