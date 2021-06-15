@@ -127,10 +127,9 @@ class PixelNorm(nn.Module):
 # Resample layers.
 
 class Resample(nn.Module):
-    def __init__(self, direction, scale_factor):
+    def __init__(self, direction):
         super().__init__()
         self.direction = direction
-        self.scale_factor = scale_factor
 
         kernel = torch.tensor([1, 2, 4, 16, 256, 16, 4, 2, 1], dtype = torch.float32, device = "cuda")
         self.kernel = kernel.expand(1, 1, -1)
@@ -147,13 +146,13 @@ class Resample(nn.Module):
         )
         return x
 
-    def forward(self, x):
+    def forward(self, x, scale_factor):
         if self.direction == "up":
-            x = F.interpolate(input = x, scale_factor = self.scale_factor, mode = "linear")
+            x = F.interpolate(input = x, scale_factor = scale_factor, mode = "linear")
             x = self._blur(x)
         else:
             x = self._blur(x)
-            x = F.interpolate(input = x, scale_factor = self.scale_factor, mode = "linear")
+            x = F.interpolate(input = x, scale_factor = scale_factor, mode = "linear")
         return x
 
 # ------------------------------------------------------------
@@ -238,7 +237,7 @@ class GenGeneralConvBlock(nn.Module):
         self.layer_epilogue_2 = LayerEpilogue(channels = out_channels)
     
     def forward(self, x, latent_w, noise = None):
-        x = self.resample(x)
+        x = self.resample(x, scale_factor = self.scale_factor)
 
         # First block
         x = self.conv_block_1(x)
@@ -279,7 +278,7 @@ class DisGeneralConvBlock(nn.Module):
         x = self.conv_block_2(x)
         x = F.leaky_relu(x, 0.2)
 
-        x = self.resample(x)
+        x = self.resample(x, scale_factor = self.scale_factor)
 
         return x
 
@@ -302,6 +301,7 @@ class DisFinalConvBlock(nn.Module):
     ):
         super().__init__()
         self.resample = resample
+        self.scale_factor = scale_factor
         
         in_channels += 1
         out_channels += 1
@@ -348,7 +348,7 @@ class DisFinalConvBlock(nn.Module):
     
         x = self.conv_block_3(x)
 
-        x = self.resample(x)
+        x = self.resample(x, scale_factor = self.scale_factor)
 
         return x
 
@@ -451,7 +451,7 @@ class Generator(nn.Module):
         
         self.constant_input = ConstantInput(nf, start_size)
         self.truncation = Truncation(avg_latent = torch.zeros(z_dim))
-        self.resample = Resample(direction = "up", scale_factor = scale_factor)
+        self.resample = Resample(direction = "up")
         
         # Base network layers
         self.layers = nn.ModuleList([])
@@ -524,7 +524,7 @@ class Generator(nn.Module):
             if i == 0:
                 out = skip
             else:
-                out = self.resample(out)
+                out = self.resample(out, scale_factor = self.scale_factor)
                 out = out + skip
             i += 1
 
@@ -567,7 +567,7 @@ class Discriminator(nn.Module):
         self.num_channels = num_channels
         self.scale_factor = scale_factor
         self.start_size = start_size
-        self.resample = Resample(scale_factor = scale_factor, direction = "down")
+        self.resample = Resample(direction = "down")
 
         # Main discriminator convolution blocks.
         self.layers = nn.ModuleList([])
@@ -598,7 +598,7 @@ class Discriminator(nn.Module):
                 stride = self.stride,
                 padding = self.padding,
                 dilation = self.dilation,
-                scale_factor = self.start_size,
+                scale_factor = 1 / self.start_size,
                 resample = self.resample
             )
         )
@@ -623,12 +623,12 @@ class Discriminator(nn.Module):
 
         for i in range(self.depth):
             if i < self.depth - 1:
-                residual = self.res_converters[i](self.resample(x))
+                residual = self.res_converters[i](self.resample(x, scale_factor = self.scale_factor))
             else:
-                residual = self.res_converters[i](self.resample(x))
+                residual = self.res_converters[i](self.resample(x, scale_factor = 1 / self.start_size))
             x = self.layers[i](x)
             x = (x + residual) * (1 / math.sqrt(2))
-        
+            
         x = self.linear(x.squeeze(2))
 
         return x
