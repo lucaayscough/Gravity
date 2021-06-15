@@ -1,5 +1,6 @@
 import torch
 import torch.nn as nn
+import torch.nn.functional as F
 from torch.nn.functional import interpolate
 import numpy as np
 import random
@@ -181,12 +182,10 @@ class LayerEpilogue(nn.Module):
         self.instance_norm = nn.InstanceNorm1d(channels)
         self.apply_noise = ApplyNoise(channels)
         self.style_mod = StyleMod(channels)
-        
-        self.l_relu = nn.LeakyReLU(0.2)
     
     def forward(self, x, latent_w, noise = None):
         self.apply_noise(x, noise)
-        x = self.l_relu(x)
+        x = F.leaky_relu(x, 0.2)
         x = self.instance_norm(x)
         x = self.style_mod(x, latent_w)
         
@@ -254,14 +253,16 @@ class DisGeneralConvBlock(nn.Module):
         self.conv_block_2 = EqualizedConv1d(in_channels = in_channels, out_channels = out_channels, kernel_size = kernel_size, stride = stride, padding = padding, dilation = dilation, bias = bias)
 
         self.down_sampler = nn.AvgPool1d(scale_factor)
-        
-        self.l_relu = nn.LeakyReLU(0.2)
     
     def forward(self, x):
-        x = self.l_relu(self.conv_block_1(x))
+        x = self.conv_block_1(x)
+        x = F.leaky_relu(x, 0.2)
 
-        x = self.l_relu(self.conv_block_2(x))
+        x = self.conv_block_2(x)
+        x = F.leaky_relu(x, 0.2)
+
         x = self.down_sampler(x)
+
         return x
 
 # ------------------------------------------------------------
@@ -315,16 +316,18 @@ class DisFinalConvBlock(nn.Module):
             padding = 0,
             bias = bias
         )
-
-        self.l_relu = nn.LeakyReLU(0.2)
         
         self.down_sampler = nn.AvgPool1d(scale_factor)
     
     def forward(self, x):
         x = self.mini_batch(x)
-        x = self.l_relu(self.conv_block_1(x))
 
-        x = self.l_relu(self.conv_block_2(x))
+        x = F.leaky_relu(x, 0.2)
+        x = self.conv_block_1(x)
+
+        x = F.leaky_relu(x, 0.2)
+        x = self.conv_block_2(x)
+    
         x = self.conv_block_3(x)
 
         x = self.down_sampler(x)
@@ -376,12 +379,10 @@ class MappingNetwork(nn.Module):
         broadcast,
         depth = 8,
         z_dim = 512,
-        use_leaky_relu = True,
-        lrmul = 0.01,
+        lrmul = 0.01
     ):
         super().__init__()
-        
-        self.use_leaky_relu = use_leaky_relu
+
         self.broadcast = broadcast
 
         # Fully connected layers.
@@ -393,18 +394,13 @@ class MappingNetwork(nn.Module):
 
         # Normalization layer.
         self.pixel_norm = PixelNorm()
-        
-        # Non-linearity layer.
-        if self.use_leaky_relu:
-            self.leaky_relu = nn.LeakyReLU(0.2)
 
     def forward(self, x):
         x = self.pixel_norm(x)
 
         for layer in self.layers:
             x = layer(x)
-            if self.use_leaky_relu:
-                x = self.leaky_relu(x)
+            x = F.leaky_relu(x, 0.2)
 
         return x.unsqueeze(1).expand(-1, self.broadcast, -1)
             

@@ -19,17 +19,17 @@ config_dict = {
     'restart_from_iter': False,
     'restart_iter_num': None,
     'epochs': 500,
-    'datadir': 'datasets/dataset_4/',
+    'datadir': 'datasets/dataset_2/',
 
     # Training
-    'batch_size': 4,
+    'batch_size': 12,
     
     # Learning
-    'learning_rate': 0.002,
+    'learning_rate': 0.003,
 
     # Model
     'scale_factor': 4,
-    'depth': 7,
+    'depth': 6,
     'num_filters': 512,
     'start_size': 32,
 
