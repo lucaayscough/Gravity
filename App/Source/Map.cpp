@@ -42,11 +42,13 @@ void Map::createSun(){
     m_Sun.setPosXY(m_Sun.getX(), m_Sun.getY());
     m_Sun.setCentrePosXY(m_Sun.getCentreX(&m_Sun), m_Sun.getCentreY(&m_Sun));
 }
-
-//--------------------------------------------------//
-// Private methods.
  
 void Map::createPlanet(int x, int y){
+    if(x - Variables::DEFAULT_PLANET_DIAMETER / 2 < 0){x = x + abs(x - Variables::DEFAULT_PLANET_DIAMETER / 2);}
+    else if(x + Variables::DEFAULT_PLANET_DIAMETER / 2 > getWidth()){x = x - ((x + Variables::DEFAULT_PLANET_DIAMETER / 2) - getWidth());}
+    if(y - Variables::DEFAULT_PLANET_DIAMETER / 2  < 0){y = y + abs(y - Variables::DEFAULT_PLANET_DIAMETER / 2);}
+    else if(y + Variables::DEFAULT_PLANET_DIAMETER / 2 > getHeight()){y = y - ((y + Variables::DEFAULT_PLANET_DIAMETER / 2) - getHeight());}
+
     // Create planet node.
     m_ParametersRef.addPlanetNode();
     juce::ValueTree node = m_ParametersRef.getRootPlanetNode().getChild(m_ParametersRef.getRootPlanetNode().getNumChildren() - 1);
@@ -100,6 +102,9 @@ void Map::rebuildPlanets(){
     }
 }
 
+//--------------------------------------------------//
+// Interface methods.
+
 int Map::getMaxNumPlanets(){return Variables::MAX_NUM_PLANETS;}
 int Map::getNumPlanets(){return m_ParametersRef.getRootPlanetNode().getNumChildren();}
 
@@ -126,6 +131,9 @@ float Map::getDistance(Planet* planet_a, Planet* planet_b){
     return sqrt(a + b);
 }
 
+//--------------------------------------------------//
+// Controller methods.
+
 void Map::mouseUp(const MouseEvent& e){juce::ignoreUnused(e);}
 
 void Map::mouseDoubleClick(const MouseEvent& e){
@@ -135,10 +143,12 @@ void Map::mouseDoubleClick(const MouseEvent& e){
         int eventX = e.getMouseDownX();
         int eventY = e.getMouseDownY();
 
-        if(getNumPlanets() < getMaxNumPlanets())
+        if(getNumPlanets() < getMaxNumPlanets()){
             createPlanet(eventX, eventY);
-        else
+        }
+        else{
             Logger::writeToLog("Maximum number of planets reached.");
+        }
     }
 }
 
