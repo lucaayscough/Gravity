@@ -48,8 +48,8 @@ private:
     float getDistance(Planet*, Planet*);
 
 public:
-    virtual int getCentreX(Planet*);
-    virtual int getCentreY(Planet*);
+    virtual int getCentreX();
+    virtual int getCentreY();
     virtual void updateGraph();
     virtual void generateSample();
 

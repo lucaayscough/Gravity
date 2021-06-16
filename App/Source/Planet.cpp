@@ -76,6 +76,7 @@ void Planet::setMapSize(int width, int height){
 void Planet::setPosXY(int x, int y){
     getState().setProperty(Parameters::posXProp, x, nullptr);
     getState().setProperty(Parameters::posYProp, y, nullptr);
+    setCentrePosXY(x + (getClipBoundary() + getDiameter()) / 2, y + (getClipBoundary() + getDiameter()) / 2);
 }
 
 void Planet::setCentrePosXY(int x, int y){
@@ -87,6 +88,8 @@ juce::ValueTree Planet::getState(){return m_ParametersRef.getRootPlanetNode().ge
 int Planet::getDiameter(){return getState().getProperty(Parameters::diameterProp);}
 int Planet::getPosX(){return getState().getProperty(Parameters::posXProp);}
 int Planet::getPosY(){return getState().getProperty(Parameters::posYProp);}
+int Planet::getCentreX(){return getState().getProperty(Parameters::posCentreXProp);}
+int Planet::getCentreY(){return getState().getProperty(Parameters::posCentreYProp);}
 int Planet::getMapWidth(){return getState().getProperty(Parameters::mapWidthProp);}
 int Planet::getMapHeight(){return getState().getProperty(Parameters::mapHeightProp);}
 int Planet::getClipBoundary(){return Variables::CLIP_BOUNDARY;}
@@ -98,10 +101,10 @@ float Planet::getDistance(int xa, int ya, int xb, int yb){
 }
 
 float Planet::getDistance(Planet* planet_a, Planet* planet_b){  
-    int centreXA = getCentreX(planet_a);
-    int centreYA = getCentreY(planet_a);
-    int centreXB = getCentreX(planet_b);
-    int centreYB = getCentreY(planet_b);
+    int centreXA = planet_a->getCentreX();
+    int centreYA = planet_a->getCentreY();
+    int centreXB = planet_b->getCentreX();
+    int centreYB = planet_b->getCentreY();
 
     float a = (float)pow(centreXB - centreXA, 2);
     float b = (float)pow(centreYB - centreYA, 2);
@@ -109,8 +112,6 @@ float Planet::getDistance(Planet* planet_a, Planet* planet_b){
     return sqrt(a + b);
 }
 
-int Planet::getCentreX(Planet* planet){return planet->getX() + ((planet->getDiameter() + planet->getClipBoundary()) / 2);}
-int Planet::getCentreY(Planet* planet){return planet->getY() + ((planet->getDiameter() + planet->getClipBoundary()) / 2);}
 void Planet::updateGraph(){getState().setProperty(Parameters::updateGraphSignal, true, nullptr);}
 void Planet::generateSample(){getState().setProperty(Parameters::generateSampleSignal, true, nullptr);}
 
@@ -165,7 +166,6 @@ void Planet::mouseDrag(const MouseEvent& e){
     checkCollision();
     checkBounds();
     setPosXY(getX(), getY());
-    setCentrePosXY(getCentreX(this), getCentreY(this));
 }
 
 void Planet::mouseWheelMove(const MouseEvent& e, const MouseWheelDetails& w){
@@ -179,8 +179,8 @@ void Planet::mouseWheelMove(const MouseEvent& e, const MouseWheelDetails& w){
 void Planet::visibilityChanged(){}
 
 void Planet::checkCollision(){
-    int centrePosX = getCentreX(this);
-    int centrePosY = getCentreY(this);
+    int centrePosX = getCentreX();
+    int centrePosY = getCentreY();
 
     float distance, minDistance;
 
@@ -205,8 +205,8 @@ void Planet::checkCollision(){
 
         // Avoid self collision testing.
         if(planet->getComponentID() != getComponentID()){
-            centrePosX2 = getCentreX(planet);
-            centrePosY2 = getCentreY(planet);
+            centrePosX2 = planet->getCentreX();
+            centrePosY2 = planet->getCentreY();
 
             distance = getDistance(centrePosX, centrePosY, centrePosX2, centrePosY2);
             minDistance = (planet->getDiameter() + getDiameter()) / 2;

@@ -24,9 +24,6 @@ public:
     void setPosXY(int, int) override;
 
     juce::ValueTree getState() override;
-    int getDiameter() override;
-    int getCentreX(Planet*) override;
-    int getCentreY(Planet*) override;
 
 //--------------------------------------------------//
 // Controller methods.

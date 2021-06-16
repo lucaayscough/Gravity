@@ -44,7 +44,6 @@ void Map::createSun(){
     addChildAndSetID(&m_Sun, m_ParametersRef.SUN_ID);
     m_Sun.draw();
     m_Sun.setPosXY(m_Sun.getX(), m_Sun.getY());
-    m_Sun.setCentrePosXY(m_Sun.getCentreX(&m_Sun), m_Sun.getCentreY(&m_Sun));
 }
  
 void Map::createPlanet(int x, int y){
@@ -76,7 +75,6 @@ void Map::setupPlanet(Planet* planet, int x, int y, juce::ValueTree node){
     );
 
     planet->setPosXY(planet->getX(), planet->getY());
-    planet->setCentrePosXY(planet->getCentreX(planet), planet->getCentreY(planet));
     planet->updateGraph();
 }
 
@@ -113,10 +111,10 @@ int Map::getMaxNumPlanets(){return Variables::MAX_NUM_PLANETS;}
 int Map::getNumPlanets(){return m_ParametersRef.getRootPlanetNode().getNumChildren();}
 
 float Map::getDistance(Sun& sun, Planet* planet){
-    int centrePlanetX = planet->getCentreX(planet);
-    int centrePlanetY = planet->getCentreY(planet);
-    int centreSunX = sun.getX() + sun.getDiameter() / 2;
-    int centreSunY = sun.getY() + sun.getDiameter() / 2;
+    int centrePlanetX = planet->getCentreX();
+    int centrePlanetY = planet->getCentreY();
+    int centreSunX = sun.getCentreX();
+    int centreSunY = sun.getCentreY();
 
     float a = (float)pow(centreSunX - centrePlanetX, 2.0f);
     float b = (float)pow(centreSunY - centrePlanetY, 2.0f);
@@ -124,10 +122,10 @@ float Map::getDistance(Sun& sun, Planet* planet){
 }
 
 float Map::getDistance(Planet* planet_a, Planet* planet_b){  
-    int centreXA = planet_a->getCentreX(planet_a);
-    int centreYA = planet_a->getCentreY(planet_a);
-    int centreXB = planet_b->getCentreX(planet_b);
-    int centreYB = planet_b->getCentreY(planet_b);
+    int centreXA = planet_a->getCentreX();
+    int centreYA = planet_a->getCentreY();
+    int centreXB = planet_b->getCentreX();
+    int centreYB = planet_b->getCentreY();
 
     float a = (float)pow(centreXB - centreXA, 2.0f);
     float b = (float)pow(centreYB - centreYA, 2.0f);

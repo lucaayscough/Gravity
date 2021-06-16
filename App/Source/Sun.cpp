@@ -35,12 +35,13 @@ void Sun::draw(){
 //------------------------------------------------------------//
 // Interface methods.
 
-void Sun::setPosXY(int, int){}
+void Sun::setPosXY(int x, int y){
+    getState().setProperty(Parameters::posXProp, x, nullptr);
+    getState().setProperty(Parameters::posYProp, y, nullptr);
+    setCentrePosXY(x + getDiameter() / 2, y + getDiameter() / 2);
+}
 
 juce::ValueTree Sun::getState(){return m_ParametersRef.getSunNode();}
-int Sun::getDiameter(){return getState().getProperty(Parameters::diameterProp);}
-int Sun::getCentreX(Planet* planet){return planet->getX() + (planet->getDiameter() / 2);}
-int Sun::getCentreY(Planet* planet){return planet->getY() + (planet->getDiameter() / 2);}
 
 //------------------------------------------------------------//
 // Controller methods.
