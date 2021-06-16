@@ -83,8 +83,8 @@ protected:
     AudioContainer& m_AudioContainerRef;
     Parameters& m_ParametersRef;
     ControlPanel& m_ControlPanelRef;
-
     juce::GlowEffect m_GlowEffect;
+    juce::ColourGradient m_ColourGradient;
 
     JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR(Planet)
 };

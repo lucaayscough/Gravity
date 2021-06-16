@@ -15,6 +15,9 @@ Planet::Planet(juce::OwnedArray<Planet>& planets_ref, AudioContainer& audioconta
 void Planet::init(){
     Logger::writeToLog("Planet created.");
     setComponentEffect(&m_GlowEffect);
+    m_ColourGradient.addColour((double)0.0, juce::Colours::purple);
+    m_ColourGradient.addColour((double)1.0, juce::Colours::red);
+    
 }
 
 Planet::~Planet(){
@@ -30,7 +33,8 @@ void Planet::paint(Graphics& g){
         g.setColour(juce::Colours::green);
     }
     else{
-        g.setColour(juce::Colours::red);
+        double pos = (double)getX() / (double)getMapWidth();
+        g.setColour(m_ColourGradient.getColourAtPosition(pos));
     }
     
     draw(getDiameter(), getX(), getY());

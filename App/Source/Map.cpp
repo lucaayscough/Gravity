@@ -8,7 +8,8 @@ Map::Map(AudioContainer& audiocontainer_ref, Parameters& parameters_ref)
     :   m_AudioContainerRef(audiocontainer_ref),
         m_ParametersRef(parameters_ref),
         m_ControlPanel(m_ParametersRef),
-        m_Sun(m_Planets, m_AudioContainerRef, m_ParametersRef, m_ControlPanel){
+        m_Sun(m_Planets, m_AudioContainerRef, m_ParametersRef, m_ControlPanel),
+        m_ColourGradient(juce::Colours::black, 100, 100, juce::Colours::grey, 300, 300, true){
     Logger::writeToLog("Map created!");
 
     addChildComponent(m_ControlPanel, -1);
@@ -29,7 +30,10 @@ Map::~Map(){
 //--------------------------------------------------//
 // View methods.
 
-void Map::paint(Graphics& g){g.fillAll(juce::Colours::black);}
+void Map::paint(Graphics& g){
+    g.setGradientFill(m_ColourGradient);
+    g.fillAll();
+}
 
 void Map::resized(){
     createSun();
