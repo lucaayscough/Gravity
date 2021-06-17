@@ -184,8 +184,8 @@ void Planet::checkCollision(){
     // TODO:
     // Fix planets sticking together when colliding bug.
 
-    int centrePosX = getCentreX();
-    int centrePosY = getCentreY();
+    int centrePosX = getX() + (getClipBoundary() + getDiameter()) / 2;
+    int centrePosY = getY() + (getClipBoundary() + getDiameter()) / 2;
 
     float distance, minDistance;
 
@@ -212,8 +212,8 @@ void Planet::checkCollision(){
 
         // Avoid self collision testing.
         if(planet->getComponentID() != getComponentID()){
-            centrePosX2 = planet->getCentreX();
-            centrePosY2 = planet->getCentreY();
+            centrePosX2 = planet->getX() + (planet->getClipBoundary() + planet->getDiameter()) / 2;
+            centrePosY2 = planet->getY() + (planet->getClipBoundary() + planet->getDiameter()) / 2;
 
             distance = getDistance(centrePosX, centrePosY, centrePosX2, centrePosY2);
             minDistance = (planet->getDiameter() + getDiameter()) / 2;
