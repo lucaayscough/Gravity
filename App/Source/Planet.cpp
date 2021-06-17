@@ -14,7 +14,7 @@ Planet::Planet(juce::OwnedArray<Planet>& planets_ref, AudioContainer& audioconta
 
 void Planet::init(){
     Logger::writeToLog("Planet created.");
-    setComponentEffect(&m_GlowEffect);
+    //setComponentEffect(&m_GlowEffect);
     m_ColourGradient.addColour((double)0.0, juce::Colours::white);
     m_ColourGradient.addColour((double)1.0, juce::Colours::purple);
     
