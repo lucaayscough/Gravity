@@ -2,8 +2,8 @@
 
 
 // Window member variables.
-const int Variables::WINDOW_WIDTH = 800;
-const int Variables::WINDOW_HEIGHT = 600;
+const int Variables::WINDOW_WIDTH = 1080;
+const int Variables::WINDOW_HEIGHT = 720;
 const bool Variables::IS_WIDTH_RESIZABLE = false;
 const bool Variables::IS_HEIGHT_RESIZABLE = false;
 

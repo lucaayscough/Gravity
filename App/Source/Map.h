@@ -12,7 +12,7 @@ private:
     void paint(Graphics&) override;
     void resized() override;
     
-    void createSun();
+    void drawSun();
     void createPlanet(int, int);
     void setupPlanet(Planet*, int x, int y, juce::ValueTree);
     void destroyPlanet(juce::String&);
@@ -40,6 +40,9 @@ private:
     Parameters& m_ParametersRef;
     ControlPanel m_ControlPanel;
     Sun m_Sun;
+
+    juce::Colour m_Grey1;
+    juce::Colour m_Grey2;
     juce::ColourGradient m_ColourGradient;
 
     JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR(Map)

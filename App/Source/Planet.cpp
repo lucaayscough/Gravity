@@ -14,14 +14,15 @@ Planet::Planet(juce::OwnedArray<Planet>& planets_ref, AudioContainer& audioconta
 
 void Planet::init(){
     Logger::writeToLog("Planet created.");
-    //setComponentEffect(&m_GlowEffect);
     m_ColourGradient.addColour((double)0.0, juce::Colours::white);
-    m_ColourGradient.addColour((double)1.0, juce::Colours::purple);
+    m_ColourGradient.addColour((double)0.2, juce::Colours::yellow);
+    m_ColourGradient.addColour((double)0.4, juce::Colours::orange);
+    m_ColourGradient.addColour((double)0.7, juce::Colours::red);
+    m_ColourGradient.addColour((double)1.0, juce::Colours::darkred);
     
 }
 
 Planet::~Planet(){
-    setComponentEffect(nullptr);
     Logger::writeToLog("Planet destroyed.");
 }
 
@@ -33,17 +34,23 @@ void Planet::paint(Graphics& g){
         g.setColour(juce::Colours::green);
     }
     else{
-        double max_distance = sqrt((double)(pow(getMapWidth() / 2, 2)) + (double)(pow(getMapHeight() / 2, 2)));
-        double pos = (getDistance(getCentreX(), getCentreY(), getMapWidth() / 2, getMapHeight() / 2)) / max_distance;
+        // TODO:
+        // Make sure this code is not a problem.
+
+        double max_distance = sqrt((double)(pow(getParentWidth() / 2, 2)) + (double)(pow(getParentHeight() / 2, 2)));
+        double pos = (getDistance(getCentreX(), getCentreY(), getParentWidth() / 2, getParentHeight() / 2)) / max_distance;
         
         g.setColour(m_ColourGradient.getColourAtPosition(pos));
     }
-    
-    draw(getDiameter(), getX(), getY());
+
     g.fillEllipse(getClipBoundary() / 2, getClipBoundary() / 2, getDiameter(), getDiameter());
 }
 
-void Planet::resized(){}
+void Planet::resized(){
+    draw(getDiameter(), getX(), getY());
+    setPosXY(getX(), getY());
+}
+
 void Planet::draw(){setBounds(getPosX(), getPosY(), getDiameter() + getClipBoundary(), getDiameter() + getClipBoundary());}
 void Planet::draw(int diameter, int x, int y){setBounds(x, y, diameter + getClipBoundary(), diameter + getClipBoundary());}
 
@@ -70,11 +77,6 @@ void Planet::resizePlanet(int diameter){
 
 void Planet::setDiameter(int diameter){getState().setProperty(Parameters::diameterProp, diameter, nullptr);}
 
-void Planet::setMapSize(int width, int height){
-    getState().setProperty(Parameters::mapWidthProp, width, nullptr);
-    getState().setProperty(Parameters::mapHeightProp, height, nullptr);
-}
-
 void Planet::setPosXY(int x, int y){
     getState().setProperty(Parameters::posXProp, x, nullptr);
     getState().setProperty(Parameters::posYProp, y, nullptr);
@@ -92,8 +94,6 @@ int Planet::getPosX(){return getState().getProperty(Parameters::posXProp);}
 int Planet::getPosY(){return getState().getProperty(Parameters::posYProp);}
 int Planet::getCentreX(){return getState().getProperty(Parameters::posCentreXProp);}
 int Planet::getCentreY(){return getState().getProperty(Parameters::posCentreYProp);}
-int Planet::getMapWidth(){return getState().getProperty(Parameters::mapWidthProp);}
-int Planet::getMapHeight(){return getState().getProperty(Parameters::mapHeightProp);}
 int Planet::getClipBoundary(){return Variables::CLIP_BOUNDARY;}
 
 float Planet::getDistance(int xa, int ya, int xb, int yb){  
@@ -181,6 +181,9 @@ void Planet::mouseWheelMove(const MouseEvent& e, const MouseWheelDetails& w){
 void Planet::visibilityChanged(){}
 
 void Planet::checkCollision(){
+    // TODO:
+    // Fix planets sticking together when colliding bug.
+
     int centrePosX = getCentreX();
     int centrePosY = getCentreY();
 
@@ -195,7 +198,9 @@ void Planet::checkCollision(){
         distance = getDistance(centrePosX, centrePosY, centreXSun, centreYSun);
         minDistance = (sunDiameter + getDiameter()) / 2;
 
-        if(distance <= minDistance){draw(getDiameter(), getPosX(), getPosY());}
+        if(distance <= minDistance){
+            draw(getDiameter(), getPosX(), getPosY());
+        }
     }
 
     Planet* planet;
@@ -213,7 +218,9 @@ void Planet::checkCollision(){
             distance = getDistance(centrePosX, centrePosY, centrePosX2, centrePosY2);
             minDistance = (planet->getDiameter() + getDiameter()) / 2;
 
-            if(distance <= minDistance){draw(getDiameter(), getPosX(), getPosY());}
+            if(distance <= minDistance){
+                draw(getDiameter(), getPosX(), getPosY());
+            }
         }
     }
 }
@@ -228,10 +235,10 @@ void Planet::checkBounds(){
         draw(getDiameter(), getX(), -(getClipBoundary() / 2));
 
     // Check right boundary,
-    if(getX() + getDiameter() + (getClipBoundary() / 2) > getMapWidth())
-        draw(getDiameter(), getMapWidth() - getDiameter() - (getClipBoundary() / 2), getY());
+    if(getX() + getDiameter() + (getClipBoundary() / 2) > getParentWidth())
+        draw(getDiameter(), getParentWidth() - getDiameter() - (getClipBoundary() / 2), getY());
 
     // Check bottom boundary.
-    if(getY() + getDiameter() + (getClipBoundary() / 2) > getMapHeight())
-        draw(getDiameter(), getX(), getMapHeight() - getDiameter() - (getClipBoundary() / 2));
+    if(getY() + getDiameter() + (getClipBoundary() / 2) > getParentHeight())
+        draw(getDiameter(), getX(), getParentHeight() - getDiameter() - (getClipBoundary() / 2));
 }

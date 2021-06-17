@@ -258,8 +258,6 @@ juce::Identifier Parameters::planetType("Planet");
 
 juce::Identifier Parameters::idProp("ID");
 juce::Identifier Parameters::isActiveProp("Is_Active");
-juce::Identifier Parameters::mapWidthProp("Map_Width");
-juce::Identifier Parameters::mapHeightProp("Map_Height");
 juce::Identifier Parameters::diameterProp("Diameter");
 juce::Identifier Parameters::posXProp("Position_X");
 juce::Identifier Parameters::posYProp("Position_Y");

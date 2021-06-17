@@ -17,7 +17,7 @@ ControlPanel::~ControlPanel(){Logger::writeToLog("Control Panel destroyed!");}
 
 void ControlPanel::paint(Graphics& g){
     g.setColour(juce::Colours::blue);
-    g.fillRect(m_State.getProperty(Parameters::posXProp), m_State.getProperty(Parameters::posYProp), m_Width, m_Height);
+    g.fillRect(m_State.getProperty(Parameters::posXProp), (int)m_State.getProperty(Parameters::posYProp) - 100, m_Width, m_Height);
 }
 
 void ControlPanel::resized(){}

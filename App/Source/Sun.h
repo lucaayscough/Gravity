@@ -2,33 +2,25 @@
 
 
 class Sun : public Planet{
-
-//--------------------------------------------------//
-// Constructors and destructors.
-
 public:
+    // Constructors and destructors.
     Sun(juce::OwnedArray<Planet>&, AudioContainer&, Parameters&, ControlPanel&);
     void init() override;
     ~Sun() override;
 
-//--------------------------------------------------//
-// View methods.
-
+public:
+    // View methods.
     void paint(Graphics& g) override;
     void resized() override;
     void draw() override;
 
-//--------------------------------------------------//
-// Interface methods.
-
+public:
+    // Interface methods.
     void setPosXY(int, int) override;
-
     juce::ValueTree getState() override;
 
-//--------------------------------------------------//
-// Controller methods.
-
 private:
+    // Controller methods.
     bool hitTest(int, int) override;
     void mouseDown(const MouseEvent& e) override;
     void mouseUp(const MouseEvent& e) override;

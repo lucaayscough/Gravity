@@ -5,19 +5,16 @@
 // Constructors and destructors.
 
 Map::Map(AudioContainer& audiocontainer_ref, Parameters& parameters_ref)
-    :   m_AudioContainerRef(audiocontainer_ref),
-        m_ParametersRef(parameters_ref),
-        m_ControlPanel(m_ParametersRef),
+    :   m_AudioContainerRef(audiocontainer_ref), m_ParametersRef(parameters_ref), m_ControlPanel(m_ParametersRef),
         m_Sun(m_Planets, m_AudioContainerRef, m_ParametersRef, m_ControlPanel),
-        m_ColourGradient(juce::Colours::black, 100, 100, juce::Colours::grey, 300, 300, true){
+        m_Grey1(61, 61, 61), m_Grey2(47, 47, 46){
     Logger::writeToLog("Map created!");
 
     addChildComponent(m_ControlPanel, -1);
+    addChildAndSetID(&m_Sun, m_ParametersRef.SUN_ID);
 
     m_ParametersRef.rootNode.addListener(this);
     m_ParametersRef.updateMap.addListener(this);
-
-    if(getNumPlanets() > 0){rebuildPlanets();}
 }
 
 Map::~Map(){
@@ -33,20 +30,38 @@ Map::~Map(){
 void Map::paint(Graphics& g){
     g.setGradientFill(m_ColourGradient);
     g.fillAll();
+
+    juce::ValueTree rootPlanetNode =  m_ParametersRef.getRootPlanetNode();
+    juce::ValueTree sunNode =  m_ParametersRef.getSunNode();
+
+    for(int i = 0; i < rootPlanetNode.getNumChildren(); i++){
+        g.setColour(juce::Colours::grey);
+        g.drawEllipse(
+            (getWidth() / 2) - (m_ParametersRef.getDistance(rootPlanetNode.getChild(i), sunNode)), 
+            (getHeight() / 2) - (m_ParametersRef.getDistance(rootPlanetNode.getChild(i), sunNode) ),
+            m_ParametersRef.getDistance(rootPlanetNode.getChild(i), sunNode) * 2,
+            m_ParametersRef.getDistance(rootPlanetNode.getChild(i), sunNode) * 2,
+            1
+        );
+    }
 }
 
 void Map::resized(){
-    createSun();
+    drawSun();
+    if(getNumPlanets() > 0){rebuildPlanets();}
     m_ControlPanel.setBounds(getLocalBounds());
+    m_ColourGradient = juce::ColourGradient(m_Grey1, getWidth() / 2, getHeight() / 2, m_Grey2, getWidth() / 4, getHeight() / 4, true);
 }
 
-void Map::createSun(){
-    addChildAndSetID(&m_Sun, m_ParametersRef.SUN_ID);
+void Map::drawSun(){
     m_Sun.draw();
-    m_Sun.setPosXY(m_Sun.getX(), m_Sun.getY());
 }
- 
+
 void Map::createPlanet(int x, int y){
+    // TODO:
+    // Need more modular implementation.
+
+    // Check creation position.
     if(x - Variables::DEFAULT_PLANET_DIAMETER / 2 < 0){x = x + abs(x - Variables::DEFAULT_PLANET_DIAMETER / 2);}
     else if(x + Variables::DEFAULT_PLANET_DIAMETER / 2 > getWidth()){x = x - ((x + Variables::DEFAULT_PLANET_DIAMETER / 2) - getWidth());}
     if(y - Variables::DEFAULT_PLANET_DIAMETER / 2  < 0){y = y + abs(y - Variables::DEFAULT_PLANET_DIAMETER / 2);}
@@ -66,7 +81,6 @@ void Map::createPlanet(int x, int y){
 void Map::setupPlanet(Planet* planet, int x, int y, juce::ValueTree node){
     // Visibility.
     addChildAndSetID(planet, node.getProperty(Parameters::idProp));
-    planet->setMapSize(getWidth(), getHeight());
 
     planet->draw(
         planet->getDiameter(),
@@ -84,8 +98,6 @@ void Map::destroyPlanet(juce::String& id){
             m_Planets.remove(i, true);
         }
     }
-
-    repaint();
 }
 
 void Map::rebuildPlanets(){
@@ -169,6 +181,7 @@ void Map::valueChanged(juce::Value& value){
 void Map::valueTreePropertyChanged(juce::ValueTree& node, const juce::Identifier& id){
     juce::ignoreUnused(node);
     if(id == Parameters::isActiveProp){repaint();}
+    if(id == Parameters::posXProp || id == Parameters::posYProp){repaint();}
 }
 
 void Map::valueTreeChildRemoved(juce::ValueTree& parentNode, juce::ValueTree& removedNode, int index){
@@ -176,5 +189,6 @@ void Map::valueTreeChildRemoved(juce::ValueTree& parentNode, juce::ValueTree& re
     if(removedNode.getType() == Parameters::planetType){
         juce::String id = removedNode.getProperty(Parameters::idProp).toString();
         destroyPlanet(id);
+        repaint();
     }
 }

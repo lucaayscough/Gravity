@@ -1,6 +1,10 @@
 #pragma once
 
 
+// TODO:
+// Cleanup this header file.
+// Sort private and public access.
+
 class Planet: public juce::Component{
 //--------------------------------------------------//
 // Constructors and destructors.
@@ -27,7 +31,6 @@ private:
 
 public:
     void setDiameter(int);
-    void setMapSize(int, int);
     virtual void setPosXY(int, int);
     virtual void setCentrePosXY(int, int);
 
@@ -35,10 +38,6 @@ public:
     virtual int getDiameter();
     virtual int getPosX();
     virtual int getPosY();
-
-private:
-    int getMapWidth();
-    int getMapHeight();
 
 public:
     int getClipBoundary();
@@ -83,7 +82,7 @@ protected:
     AudioContainer& m_AudioContainerRef;
     Parameters& m_ParametersRef;
     ControlPanel& m_ControlPanelRef;
-    juce::GlowEffect m_GlowEffect;
+    
     juce::ColourGradient m_ColourGradient;
 
     JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR(Planet)

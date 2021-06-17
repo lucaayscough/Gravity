@@ -8,12 +8,14 @@ Sun::Sun(juce::OwnedArray<Planet>& planets_ref, AudioContainer& audiocontainer_r
     :   Planet(planets_ref, audiocontainer_ref, parameters_ref, controlpanel_ref){}
 
 void Sun::init(){
+    // TODO:
+    // Init using this function for sun.
+    // Currently this is not getting called.
+
     Logger::writeToLog("Sun created.");
-    setComponentEffect(&m_GlowEffect);
 }
 
 Sun::~Sun(){
-    setComponentEffect(nullptr);
     Logger::writeToLog("Sun destroyed.");
 }
 
@@ -21,11 +23,14 @@ Sun::~Sun(){
 // View methods.
 
 void Sun::paint(Graphics& g){
-    g.setColour(juce::Colours::yellow);
+    g.setColour(juce::Colours::white);
     g.fillEllipse(0, 0, getDiameter(), getDiameter());
 }
 
-void Sun::resized(){}
+void Sun::resized(){
+    draw();
+    setPosXY(getX(), getY());
+}
 
 void Sun::draw(){
     setSize(getDiameter(), getDiameter());
