@@ -216,22 +216,23 @@ class Train:
                 self._save_state(epoch)
 
             # Prepare Data
-            for idx, data in enumerate(dataloader):
-                real = data[0].to(self.device)
+                for idx, data in enumerate(dataloader):
+                    real = data[0].to(self.device)
 
-                self._train_discriminator(real)
-                self._train_generator()
-                 
-                self._update_average(beta = self.ema_beta)
-                
-                # Log State
-                print(
-                    f'Epoch [{epoch}/{self.epochs}] \
-                    Batch {idx} / {len(dataloader)} \
-                    Loss D: {self.loss_disc:.4f}, loss G: {self.loss_gen:.4f}'
-                )
+                    self._train_discriminator(real)
+                    self._train_generator()
+                    
+                    self._update_average(beta = self.ema_beta)
+                    
+                    # Log State
+                    print(
+                        f'Epoch [{epoch}/{self.epochs}] \
+                        Batch {idx} / {len(dataloader)} \
+                        Loss D: {self.loss_disc:.4f}, loss G: {self.loss_gen:.4f}'
+                    )
 
-                self._print_examples(idx, epoch, real)
+                    self._print_examples(idx, epoch, real)
+        
             print("Time elapsed: ", int(time.time() - start_time), " seconds.")
 
     
@@ -273,10 +274,10 @@ class Train:
             
             with torch.no_grad():
                 fake_sample = self.netG(
-                    torch.randn((32, self.z_dim)).to(self.device),
+                    torch.randn((8, self.z_dim)).to(self.device),
                     self.depth
                 )
-                for s in range(32):
+                for s in range(8):
                     # Print Fake Examples
                     torchaudio.save(
                         filepath = 'runs/iter_' + str(self.iter_num) + '/output/fake/' + '_' + str(epoch).zfill(3) + '_' + str(s).zfill(3) + '.wav',
