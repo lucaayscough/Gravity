@@ -1,10 +1,10 @@
 import torch
 import torch.nn as nn
 import torch.nn.functional as F
-from torch.nn.functional import interpolate
 import numpy as np
 import random
 import math
+
 
 # ------------------------------------------------------------
 # Low level network components.
@@ -98,19 +98,32 @@ class ApplyNoise(nn.Module):
 # ------------------------------------------------------------
 # Style modulation layer.
 
-class StyleMod(nn.Module):
-    def __init__(self, channels, latent_size = 512):
-        super(StyleMod, self).__init__()
-        self.lin = EqualizedLinear(latent_size,
-                                   channels * 2,
-                                   gain=1.0)
+class ApplyStyle(nn.Module):
+    def __init__(self, conv, channels, latent_size = 512):
+        super(ApplyStyle, self).__init__()
+        self.conv = conv
+        self.lin = EqualizedLinear(latent_size, channels, gain = 1)
+    
+    def forward(self, x, styles, weight):
+        batch_size = x.shape[0]
 
-    def forward(self, x, latent):
-        style = self.lin(latent)  # style => [batch_size, n_channels*2]
+        styles = self.lin(styles)
 
-        shape = [-1, 2, x.size(1)] + (x.dim() - 2) * [1]
-        style = style.view(shape)  # [batch_size, 2, n_channels, ...]
-        x = x * (style[:, 0] + 1.) + style[:, 1]
+        # Calculate per-sample weights and demodulation coefficients.
+        w = weight.unsqueeze(0)
+        w = w * styles.reshape(batch_size, 1, -1, 1)
+        
+        torch.flip(w, [0, 1, 2, 3])
+
+        dcoefs = (w.square().sum(dim=[2,3]) + 1e-8).rsqrt()
+
+        w = w * dcoefs.reshape(batch_size, -1, 1, 1) 
+
+        x = x * styles.reshape(batch_size, -1, 1)
+
+        x = self.conv(x)
+        x = x * dcoefs.reshape(batch_size, -1, 1)
+
         return x
 
 # ------------------------------------------------------------
@@ -123,22 +136,45 @@ class PixelNorm(nn.Module):
     def forward(self, x, epsilon: float = 1e-8):
         x = x / (x.pow(2.0).mean(dim = 1, keepdim = True).add(epsilon).sqrt())
         return x
+    
+# ------------------------------------------------------------
+# Resample layers.
+
+class Resample(nn.Module):
+    def __init__(self, direction):
+        super().__init__()
+        self.direction = direction
+        kernel = [1, 2, 4, 2, 1]
+        kernel = torch.tensor(kernel, dtype = torch.float)
+        kernel = kernel.expand(1, 1, -1)
+        kernel = kernel / kernel.sum()
+        self.register_buffer("kernel", kernel)
+
+    def _blur(self, x):
+        kernel = self.kernel.expand(x.size(1), -1, -1)
+        x = F.conv1d(
+            x,
+            kernel,
+            stride = 1,
+            padding = 2,
+            groups = x.size(1)
+        )
+        return x
+
+    def forward(self, x, scale_factor):
+        if self.direction == "up":
+            x = F.interpolate(input = x, scale_factor = scale_factor, mode = "linear")
+            x = self._blur(x)
+        else:
+            x = self._blur(x)
+            x = F.interpolate(input = x, scale_factor = scale_factor, mode = "linear")
+        return x
 
 # ------------------------------------------------------------
 # Minibatch standard deviation layer for discriminator. Used to increase diversity in generator.
 
 class MiniBatchStdDev(nn.Module):
-    """
-    Minibatch standard deviation layer for the discriminator
-    Args:
-        group_size: Size of each group into which the batch is split
-    """
-
     def __init__(self, group_size = 4) -> None:
-        """
-        Args:
-            group_size: Size of each group into which the batch is split
-        """
         super(MiniBatchStdDev, self).__init__()
         self.group_size = group_size
 
@@ -162,34 +198,10 @@ class MiniBatchStdDev(nn.Module):
         y = y.mean(dim=[1, 2], keepdim=True)
         y = y.repeat(group_size, 1, samples)
         y = torch.cat([x, y], 1)
-
-        # return the computed values:
         return y
 
 # ------------------------------------------------------------
 # Blocks composed of low level network components.
-
-# ------------------------------------------------------------
-# Epilogue layer.
-
-class LayerEpilogue(nn.Module):
-    def __init__(
-        self,
-        channels
-    ):
-        super().__init__()
-
-        self.instance_norm = nn.InstanceNorm1d(channels)
-        self.apply_noise = ApplyNoise(channels)
-        self.style_mod = StyleMod(channels)
-    
-    def forward(self, x, latent_w, noise = None):
-        self.apply_noise(x, noise)
-        x = F.leaky_relu(x, 0.2)
-        x = self.instance_norm(x)
-        x = self.style_mod(x, latent_w)
-        
-        return x
 
 # ------------------------------------------------------------
 # General generator block.
@@ -204,32 +216,37 @@ class GenGeneralConvBlock(nn.Module):
         padding,
         dilation,
         scale_factor,
+        resample,
         bias = True,
     ):
         super().__init__()
         self.scale_factor = scale_factor
+        self.resample = resample
         
         self.conv_block_1 = EqualizedConv1d(in_channels = in_channels, out_channels = in_channels, kernel_size = kernel_size, stride = stride, padding = padding, dilation = dilation, bias = bias)
-        self.conv_block_2 = EqualizedConv1d(in_channels = in_channels, out_channels = out_channels, kernel_size = kernel_size, stride = stride, padding = padding, dilation = dilation, bias = bias)
+        self.conv_block_2 = EqualizedConv1d(in_channels = in_channels, out_channels = in_channels, kernel_size = kernel_size, stride = stride, padding = padding, dilation = dilation, bias = bias)
+        self.conv_block_3 = EqualizedConv1d(in_channels = in_channels, out_channels = out_channels, kernel_size = kernel_size, stride = stride, padding = padding, dilation = dilation, bias = bias)
 
-        self.layer_epilogue_1 = LayerEpilogue(
-            channels = in_channels,
-        )
+        self.weight = torch.nn.Parameter(torch.randn([in_channels, in_channels, kernel_size]))
 
-        self.layer_epilogue_2 = LayerEpilogue(
-            channels = out_channels,
-        )
+        self.apply_style_1 = ApplyStyle(conv = self.conv_block_1, channels = in_channels)
+        self.apply_style_2 = ApplyStyle(conv = self.conv_block_2, channels = in_channels)
+
+        self.apply_noise_1 = ApplyNoise(in_channels)
+        self.apply_noise_2 = ApplyNoise(in_channels)
     
     def forward(self, x, latent_w, noise = None):
-        x = interpolate(x, scale_factor = self.scale_factor)
+        x = self.resample(x, scale_factor = self.scale_factor)
 
-        # First block
-        x = self.conv_block_1(x)
-        x = self.layer_epilogue_1(x, latent_w[:, 0], noise)
+        x = self.apply_style_1(x, latent_w[:, 0], weight = self.weight)
+        x = self.apply_noise_1(x, noise)
+        x = F.leaky_relu(x, 0.2)
 
-        # Second block
-        x = self.conv_block_2(x)
-        x = self.layer_epilogue_2(x, latent_w[:, 1], noise)
+        x = self.apply_style_2(x, latent_w[:, 1], weight = self.weight)
+        x = self.apply_noise_2(x, noise)
+        x = F.leaky_relu(x, 0.2)
+
+        x = self.conv_block_3(x)
         return x
 
 # ------------------------------------------------------------
@@ -245,14 +262,15 @@ class DisGeneralConvBlock(nn.Module):
         padding,
         dilation,
         scale_factor,
+        resample,
         bias = True
     ):
         super().__init__()
+        self.scale_factor = scale_factor
+        self.resample = resample
 
         self.conv_block_1 = EqualizedConv1d(in_channels = in_channels, out_channels = in_channels, kernel_size = kernel_size, stride = stride, padding = padding, dilation = dilation, bias = bias)
         self.conv_block_2 = EqualizedConv1d(in_channels = in_channels, out_channels = out_channels, kernel_size = kernel_size, stride = stride, padding = padding, dilation = dilation, bias = bias)
-
-        self.down_sampler = nn.AvgPool1d(scale_factor)
     
     def forward(self, x):
         x = self.conv_block_1(x)
@@ -261,7 +279,7 @@ class DisGeneralConvBlock(nn.Module):
         x = self.conv_block_2(x)
         x = F.leaky_relu(x, 0.2)
 
-        x = self.down_sampler(x)
+        x = self.resample(x, scale_factor = self.scale_factor)
 
         return x
 
@@ -279,9 +297,12 @@ class DisFinalConvBlock(nn.Module):
         padding,
         dilation,
         scale_factor,
+        resample,
         bias = True
     ):
         super().__init__()
+        self.resample = resample
+        self.scale_factor = scale_factor
         
         in_channels += 1
         out_channels += 1
@@ -316,8 +337,6 @@ class DisFinalConvBlock(nn.Module):
             padding = 0,
             bias = bias
         )
-        
-        self.down_sampler = nn.AvgPool1d(scale_factor)
     
     def forward(self, x):
         x = self.mini_batch(x)
@@ -330,7 +349,7 @@ class DisFinalConvBlock(nn.Module):
     
         x = self.conv_block_3(x)
 
-        x = self.down_sampler(x)
+        x = self.resample(x, scale_factor = self.scale_factor)
 
         return x
 
@@ -432,8 +451,8 @@ class Generator(nn.Module):
         self.scale_factor = scale_factor
         
         self.constant_input = ConstantInput(nf, start_size)
-
         self.truncation = Truncation(avg_latent = torch.zeros(z_dim))
+        self.resample = Resample(direction = "up")
         
         # Base network layers
         self.layers = nn.ModuleList([])
@@ -454,6 +473,7 @@ class Generator(nn.Module):
                     padding = padding,
                     dilation = dilation,
                     scale_factor = self.scale_factor,
+                    resample = self.resample
                 )
             )
             n = n // 2
@@ -505,7 +525,7 @@ class Generator(nn.Module):
             if i == 0:
                 out = skip
             else:
-                out = nn.Upsample(scale_factor = self.scale_factor, mode = "linear")(out)
+                out = self.resample(out, scale_factor = self.scale_factor)
                 out = out + skip
             i += 1
 
@@ -548,6 +568,7 @@ class Discriminator(nn.Module):
         self.num_channels = num_channels
         self.scale_factor = scale_factor
         self.start_size = start_size
+        self.resample = Resample(direction = "down")
 
         # Main discriminator convolution blocks.
         self.layers = nn.ModuleList([])
@@ -563,6 +584,7 @@ class Discriminator(nn.Module):
                     padding = self.padding,
                     dilation = self.dilation,
                     scale_factor = self.scale_factor,
+                    resample = self.resample
                 )
             )
             n = n * 2
@@ -577,7 +599,8 @@ class Discriminator(nn.Module):
                 stride = self.stride,
                 padding = self.padding,
                 dilation = self.dilation,
-                scale_factor = self.start_size,
+                scale_factor = 1 / self.start_size,
+                resample = self.resample
             )
         )
         
@@ -601,12 +624,12 @@ class Discriminator(nn.Module):
 
         for i in range(self.depth):
             if i < self.depth - 1:
-                residual = self.res_converters[i](nn.Upsample(scale_factor = 1 / self.scale_factor,  mode = "linear")(x))
+                residual = self.res_converters[i](self.resample(x, scale_factor = self.scale_factor))
             else:
-                residual = self.res_converters[i](nn.Upsample(scale_factor = 1 / self.start_size,  mode = "linear")(x))
+                residual = self.res_converters[i](self.resample(x, scale_factor = 1 / self.start_size))
             x = self.layers[i](x)
             x = (x + residual) * (1 / math.sqrt(2))
-        
+            
         x = self.linear(x.squeeze(2))
 
         return x

@@ -16,13 +16,13 @@ from utils import build_folder_structure, get_iter
 
 config_dict = {
     # Iterarion
-    'restart_from_iter': False,
-    'restart_iter_num': None,
+    'restart_from_iter': True,
+    'restart_iter_num': 3,
     'epochs': 500,
     'datadir': 'datasets/dataset_2/',
 
     # Training
-    'batch_size': 12,
+    'batch_size': 8,
     
     # Learning
     'learning_rate': 0.003,
