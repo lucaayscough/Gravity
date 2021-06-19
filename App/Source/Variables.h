@@ -8,8 +8,16 @@ struct Variables{
     static const bool IS_WIDTH_RESIZABLE;
     static const bool IS_HEIGHT_RESIZABLE;
 
+    // Main component sizes.
+    static const int LEFT_BAR;
+    static const int TOP_BAR;
+    static const int MAP_TRIM;
+
     // Map member variables.
     static const int MAX_NUM_PLANETS;
+    static const juce::Colour MAP_BG_COLOUR_1;
+    static const juce::Colour MAP_BG_COLOUR_2;
+    static const juce::Colour MAP_CIRCLE_COLOUR;
     
     // Planet member variables.
     static const int DEFAULT_PLANET_DIAMETER;

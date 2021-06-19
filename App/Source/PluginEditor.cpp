@@ -26,6 +26,8 @@ void AudioPluginAudioProcessorEditor::paint(juce::Graphics& g){juce::ignoreUnuse
 
 void AudioPluginAudioProcessorEditor::resized(){
     auto r = getLocalBounds();
-    auto mapArea = r;
+    auto topBar = r.removeFromTop(Variables::TOP_BAR);
+    auto leftBar = r.removeFromLeft(Variables::LEFT_BAR);
+    auto mapArea = r.withTrimmedRight(Variables::MAP_TRIM).withTrimmedBottom(Variables::MAP_TRIM);
     m_Map.setBounds(mapArea);
 }

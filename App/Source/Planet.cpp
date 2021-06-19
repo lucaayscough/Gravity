@@ -191,8 +191,8 @@ void Planet::checkCollision(){
 
     // Check collision with sun.
     {
-        int centreXSun = Variables::WINDOW_WIDTH / 2;
-        int centreYSun = Variables::WINDOW_HEIGHT / 2;
+        int centreXSun = getParentWidth() / 2;
+        int centreYSun = getParentHeight() / 2;
         int sunDiameter = Variables::SUN_DIAMETER;
 
         distance = getDistance(centrePosX, centrePosY, centreXSun, centreYSun);
