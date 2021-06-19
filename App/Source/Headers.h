@@ -17,5 +17,7 @@
 #include "Sun.h"
 #include "Map.h"
 
+#include "TopBar.h"
+
 #include "PluginProcessor.h"
 #include "PluginEditor.h"

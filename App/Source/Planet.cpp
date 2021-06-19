@@ -34,9 +34,6 @@ void Planet::paint(Graphics& g){
         g.setColour(juce::Colours::green);
     }
     else{
-        // TODO:
-        // Make sure this code is not a problem.
-
         double max_distance = sqrt((double)(pow(getParentWidth() / 2, 2)) + (double)(pow(getParentHeight() / 2, 2)));
         double pos = (getDistance(getCentreX(), getCentreY(), getParentWidth() / 2, getParentHeight() / 2)) / max_distance;
         
@@ -181,9 +178,6 @@ void Planet::mouseWheelMove(const MouseEvent& e, const MouseWheelDetails& w){
 void Planet::visibilityChanged(){}
 
 void Planet::checkCollision(){
-    // TODO:
-    // Fix planets sticking together when colliding bug.
-
     int centrePosX = getX() + (getClipBoundary() + getDiameter()) / 2;
     int centrePosY = getY() + (getClipBoundary() + getDiameter()) / 2;
 
