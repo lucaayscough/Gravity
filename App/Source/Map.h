@@ -41,8 +41,9 @@ private:
     ControlPanel m_ControlPanel;
     Sun m_Sun;
 
-    juce::Colour m_Grey1;
-    juce::Colour m_Grey2;
+    juce::Colour m_BGColour1;
+    juce::Colour m_BGColour2;
+    juce::Colour m_CircleColour;
     juce::ColourGradient m_ColourGradient;
 
     JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR(Map)

@@ -7,7 +7,7 @@
 Map::Map(AudioContainer& audiocontainer_ref, Parameters& parameters_ref)
     :   m_AudioContainerRef(audiocontainer_ref), m_ParametersRef(parameters_ref), m_ControlPanel(m_ParametersRef),
         m_Sun(m_Planets, m_AudioContainerRef, m_ParametersRef, m_ControlPanel),
-        m_Grey1(61, 61, 61), m_Grey2(47, 47, 46){
+        m_BGColour1(37, 38, 43), m_BGColour2(33, 34, 38), m_CircleColour(86, 87, 90){
     Logger::writeToLog("Map created!");
 
     addChildComponent(m_ControlPanel, -1);
@@ -31,11 +31,14 @@ void Map::paint(Graphics& g){
     g.setGradientFill(m_ColourGradient);
     g.fillAll();
 
+    // TODO:
+    // Clean this up.
+
     juce::ValueTree rootPlanetNode =  m_ParametersRef.getRootPlanetNode();
     juce::ValueTree sunNode =  m_ParametersRef.getSunNode();
 
     for(int i = 0; i < rootPlanetNode.getNumChildren(); i++){
-        g.setColour(juce::Colours::grey);
+        g.setColour(m_CircleColour);
         g.drawEllipse(
             (getWidth() / 2) - (m_ParametersRef.getDistance(rootPlanetNode.getChild(i), sunNode)), 
             (getHeight() / 2) - (m_ParametersRef.getDistance(rootPlanetNode.getChild(i), sunNode) ),
@@ -50,7 +53,7 @@ void Map::resized(){
     drawSun();
     if(getNumPlanets() > 0){rebuildPlanets();}
     m_ControlPanel.setBounds(getLocalBounds());
-    m_ColourGradient = juce::ColourGradient(m_Grey1, getWidth() / 2, getHeight() / 2, m_Grey2, getWidth() / 4, getHeight() / 4, true);
+    m_ColourGradient = juce::ColourGradient(m_BGColour1, getWidth() / 2, getHeight() / 2, m_BGColour2, getWidth() / 4, getHeight() / 4, true);
 }
 
 void Map::drawSun(){
