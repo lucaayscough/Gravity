@@ -24,9 +24,5 @@ private:
     bool hitTest(int, int) override;
     void mouseDown(const MouseEvent& e) override;
 
-private:
-    // Callback methods.
-    void valueChanged(Value&) override;
-
     JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR(Sun)
 };

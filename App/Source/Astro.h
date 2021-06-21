@@ -1,7 +1,7 @@
 #pragma once
 
 
-class Astro: public juce::Component, juce::Value::Listener{
+class Astro: public juce::Component, public juce::Value::Listener{
 public: 
     // Constructors and destructors.
     Astro(AudioContainer&, Parameters&, ControlPanel&);
@@ -36,6 +36,7 @@ protected:
     // Controller methods.
     void mouseEnter(const MouseEvent&) override;
     void mouseExit(const MouseEvent&) override;
+    void valueChanged(juce::Value&) override;
 
 protected:
     // Member variables.
@@ -43,7 +44,7 @@ protected:
     Parameters& m_ParametersRef;
     ControlPanel& m_ControlPanelRef;
 
-    /*
+public:
     // Animator class.
     class Animator: juce::Timer{
     public:
@@ -51,17 +52,16 @@ protected:
         Animator();
         ~Animator() override;
 
+        // Interface methods.
+        int getDiameterShift();
+
         // Callback methods.
         void timerCallback() override;
 
         // Member variables.
-        juce::Value m_AnimateDiameter;
-        bool m_DiameterDirection = true;
+        juce::Value m_DiameterShift;
+        bool m_DiameterShiftDirection = true;
     };
-
-    // Member variables.
-    Animator m_Animator;
-    */
 
     JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR(Astro)
 };

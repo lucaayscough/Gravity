@@ -59,8 +59,3 @@ void Sun::mouseDown(const MouseEvent& e){
         playSample();
     }
 }
-
-//------------------------------------------------------------//
-// Callback methods.
-
-void Sun::valueChanged(Value& value){juce::ignoreUnused(value);}

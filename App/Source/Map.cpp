@@ -98,7 +98,7 @@ void Map::setupPlanet(Planet* planet, int x, int y, juce::ValueTree node){
 }
 
 void Map::destroyPlanet(juce::String& id){
-    for(int i = 0; i < getNumPlanets(); i++){
+    for(int i = 0; i < m_Planets.size(); i++){
         if(m_Planets[i]->getComponentID() == id){
             m_Planets.remove(i, true);
         }

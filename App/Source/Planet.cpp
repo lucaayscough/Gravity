@@ -14,9 +14,13 @@ Planet::Planet(juce::OwnedArray<Planet>& planets_ref, AudioContainer& audioconta
     m_ColourGradient.addColour((double)0.4, juce::Colours::orange);
     m_ColourGradient.addColour((double)0.7, juce::Colours::red);
     m_ColourGradient.addColour((double)1.0, juce::Colours::darkred);
+
+    m_Animator.m_DiameterShift.addListener(this);
 }
 
 Planet::~Planet(){
+    m_Animator.m_DiameterShift.removeListener(this);
+
     Logger::writeToLog("Planet destroyed.");
 }
 
@@ -37,8 +41,8 @@ void Planet::paint(Graphics& g){
     g.fillEllipse(
         getClipBoundary() / 2,
         getClipBoundary() / 2,
-        getDiameter(),
-        getDiameter()
+        getDiameter() + m_Animator.getDiameterShift() * 2,
+        getDiameter() + m_Animator.getDiameterShift() * 2
     );
 }
 
@@ -184,14 +188,4 @@ void Planet::mouseWheelMove(const MouseEvent& e, const MouseWheelDetails& w){
 
     if(w.deltaY > 0.0f && getDiameter() < Variables::MAX_PLANET_SIZE){resizePlanet(getDiameter() + Variables::SIZE_MODIFIER);}
     else if(w.deltaY < 0.0f && getDiameter() > Variables::MIN_PLANET_SIZE){resizePlanet(getDiameter() - Variables::SIZE_MODIFIER);}
-}
-
-//--------------------------------------------------//
-// Callback methods.
-
-void Planet::visibilityChanged(){}
-
-void Planet::valueChanged(juce::Value& value){
-    juce::ignoreUnused(value);
-    repaint();
 }

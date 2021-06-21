@@ -75,38 +75,46 @@ void Astro::mouseExit(const MouseEvent& e){
     m_ControlPanelRef.unshow();
 }
 
-
-/*
+void Astro::valueChanged(juce::Value& value){
+    juce::ignoreUnused(value);
+    repaint();
+}
 
 //--------------------------------------------------//
-// Planet animator class.
+// Animator class.
 
 //--------------------------------------------------//
 // Constructors and destructors.
 
-Planet::PlanetAnimator::PlanetAnimator(){
-    m_AnimateDiameter.setValue(0.0f);
+Astro::Animator::Animator(){
+    m_DiameterShift.setValue(0);
     startTimer(50);
 }
 
-Planet::PlanetAnimator::~PlanetAnimator(){
+Astro::Animator::~Animator(){
     stopTimer();
 }
 
-void Planet::PlanetAnimator::timerCallback(){
-    if((int)m_AnimateDiameter.getValue() >= 6){
-        m_DiameterDirection = false;
+//--------------------------------------------------//
+// Interface methods.
+
+int Astro::Animator::getDiameterShift(){return (int)m_DiameterShift.getValue();}
+
+//--------------------------------------------------//
+// Callback methods.
+
+void Astro::Animator::timerCallback(){
+    if((int)m_DiameterShift.getValue() >= 6){
+        m_DiameterShiftDirection = false;
     }
-    else if((int)m_AnimateDiameter.getValue() <= -2){
-        m_DiameterDirection = true;
+    else if((int)m_DiameterShift.getValue() <= -2){
+        m_DiameterShiftDirection = true;
     }
 
-    if(m_DiameterDirection == true){
-        m_AnimateDiameter.setValue((int)m_AnimateDiameter.getValue() + 1);
+    if(m_DiameterShiftDirection == true){
+        m_DiameterShift.setValue((int)m_DiameterShift.getValue() + 1);
     }
     else{
-        m_AnimateDiameter.setValue((int)m_AnimateDiameter.getValue() - 1);
+        m_DiameterShift.setValue((int)m_DiameterShift.getValue() - 1);
     }
 }
-
-*/
