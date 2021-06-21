@@ -39,8 +39,8 @@ void Planet::paint(Graphics& g){
     }
 
     g.fillEllipse(
-        getClipBoundary() / 2,
-        getClipBoundary() / 2,
+        getClipBoundary() / 2 - m_Animator.getDiameterShift(),
+        getClipBoundary() / 2 - m_Animator.getDiameterShift(),
         getDiameter() + m_Animator.getDiameterShift() * 2,
         getDiameter() + m_Animator.getDiameterShift() * 2
     );

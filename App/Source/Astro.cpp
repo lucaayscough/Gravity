@@ -88,7 +88,7 @@ void Astro::valueChanged(juce::Value& value){
 
 Astro::Animator::Animator(){
     m_DiameterShift.setValue(0);
-    startTimer(50);
+    startTimer(17);
 }
 
 Astro::Animator::~Animator(){
@@ -104,10 +104,10 @@ int Astro::Animator::getDiameterShift(){return (int)m_DiameterShift.getValue();}
 // Callback methods.
 
 void Astro::Animator::timerCallback(){
-    if((int)m_DiameterShift.getValue() >= 6){
+    if((int)m_DiameterShift.getValue() >= 20){
         m_DiameterShiftDirection = false;
     }
-    else if((int)m_DiameterShift.getValue() <= -2){
+    else if((int)m_DiameterShift.getValue() <= -20){
         m_DiameterShiftDirection = true;
     }
 
