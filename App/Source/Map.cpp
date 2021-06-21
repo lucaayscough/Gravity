@@ -6,7 +6,7 @@
 
 Map::Map(AudioContainer& audiocontainer_ref, Parameters& parameters_ref)
     :   m_AudioContainerRef(audiocontainer_ref), m_ParametersRef(parameters_ref), m_ControlPanel(m_ParametersRef),
-m_Sun(m_Planets, m_AudioContainerRef, m_ParametersRef, m_ControlPanel){
+        m_Sun(m_AudioContainerRef, m_ParametersRef, m_ControlPanel){
     Logger::writeToLog("Map created!");
 
     addChildComponent(m_ControlPanel, -1);

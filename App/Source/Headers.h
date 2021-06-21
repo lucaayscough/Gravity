@@ -13,6 +13,7 @@
 #include "Parameters.h"
 
 #include "ControlPanel.h"
+#include "Astro.h"
 #include "Planet.h"
 #include "Sun.h"
 #include "Map.h"

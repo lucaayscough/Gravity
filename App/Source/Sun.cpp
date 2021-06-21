@@ -4,19 +4,13 @@
 //------------------------------------------------------------//
 // Constructors and destructors.
 
-Sun::Sun(juce::OwnedArray<Planet>& planets_ref, AudioContainer& audiocontainer_ref, Parameters& parameters_ref, ControlPanel& controlpanel_ref)
-    :   Planet(planets_ref, audiocontainer_ref, parameters_ref, controlpanel_ref){}
-
-void Sun::init(){
-    // TODO:
-    // Init using this function for sun.
-    // Currently this is not getting called.
-
+Sun::Sun(AudioContainer& audiocontainer_ref, Parameters& parameters_ref, ControlPanel& controlpanel_ref)
+    :   Astro(audiocontainer_ref, parameters_ref, controlpanel_ref){
     Logger::writeToLog("Sun created.");
 }
 
 Sun::~Sun(){
-    Logger::writeToLog("Sun destroyed.");
+    Logger::writeToLog("Planet destroyed.");
 }
 
 //------------------------------------------------------------//
@@ -37,14 +31,11 @@ void Sun::draw(){
     setCentreRelative(0.5, 0.5);
 }
 
+void Sun::draw(int diameter, int x, int y){setBounds(x, y, diameter, diameter);}
+
+
 //------------------------------------------------------------//
 // Interface methods.
-
-void Sun::setPosXY(int x, int y){
-    getState().setProperty(Parameters::posXProp, x, nullptr);
-    getState().setProperty(Parameters::posYProp, y, nullptr);
-    setCentrePosXY(x + getDiameter() / 2, y + getDiameter() / 2);
-}
 
 juce::ValueTree Sun::getState(){return m_ParametersRef.getSunNode();}
 
@@ -72,3 +63,5 @@ void Sun::mouseDown(const MouseEvent& e){
 void Sun::mouseUp(const MouseEvent& e){juce::ignoreUnused(e);}
 void Sun::mouseDrag(const MouseEvent& e){juce::ignoreUnused(e);}
 void Sun::mouseWheelMove(const MouseEvent& e, const MouseWheelDetails& w){juce::ignoreUnused(e, w);}
+
+void Sun::valueChanged(Value& value){juce::ignoreUnused(value);}
