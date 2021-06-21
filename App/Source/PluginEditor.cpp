@@ -10,7 +10,7 @@ AudioPluginAudioProcessorEditor::AudioPluginAudioProcessorEditor(AudioPluginAudi
         m_Map(processorRef.m_AudioContainer, processorRef.m_Parameters),
         m_DropShadow(Variables::TOP_BAR_SHADOW_COLOUR, 10, juce::Point<int>({0, 0})), m_DropShadower(m_DropShadow){
     Logger::writeToLog("Editor created.");
-    
+
     addAndMakeVisible(m_TopBar);
     addAndMakeVisible(m_Map);
 
@@ -39,6 +39,7 @@ void AudioPluginAudioProcessorEditor::resized(){
     m_TopBar.setBounds(topBar);
 
     auto leftBar = r.removeFromLeft(Variables::LEFT_BAR);
+    juce::ignoreUnused(leftBar);
 
     auto mapArea = r.withTrimmedRight(Variables::MAP_TRIM).withTrimmedBottom(Variables::MAP_TRIM);
     m_Map.setBounds(mapArea);

@@ -21,7 +21,7 @@ public:
 
 public:
     // Interface methods.
-    void setPosXY(int, int) override;
+    void setCentrePosXY(int, int) override;
 
     juce::ValueTree getState() override;
     int getClipBoundary();

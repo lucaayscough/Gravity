@@ -12,6 +12,7 @@ public:
     virtual void draw() = 0;
     virtual void draw(int, int, int) = 0;
 
+    // Interface methods.
     virtual void setDiameter(int);
     virtual void setPosXY(int, int);
     virtual void setCentrePosXY(int, int);

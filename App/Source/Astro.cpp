@@ -13,7 +13,7 @@ Astro::Astro(AudioContainer& audiocontainer_ref, Parameters& parameters_ref, Con
 Astro::~Astro(){}
 
 //--------------------------------------------------//
-// View methods.
+// Interface methods.
 
 void Astro::setDiameter(int diameter){getState().setProperty(Parameters::diameterProp, diameter, nullptr);}
 

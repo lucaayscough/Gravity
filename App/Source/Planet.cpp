@@ -71,10 +71,9 @@ void Planet::resizePlanet(int diameter){
     //updateGraph();
 }
 
-void Planet::setPosXY(int x, int y){
-    getState().setProperty(Parameters::posXProp, x, nullptr);
-    getState().setProperty(Parameters::posYProp, y, nullptr);
-    setCentrePosXY(x + (getClipBoundary() + getDiameter()) / 2, y + (getClipBoundary() + getDiameter()) / 2);
+void Planet::setCentrePosXY(int x, int y){
+    getState().setProperty(Parameters::posCentreXProp, x + getClipBoundary() / 2, nullptr);
+    getState().setProperty(Parameters::posCentreYProp, y + getClipBoundary() / 2, nullptr);
 }
 
 juce::ValueTree Planet::getState(){return m_ParametersRef.getRootPlanetNode().getChildWithProperty(Parameters::idProp, getComponentID());}
