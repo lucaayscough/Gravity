@@ -1,10 +1,6 @@
 #pragma once
 
 
-// TODO:
-// Cleanup this header file.
-// Sort private and public access.
-
 class Planet: public Astro{
 public: 
     // Constructors and destructors.
@@ -18,22 +14,19 @@ public:
     void draw() override;
     void draw(int, int, int) override;
     void resizePlanet(int);
+    void checkCollision();
+    void checkBounds();
 
 public:
     // Interface methods.
-    void setCentrePosXY(int, int) override;
-
     juce::ValueTree getState() override;
     int getClipBoundary();
 
-    void checkCollision();
-    void checkBounds();
+    void setCentrePosXY(int, int) override;
 
 private:
     // Controller methods.
     bool hitTest(int, int) override;
-    void mouseEnter(const MouseEvent&) override;
-    void mouseExit(const MouseEvent&) override;
     void mouseDown(const MouseEvent&) override;
     void mouseUp(const MouseEvent&) override;
     void mouseDrag(const MouseEvent&) override;

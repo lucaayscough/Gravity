@@ -60,8 +60,7 @@ void Sun::mouseDown(const MouseEvent& e){
     }
 }
 
-void Sun::mouseUp(const MouseEvent& e){juce::ignoreUnused(e);}
-void Sun::mouseDrag(const MouseEvent& e){juce::ignoreUnused(e);}
-void Sun::mouseWheelMove(const MouseEvent& e, const MouseWheelDetails& w){juce::ignoreUnused(e, w);}
+//------------------------------------------------------------//
+// Callback methods.
 
 void Sun::valueChanged(Value& value){juce::ignoreUnused(value);}

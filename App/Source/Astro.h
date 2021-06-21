@@ -33,6 +33,11 @@ public:
     virtual void playSample();
 
 protected:
+    // Controller methods.
+    void mouseEnter(const MouseEvent&) override;
+    void mouseExit(const MouseEvent&) override;
+
+protected:
     // Member variables.
     AudioContainer& m_AudioContainerRef;
     Parameters& m_ParametersRef;

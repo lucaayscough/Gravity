@@ -71,68 +71,6 @@ void Planet::resizePlanet(int diameter){
     //updateGraph();
 }
 
-void Planet::setCentrePosXY(int x, int y){
-    getState().setProperty(Parameters::posCentreXProp, x + getClipBoundary() / 2, nullptr);
-    getState().setProperty(Parameters::posCentreYProp, y + getClipBoundary() / 2, nullptr);
-}
-
-juce::ValueTree Planet::getState(){return m_ParametersRef.getRootPlanetNode().getChildWithProperty(Parameters::idProp, getComponentID());}
-int Planet::getClipBoundary(){return Variables::CLIP_BOUNDARY;}
-
-//--------------------------------------------------//
-// Private methods.
-
-bool Planet::hitTest(int x, int y){
-    float a = pow((float)x - ((float)getDiameter() + (float)getClipBoundary()) / 2.0f, 2.0f);
-    float b = pow((float)y - ((float)getDiameter() + (float)getClipBoundary()) / 2.0f, 2.0f);
-    return sqrt(a + b) <= getDiameter() / 2;
-}
-
-void Planet::mouseEnter(const MouseEvent& e){
-    juce::ignoreUnused(e);
-    m_ControlPanelRef.show(getState());
-}
-
-void Planet::mouseExit(const MouseEvent& e){
-    juce::ignoreUnused(e);
-    m_ControlPanelRef.unshow();
-}
-
-void Planet::mouseDown(const MouseEvent& e){m_Dragger.startDraggingComponent(this, e);}
-
-void Planet::mouseUp(const MouseEvent& e){
-    if(e.mods.isLeftButtonDown()){
-        // Generates new sample if double clicked with left mouse button.
-        if(e.getNumberOfClicks() > 1){generateSample();}
-        
-        // Plays sample if clicked once with left mouse button.
-        else if(e.getNumberOfClicks() == 1 && e.mouseWasClicked()){playSample();}
-
-        // Updates latent mixture graph if there has been a dragging motion.
-        else if(e.mouseWasDraggedSinceMouseDown()){updateGraph();}
-    }
-    
-    // Destroys planet if clicked with right mouse button.
-    else if(e.mods.isRightButtonDown()){
-        m_ParametersRef.removePlanetNode(getComponentID());
-    }
-}
-
-void Planet::mouseDrag(const MouseEvent& e){
-    m_Dragger.dragComponent(this, e, nullptr);
-    checkCollision();
-    checkBounds();
-    setPosXY(getX(), getY());
-}
-
-void Planet::mouseWheelMove(const MouseEvent& e, const MouseWheelDetails& w){
-    juce::ignoreUnused(e);
-    Logger::writeToLog("Wheel moved.");
-
-    if(w.deltaY > 0.0f && getDiameter() < Variables::MAX_PLANET_SIZE){resizePlanet(getDiameter() + Variables::SIZE_MODIFIER);}
-    else if(w.deltaY < 0.0f && getDiameter() > Variables::MIN_PLANET_SIZE){resizePlanet(getDiameter() - Variables::SIZE_MODIFIER);}
-}
-
 void Planet::checkCollision(){
     int centrePosX = getX() + (getClipBoundary() + getDiameter()) / 2;
     int centrePosY = getY() + (getClipBoundary() + getDiameter()) / 2;
@@ -191,6 +129,61 @@ void Planet::checkBounds(){
     // Check bottom boundary.
     if(getY() + getDiameter() + (getClipBoundary() / 2) > getParentHeight())
         draw(getDiameter(), getX(), getParentHeight() - getDiameter() - (getClipBoundary() / 2));
+}
+
+//--------------------------------------------------//
+// Interface methods.
+
+juce::ValueTree Planet::getState(){return m_ParametersRef.getRootPlanetNode().getChildWithProperty(Parameters::idProp, getComponentID());}
+int Planet::getClipBoundary(){return Variables::CLIP_BOUNDARY;}
+
+void Planet::setCentrePosXY(int x, int y){
+    getState().setProperty(Parameters::posCentreXProp, x + getClipBoundary() / 2, nullptr);
+    getState().setProperty(Parameters::posCentreYProp, y + getClipBoundary() / 2, nullptr);
+}
+
+//--------------------------------------------------//
+// Controller methods.
+
+bool Planet::hitTest(int x, int y){
+    float a = pow((float)x - ((float)getDiameter() + (float)getClipBoundary()) / 2.0f, 2.0f);
+    float b = pow((float)y - ((float)getDiameter() + (float)getClipBoundary()) / 2.0f, 2.0f);
+    return sqrt(a + b) <= getDiameter() / 2;
+}
+
+void Planet::mouseDown(const MouseEvent& e){m_Dragger.startDraggingComponent(this, e);}
+
+void Planet::mouseUp(const MouseEvent& e){
+    if(e.mods.isLeftButtonDown()){
+        // Generates new sample if double clicked with left mouse button.
+        if(e.getNumberOfClicks() > 1){generateSample();}
+        
+        // Plays sample if clicked once with left mouse button.
+        else if(e.getNumberOfClicks() == 1 && e.mouseWasClicked()){playSample();}
+
+        // Updates latent mixture graph if there has been a dragging motion.
+        else if(e.mouseWasDraggedSinceMouseDown()){updateGraph();}
+    }
+    
+    // Destroys planet if clicked with right mouse button.
+    else if(e.mods.isRightButtonDown()){
+        m_ParametersRef.removePlanetNode(getComponentID());
+    }
+}
+
+void Planet::mouseDrag(const MouseEvent& e){
+    m_Dragger.dragComponent(this, e, nullptr);
+    checkCollision();
+    checkBounds();
+    setPosXY(getX(), getY());
+}
+
+void Planet::mouseWheelMove(const MouseEvent& e, const MouseWheelDetails& w){
+    juce::ignoreUnused(e);
+    Logger::writeToLog("Wheel moved.");
+
+    if(w.deltaY > 0.0f && getDiameter() < Variables::MAX_PLANET_SIZE){resizePlanet(getDiameter() + Variables::SIZE_MODIFIER);}
+    else if(w.deltaY < 0.0f && getDiameter() > Variables::MIN_PLANET_SIZE){resizePlanet(getDiameter() - Variables::SIZE_MODIFIER);}
 }
 
 //--------------------------------------------------//

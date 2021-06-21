@@ -62,7 +62,18 @@ void Astro::playSample(){
     m_AudioContainerRef.playAudio = true;
 }
 
+//--------------------------------------------------//
+// Controller methods.
 
+void Astro::mouseEnter(const MouseEvent& e){
+    juce::ignoreUnused(e);
+    m_ControlPanelRef.show(getState());
+}
+
+void Astro::mouseExit(const MouseEvent& e){
+    juce::ignoreUnused(e);
+    m_ControlPanelRef.unshow();
+}
 
 
 /*
