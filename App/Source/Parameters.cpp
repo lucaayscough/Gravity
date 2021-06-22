@@ -275,3 +275,13 @@ juce::Identifier Parameters::sampleProp("Sample");
 juce::Identifier Parameters::updateGraphSignal("Update_Graph");
 juce::Identifier Parameters::generateSampleSignal("Generate_Sample");
 
+//------------------------------------------------------------//
+// Threads.
+
+Parameters::MixerThread::MixerThread()
+    :   Thread("Mixer Thread"){}
+
+Parameters::MixerThread::~MixerThread(){}
+
+void Parameters::MixerThread::run(){}
+

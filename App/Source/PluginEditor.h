@@ -14,7 +14,12 @@ public:
 private:
     // Member variables.
     AudioPluginAudioProcessor& processorRef;
+    
+    TopBar m_TopBar;
     Map m_Map;
+
+    juce::DropShadow m_DropShadow;
+    juce::DropShadower m_DropShadower;
 
     JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR (AudioPluginAudioProcessorEditor)
 };

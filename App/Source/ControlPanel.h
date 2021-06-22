@@ -30,4 +30,6 @@ private:
     int m_Height = 60;
 
     juce::ValueTree m_State;
+
+    JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR(ControlPanel)
 };

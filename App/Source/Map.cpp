@@ -6,8 +6,7 @@
 
 Map::Map(AudioContainer& audiocontainer_ref, Parameters& parameters_ref)
     :   m_AudioContainerRef(audiocontainer_ref), m_ParametersRef(parameters_ref), m_ControlPanel(m_ParametersRef),
-        m_Sun(m_Planets, m_AudioContainerRef, m_ParametersRef, m_ControlPanel),
-        m_Grey1(61, 61, 61), m_Grey2(47, 47, 46){
+        m_Sun(m_AudioContainerRef, m_ParametersRef, m_ControlPanel){
     Logger::writeToLog("Map created!");
 
     addChildComponent(m_ControlPanel, -1);
@@ -28,14 +27,20 @@ Map::~Map(){
 // View methods.
 
 void Map::paint(Graphics& g){
+    int rectOverlap = 25;
+
     g.setGradientFill(m_ColourGradient);
-    g.fillAll();
+    g.fillRect(0, 0, getWidth(), getHeight() / 2);
+    g.fillRoundedRectangle(0, getHeight() / 2 - rectOverlap, getWidth(), getHeight() / 2 + rectOverlap, 5.0f);
+
+    // TODO:
+    // Clean this up.
 
     juce::ValueTree rootPlanetNode =  m_ParametersRef.getRootPlanetNode();
     juce::ValueTree sunNode =  m_ParametersRef.getSunNode();
 
     for(int i = 0; i < rootPlanetNode.getNumChildren(); i++){
-        g.setColour(juce::Colours::grey);
+        g.setColour(Variables::MAP_CIRCLE_COLOUR);
         g.drawEllipse(
             (getWidth() / 2) - (m_ParametersRef.getDistance(rootPlanetNode.getChild(i), sunNode)), 
             (getHeight() / 2) - (m_ParametersRef.getDistance(rootPlanetNode.getChild(i), sunNode) ),
@@ -50,7 +55,7 @@ void Map::resized(){
     drawSun();
     if(getNumPlanets() > 0){rebuildPlanets();}
     m_ControlPanel.setBounds(getLocalBounds());
-    m_ColourGradient = juce::ColourGradient(m_Grey1, getWidth() / 2, getHeight() / 2, m_Grey2, getWidth() / 4, getHeight() / 4, true);
+    m_ColourGradient = juce::ColourGradient(Variables::MAP_BG_COLOUR_1, getWidth() / 2, getHeight() / 2, Variables::MAP_BG_COLOUR_2, getWidth() / 4, getHeight() / 4, true);
 }
 
 void Map::drawSun(){
@@ -93,7 +98,7 @@ void Map::setupPlanet(Planet* planet, int x, int y, juce::ValueTree node){
 }
 
 void Map::destroyPlanet(juce::String& id){
-    for(int i = 0; i < getNumPlanets(); i++){
+    for(int i = 0; i < m_Planets.size(); i++){
         if(m_Planets[i]->getComponentID() == id){
             m_Planets.remove(i, true);
         }

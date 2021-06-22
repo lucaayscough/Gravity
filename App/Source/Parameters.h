@@ -69,4 +69,12 @@ struct Parameters: public juce::ValueTree::Listener{
     static juce::Identifier updateGraphSignal;
     static juce::Identifier generateSampleSignal;
 
+    // Threads.
+    struct MixerThread: public Thread{
+        MixerThread();
+        ~MixerThread() override;
+        void run() override;
+    };
+
+    MixerThread mixerThread;
 };
