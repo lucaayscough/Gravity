@@ -494,10 +494,11 @@ class Generator(nn.Module):
         latent_z,
         is_training = True,
         latent_w = None,
-        noise = None
+        noise = None,
+        return_w = False
     ):     
         if is_training:
-            x = self._train(latent_z)
+            x = self._train(latent_z, return_w)
             return x
         else:
             x = self._generate(latent_z)
@@ -506,7 +507,7 @@ class Generator(nn.Module):
     def _generate(self, latent_z):
         pass
 
-    def _train(self, latent_z):
+    def _train(self, latent_z, return_w):
         batch_size = latent_z.size(0)
 
         x = self.constant_input(batch_size)
@@ -528,8 +529,11 @@ class Generator(nn.Module):
                 out = self.resample(out, scale_factor = self.scale_factor)
                 out = out + skip
             i += 1
-
-        return out
+        
+        if return_w:
+            return out, latent_w
+        else:
+            return out
 
     def _mixing_regularization(self, latent_z, latent_w, depth):
         latent_z_2 = torch.randn(latent_z.shape).to(latent_z.device)

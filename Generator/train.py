@@ -9,6 +9,7 @@ from model import Generator, Discriminator
 from utils import AudioFolder, gradient_penalty
 import time
 import copy
+import math
 
 
 class Train:
@@ -75,11 +76,10 @@ class Train:
         
         # Initialization
         torch.backends.cudnn.benchmark = True
+        self.mean_path_length = 0
 
         self._init_models()
         self._init_optim()
-
-        self.mode = None
 
         if self.restart_from_iter == True:
             self._load_state()
@@ -167,10 +167,9 @@ class Train:
         self.netG.load_state_dict(checkpointG['state_dict'])
         self.netD.load_state_dict(checkpointD['state_dict'])
 
-
     def _save_state(self, epoch): 
-        checkpointD = {'state_dict': self.netD.state_dict(), 'optimizer': self.opt_dis.state_dict(), 'epoch': epoch}
-        checkpointG = {'state_dict': self.netG.state_dict(), 'optimizer': self.opt_gen.state_dict(), 'epoch': epoch}    
+        checkpointD = {'state_dict': self.netD.state_dict(), 'optimizer': self.opt_dis.state_dict()}
+        checkpointG = {'state_dict': self.netG.state_dict(), 'optimizer': self.opt_gen.state_dict()}    
         
         torch.save(checkpointD,
             'runs/iter_{iter_num}/model/checkpoint_{epoch}_D.pth.tar'.format(
@@ -219,8 +218,8 @@ class Train:
                 for idx, data in enumerate(dataloader):
                     real = data[0].to(self.device)
 
-                    self._train_discriminator(real)
-                    self._train_generator()
+                    self._train_discriminator(real, idx)
+                    self._train_generator(idx)
                     
                     self._update_average(beta = self.ema_beta)
                     
@@ -235,7 +234,86 @@ class Train:
         
             print("Time elapsed: ", int(time.time() - start_time), " seconds.")
 
-    
+
+
+
+    def _train_discriminator(self, real, idx):
+        self.netD.zero_grad()
+
+        self._set_grad_flag(self.netD, True)
+        self._set_grad_flag(self.netG, False)
+
+        real.requires_grad = True
+        
+        # Train on real samples.
+        disc_real = self.netD(real).reshape(-1)
+        disc_real = nn.functional.softplus(-disc_real).mean()
+        disc_real.backward(retain_graph = True)
+        
+        # Train on fake samples.
+        noise = torch.randn((self.batch_size, self.z_dim)).to(self.device)
+        fake = self.netG(noise)
+        disc_fake = self.netD(fake).reshape(-1)
+
+        disc_fake = nn.functional.softplus(disc_fake).mean()
+        disc_fake.backward()
+
+        self.loss_disc = (disc_real + disc_fake) / 2     
+        
+        # R1.
+        if idx % 16 == 0:
+            grad_real = torch.autograd.grad(outputs = disc_real.sum(), inputs = real, create_graph = True)[0]
+            grad_penalty_real = (grad_real.view(grad_real.size(0), -1).norm(2, dim=1) ** 2).mean()
+            grad_penalty_real = 10 / 2 * grad_penalty_real
+
+            grad_penalty_real.backward()
+        
+        self.opt_dis.step()
+       
+
+
+    def _train_generator(self, idx):
+        self.netG.zero_grad()
+
+        self._set_grad_flag(self.netD, False)
+        self._set_grad_flag(self.netG, True)
+
+        noise = torch.randn((self.batch_size, self.z_dim)).to(self.device)
+        fake = self.netG(noise)
+        output = self.netD(fake).reshape(-1)
+
+        output = nn.functional.softplus(-output).mean()
+        output.backward()
+        
+        self.loss_gen = output
+
+        self.opt_gen.step()
+
+        if idx % 8 == 0:
+            path_batch_size = max(1, self.batch_size // 2)
+            noise = torch.randn((self.batch_size, self.z_dim)).to(self.device)
+            fake, latents = self.netG(noise, return_w = True)
+
+            noise = torch.randn_like(fake) / math.sqrt(fake.shape[2])
+            grad, = torch.autograd.grad(outputs = (fake * noise).sum(), inputs = latents, create_graph = True)
+
+            path_lengths = torch.sqrt(grad.pow(2).sum(2).mean(1))
+            path_mean = self.mean_path_length + 0.01 * (path_lengths.mean() - self.mean_path_length)
+            path_loss = (path_lengths - path_mean).pow(2).mean()
+            self.mean_path_length = path_mean.detach()
+
+            self.netG.zero_grad()
+
+            weighted_path_loss = 2 * 8 * path_loss
+            weighted_path_loss += 0 * fake[0, 0, 0]
+            weighted_path_loss.backward()
+
+            self.opt_gen.step()
+
+
+
+
+    """
     def _train_discriminator(self, real):
         noise = torch.randn((self.batch_size, self.z_dim)).to(self.device)
         fake = self.netG(noise)
@@ -262,6 +340,8 @@ class Train:
         self.netG.zero_grad()
         self.loss_gen.backward()
         self.opt_gen.step()
+    """
+
 
 # ------------------------------------------------------------
 # Helper functions.
@@ -315,3 +395,7 @@ class Train:
         # turn back on the gradient calculation
         toggle_grad(self.netG_shadow, True)
         toggle_grad(self.netG, True)
+
+    def _set_grad_flag(self, module, flag):
+        for p in module.parameters():
+            p.requires_grad = flag

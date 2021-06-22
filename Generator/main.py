@@ -8,24 +8,20 @@ from utils import build_folder_structure, get_iter
 
 ### add logger
 ### add profiler
-### add equalized learning to sa module
-### add demodulation 
-### define custom up/downsample function
-### change loss
 
 
 config_dict = {
     # Iterarion
     'restart_from_iter': True,
-    'restart_iter_num': 3,
+    'restart_iter_num': 4,
     'epochs': 500,
     'datadir': 'datasets/dataset_2/',
 
     # Training
-    'batch_size': 8,
+    'batch_size': 12,
     
     # Learning
-    'learning_rate': 0.003,
+    'learning_rate': 0.002,
 
     # Model
     'scale_factor': 4,
