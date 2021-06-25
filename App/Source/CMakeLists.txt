@@ -47,7 +47,7 @@ juce_add_plugin(AudioPluginExample
     NEEDS_MIDI_OUTPUT TRUE                      # Does the plugin need midi output?
     # IS_MIDI_EFFECT TRUE/FALSE                 # Is this plugin a MIDI effect?
     # EDITOR_WANTS_KEYBOARD_FOCUS TRUE/FALSE    # Does the editor need keyboard focus?
-    COPY_PLUGIN_AFTER_BUILD TRUE		# Should the plugin be installed to a default location after building?
+    COPY_PLUGIN_AFTER_BUILD TRUE	        	# Should the plugin be installed to a default location after building?
     PLUGIN_MANUFACTURER_CODE Juce               # A four-character manufacturer id with at least one upper-case character
     PLUGIN_CODE Dem0                            # A unique four-character plugin id with exactly one upper-case character
                                                 # GarageBand 10.3 requires the first letter to be upper-case, and the remaining letters to be lower-case
@@ -133,7 +133,8 @@ target_link_libraries(AudioPluginExample PRIVATE "${TORCH_LIBRARIES}")
 set_property(TARGET AudioPluginExample PROPERTY CXX_STANDARD 14)
 
 if (MSVC)
-  file(GLOB TORCH_DLLS "../Dependencies/libtorch/lib/*.dll")
+  file(GLOB TORCH_DLLS "../Dependencies/libtorch_deb/lib/*.dll")
+  #file(GLOB TORCH_DLLS "../Dependencies/libtorch_rel/lib/*.dll")
   add_custom_command(TARGET AudioPluginExample
                      POST_BUILD
                      COMMAND ${CMAKE_COMMAND} -E copy_if_different
