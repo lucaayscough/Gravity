@@ -38,11 +38,20 @@ void Planet::paint(Graphics& g){
         g.setColour(m_ColourGradient.getColourAtPosition(pos));
     }
 
+    /*
     g.fillEllipse(
         getClipBoundary() / 2 - m_Animator.getDiameterShift(),
         getClipBoundary() / 2 - m_Animator.getDiameterShift(),
         getDiameter() + m_Animator.getDiameterShift() * 2,
         getDiameter() + m_Animator.getDiameterShift() * 2
+    );
+    */
+
+    g.fillEllipse(
+        getClipBoundary() / 2,
+        getClipBoundary() / 2,
+        getDiameter(),
+        getDiameter()
     );
 }
 
@@ -50,9 +59,6 @@ void Planet::resized(){
     draw(getDiameter(), getX(), getY());
     setPosXY(getX(), getY());
 }
-
-void Planet::draw(){setBounds(getPosX(), getPosY(), getDiameter() + getClipBoundary(), getDiameter() + getClipBoundary());}
-void Planet::draw(int diameter, int x, int y){setBounds(x, y, diameter + getClipBoundary(), diameter + getClipBoundary());}
 
 void Planet::resizePlanet(int diameter){
     int new_x;
@@ -76,8 +82,8 @@ void Planet::resizePlanet(int diameter){
 }
 
 void Planet::checkCollision(){
-    int centrePosX = getX() + (getClipBoundary() + getDiameter()) / 2;
-    int centrePosY = getY() + (getClipBoundary() + getDiameter()) / 2;
+    int centrePosX = getX() + getRadiusWithClipBoundary();
+    int centrePosY = getY() + getRadiusWithClipBoundary();
 
     float distance, minDistance;
 
@@ -104,11 +110,11 @@ void Planet::checkCollision(){
 
         // Avoid self collision testing.
         if(planet->getComponentID() != getComponentID()){
-            centrePosX2 = planet->getX() + (planet->getClipBoundary() + planet->getDiameter()) / 2;
-            centrePosY2 = planet->getY() + (planet->getClipBoundary() + planet->getDiameter()) / 2;
+            centrePosX2 = planet->getX() + planet->getRadiusWithClipBoundary();
+            centrePosY2 = planet->getY() + planet->getRadiusWithClipBoundary();
 
             distance = getDistance(centrePosX, centrePosY, centrePosX2, centrePosY2);
-            minDistance = (planet->getDiameter() + getDiameter()) / 2;
+            minDistance = planet->getRadiusWithClipBoundary();
 
             if(distance <= minDistance){
                 draw(getDiameter(), getPosX(), getPosY());
@@ -139,21 +145,9 @@ void Planet::checkBounds(){
 // Interface methods.
 
 juce::ValueTree Planet::getState(){return m_ParametersRef.getRootPlanetNode().getChildWithProperty(Parameters::idProp, getComponentID());}
-int Planet::getClipBoundary(){return Variables::CLIP_BOUNDARY;}
-
-void Planet::setCentrePosXY(int x, int y){
-    getState().setProperty(Parameters::posCentreXProp, x + getClipBoundary() / 2, nullptr);
-    getState().setProperty(Parameters::posCentreYProp, y + getClipBoundary() / 2, nullptr);
-}
 
 //--------------------------------------------------//
 // Controller methods.
-
-bool Planet::hitTest(int x, int y){
-    float a = pow((float)x - ((float)getDiameter() + (float)getClipBoundary()) / 2.0f, 2.0f);
-    float b = pow((float)y - ((float)getDiameter() + (float)getClipBoundary()) / 2.0f, 2.0f);
-    return sqrt(a + b) <= getDiameter() / 2;
-}
 
 void Planet::mouseDown(const MouseEvent& e){m_Dragger.startDraggingComponent(this, e);}
 

@@ -11,8 +11,6 @@ public:
     // View methods.
     void paint(Graphics&) override;
     void resized() override;
-    void draw() override;
-    void draw(int, int, int) override;
     void resizePlanet(int);
     void checkCollision();
     void checkBounds();
@@ -20,13 +18,9 @@ public:
 public:
     // Interface methods.
     juce::ValueTree getState() override;
-    int getClipBoundary();
-
-    void setCentrePosXY(int, int) override;
 
 private:
     // Controller methods.
-    bool hitTest(int, int) override;
     void mouseDown(const MouseEvent&) override;
     void mouseUp(const MouseEvent&) override;
     void mouseDrag(const MouseEvent&) override;
