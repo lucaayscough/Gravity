@@ -13,11 +13,13 @@ public:
     virtual void draw(const int, const int, const int);
 
     // Interface methods.
-    virtual void setDiameter(const int);
+    virtual void setArea(const float);
     virtual void setPosXY(const int, int);
     virtual void setCentrePosXY(const int, const int);
 
     virtual juce::ValueTree getState() = 0;
+    virtual float getArea();
+    virtual float getFloatDiameter();
     virtual int getDiameter();
     virtual int getDiameterWithClipBoundary();
     virtual int getRadius();

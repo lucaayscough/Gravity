@@ -7,7 +7,7 @@
 Map::Map(AudioContainer& audiocontainer_ref, Parameters& parameters_ref)
     :   m_AudioContainerRef(audiocontainer_ref), m_ParametersRef(parameters_ref), m_ControlPanel(m_ParametersRef),
         m_Sun(m_AudioContainerRef, m_ParametersRef, m_ControlPanel){
-    Logger::writeToLog("Map created!");
+    Logger::writeToLog("Map created.");
 
     addChildComponent(m_ControlPanel, -1);
     addChildAndSetID(&m_Sun, m_ParametersRef.SUN_ID);
@@ -20,7 +20,7 @@ Map::~Map(){
     m_ParametersRef.rootNode.removeListener(this);
     m_ParametersRef.updateMap.removeListener(this);
 
-    Logger::writeToLog("Map destroyed!");
+    Logger::writeToLog("Map destroyed.");
 }
 
 //--------------------------------------------------//
@@ -64,13 +64,15 @@ void Map::drawSun(){
 
 void Map::createPlanet(int x, int y){
     // TODO:
-    // Need more modular implementation.
+    // Add check for other astri.
 
     // Check creation position.
-    if(x - Variables::DEFAULT_PLANET_DIAMETER / 2 < 0){x = x + abs(x - Variables::DEFAULT_PLANET_DIAMETER / 2);}
-    else if(x + Variables::DEFAULT_PLANET_DIAMETER / 2 > getWidth()){x = x - ((x + Variables::DEFAULT_PLANET_DIAMETER / 2) - getWidth());}
-    if(y - Variables::DEFAULT_PLANET_DIAMETER / 2  < 0){y = y + abs(y - Variables::DEFAULT_PLANET_DIAMETER / 2);}
-    else if(y + Variables::DEFAULT_PLANET_DIAMETER / 2 > getHeight()){y = y - ((y + Variables::DEFAULT_PLANET_DIAMETER / 2) - getHeight());}
+    int default_radius = (int)sqrt(Variables::DEFAULT_PLANET_AREA / 3.1415f);
+
+    if(x - default_radius < 0){x = x + abs(x - default_radius);}
+    else if(x + default_radius > getWidth()){x = x - ((x + default_radius) - getWidth());}
+    if(y - default_radius < 0){y = y + abs(y - default_radius);}
+    else if(y + default_radius > getHeight()){y = y - ((y + default_radius) - getHeight());}
 
     // Create planet node.
     m_ParametersRef.addPlanetNode();

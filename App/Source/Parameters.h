@@ -54,7 +54,7 @@ struct Parameters: public juce::ValueTree::Listener{
     // Property identifiers.
     static juce::Identifier idProp;
     static juce::Identifier isActiveProp;
-    static juce::Identifier diameterProp;
+    static juce::Identifier areaProp;
     static juce::Identifier posXProp;
     static juce::Identifier posYProp;
     static juce::Identifier posCentreXProp;

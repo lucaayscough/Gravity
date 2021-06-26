@@ -24,12 +24,12 @@ struct Variables{
     static const juce::Colour MAP_CIRCLE_COLOUR;
     
     // Planet variables.
-    static const int DEFAULT_PLANET_DIAMETER;
-    static const int MAX_PLANET_SIZE;
-    static const int MIN_PLANET_SIZE;
-    static const int SIZE_MODIFIER;
+    static const float DEFAULT_PLANET_AREA;
+    static const float MAX_PLANET_AREA;
+    static const float MIN_PLANET_AREA;
+    static const float AREA_MODIFIER;
     static const int CLIP_BOUNDARY;
 
     // Sun variables.
-    static const int SUN_DIAMETER;
+    static const float SUN_AREA;
 };

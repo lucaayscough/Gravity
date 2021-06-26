@@ -11,7 +11,7 @@ public:
     // View methods.
     void paint(Graphics&) override;
     void resized() override;
-    void resizePlanet(int);
+    void resizePlanet(float);
     void checkCollision();
     void checkBounds();
 

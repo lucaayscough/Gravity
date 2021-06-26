@@ -21,7 +21,7 @@ void Astro::draw(const int diameter, const int x, const int y){setBounds(x, y, d
 //--------------------------------------------------//
 // Interface methods.
 
-void Astro::setDiameter(const int diameter){getState().setProperty(Parameters::diameterProp, diameter, nullptr);}
+void Astro::setArea(const float area){getState().setProperty(Parameters::areaProp, area, nullptr);}
 
 void Astro::setPosXY(const int x, const int y){
     getState().setProperty(Parameters::posXProp, x, nullptr);
@@ -34,7 +34,18 @@ void Astro::setCentrePosXY(const int x, const int y){
     getState().setProperty(Parameters::posCentreYProp, y + getClipBoundary() / 2, nullptr);
 }
 
-int Astro::getDiameter(){return getState().getProperty(Parameters::diameterProp);}
+float Astro::getArea(){return getState().getProperty(Parameters::areaProp);}
+
+float Astro::getFloatDiameter(){
+    float area = getArea();
+    return sqrt(area / 3.1415f) * 2.0f;
+}
+
+int Astro::getDiameter(){
+    float area = getArea();
+    return (int)(sqrt(area / 3.1415f) * 2.0f);
+}
+
 int Astro::getDiameterWithClipBoundary(){return getDiameter() + getClipBoundary();}
 int Astro::getRadius(){return getDiameter() / 2;}
 int Astro::getRadiusWithClipBoundary(){return (getDiameter() + getClipBoundary()) / 2;}

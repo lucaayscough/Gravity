@@ -60,21 +60,23 @@ void Planet::resized(){
     setPosXY(getX(), getY());
 }
 
-void Planet::resizePlanet(int diameter){
-    int new_x;
-    int new_y;
+void Planet::resizePlanet(float area){
+    float new_diameter = sqrt(area / 3.1415f) * 2.0f;
+    float old_diameter = getFloatDiameter();
 
-    if(diameter > getDiameter()){
-        new_x = getX() - (Variables::SIZE_MODIFIER / 2);
-        new_y = getY() - (Variables::SIZE_MODIFIER / 2);
-    }
-    else{
-        new_x = getX() + (Variables::SIZE_MODIFIER / 2);
-        new_y = getY() + (Variables::SIZE_MODIFIER / 2);
-    }
+    new_diameter = round(new_diameter / 2.0f) * 2.0f;
+    area = pow(new_diameter / 2.0f, 2.0f) * 3.1415f;
 
-    setDiameter(diameter);
-    draw(diameter, new_x, new_y);
+    float diff = old_diameter - new_diameter;
+    diff = round(diff / 2.0f) * 2;
+    
+    setArea(area);
+    
+    draw(
+        (int)new_diameter,
+        getX() + (int)diff / 2,
+        getY() + (int)diff / 2
+    );
 
     // TODO:
     // NEED A WAY TO UPDATE GRAPH WHEN DONE ZOOMING IN ON SOUND
@@ -91,10 +93,14 @@ void Planet::checkCollision(){
     {
         int centreXSun = getParentWidth() / 2;
         int centreYSun = getParentHeight() / 2;
-        int sunDiameter = Variables::SUN_DIAMETER;
+        
+        // TODO:
+        // Fix this value.
+        
+        int sunRadius = (int)sqrt(Variables::SUN_AREA / 3.1415f);
 
         distance = getDistance(centrePosX, centrePosY, centreXSun, centreYSun);
-        minDistance = (sunDiameter + getDiameter()) / 2;
+        minDistance = sunRadius + getRadius();
 
         if(distance <= minDistance){
             draw(getDiameter(), getPosX(), getPosY());
@@ -178,8 +184,11 @@ void Planet::mouseDrag(const MouseEvent& e){
 
 void Planet::mouseWheelMove(const MouseEvent& e, const MouseWheelDetails& w){
     juce::ignoreUnused(e);
-    Logger::writeToLog("Wheel moved.");
 
-    if(w.deltaY > 0.0f && getDiameter() < Variables::MAX_PLANET_SIZE){resizePlanet(getDiameter() + Variables::SIZE_MODIFIER);}
-    else if(w.deltaY < 0.0f && getDiameter() > Variables::MIN_PLANET_SIZE){resizePlanet(getDiameter() - Variables::SIZE_MODIFIER);}
+    if(w.deltaY > 0.0f && getArea() < Variables::MAX_PLANET_AREA){
+        resizePlanet(getArea() + Variables::AREA_MODIFIER);
+    }
+    else if(w.deltaY < 0.0f && getArea() > Variables::MIN_PLANET_AREA){
+        resizePlanet(getArea() - Variables::AREA_MODIFIER);
+    }
 }
