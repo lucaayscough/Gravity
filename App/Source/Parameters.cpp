@@ -6,7 +6,7 @@
 
 Parameters::Parameters(juce::ValueTree v)
     :   rootNode(v){
-    Logger::writeToLog("Parameters created!");
+    Logger::writeToLog("Parameters created.");
 
     // Listeners.
     rootNode.addListener(this);
@@ -20,7 +20,7 @@ Parameters::Parameters(juce::ValueTree v)
 
 Parameters::~Parameters(){
     rootNode.removeListener(this);
-    Logger::writeToLog("Parameters destroyed!");
+    Logger::writeToLog("Parameters destroyed.");
 }
 
 //------------------------------------------------------------//
@@ -28,7 +28,7 @@ Parameters::~Parameters(){
 
 void Parameters::addSunNode(){
     juce::ValueTree sunNode(sunType);
-    sunNode.setProperty(diameterProp, Variables::SUN_DIAMETER, nullptr);
+    sunNode.setProperty(areaProp, Variables::SUN_AREA, nullptr);
     sunNode.setProperty(idProp, SUN_ID, nullptr);
 
     // Listeners.
@@ -44,7 +44,7 @@ void Parameters::addSunNode(){
 void Parameters::addPlanetNode(){
     juce::ValueTree planetNode(planetType);
     setRandomID(planetNode);
-    planetNode.setProperty(diameterProp, Variables::DEFAULT_PLANET_DIAMETER, nullptr);
+    planetNode.setProperty(areaProp, Variables::DEFAULT_PLANET_AREA, nullptr);
 
     // Listeners.
     planetNode.setProperty(updateGraphSignal, false, nullptr);
@@ -182,7 +182,7 @@ float Parameters::getDistance(juce::ValueTree node_a, juce::ValueTree node_b){
 
 float Parameters::getForceVector(juce::ValueTree node_a, juce::ValueTree node_b){
     float r = getDistance(node_a, node_b);
-    float m = ((float)node_a.getProperty(diameterProp) * (float)node_b.getProperty(diameterProp));
+    float m = ((float)node_a.getProperty(areaProp) * (float)node_b.getProperty(areaProp));
     return (m / pow(r, 2.0f));
 }
 
@@ -258,7 +258,7 @@ juce::Identifier Parameters::planetType("Planet");
 
 juce::Identifier Parameters::idProp("ID");
 juce::Identifier Parameters::isActiveProp("Is_Active");
-juce::Identifier Parameters::diameterProp("Diameter");
+juce::Identifier Parameters::areaProp("Area");
 juce::Identifier Parameters::posXProp("Position_X");
 juce::Identifier Parameters::posYProp("Position_Y");
 juce::Identifier Parameters::posCentreXProp("Position_Centre_X");

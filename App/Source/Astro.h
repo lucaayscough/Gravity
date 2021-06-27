@@ -9,22 +9,28 @@ public:
    
 public:
     // View methods.
-    virtual void draw() = 0;
-    virtual void draw(int, int, int) = 0;
+    virtual void draw();
+    virtual void draw(const int, const int, const int);
 
     // Interface methods.
-    virtual void setDiameter(int);
-    virtual void setPosXY(int, int);
-    virtual void setCentrePosXY(int, int);
+    virtual void setArea(const float);
+    virtual void setPosXY(const int, int);
+    virtual void setCentrePosXY(const int, const int);
 
     virtual juce::ValueTree getState() = 0;
+    virtual float getArea();
+    virtual float getFloatDiameter();
     virtual int getDiameter();
+    virtual int getDiameterWithClipBoundary();
+    virtual int getRadius();
+    virtual int getRadiusWithClipBoundary();
     virtual int getPosX();
     virtual int getPosY();
     virtual int getCentreX();
     virtual int getCentreY();
+    virtual int getClipBoundary();
 
-    virtual float getDistance(int, int, int, int);
+    virtual float getDistance(const int, const int, const int, const int);
     virtual float getDistance(Astro*, Astro*);
 
     virtual void updateGraph();
@@ -34,6 +40,7 @@ public:
 
 protected:
     // Controller methods.
+    bool hitTest(const int, const int) override;
     void mouseEnter(const MouseEvent&) override;
     void mouseExit(const MouseEvent&) override;
     void valueChanged(juce::Value&) override;

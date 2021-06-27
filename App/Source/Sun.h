@@ -11,9 +11,7 @@ public:
     // View methods.
     void paint(Graphics& g) override;
     void resized() override;
-
     void draw() override;
-    void draw(int, int, int) override;
 
 public:
     // Interface methods.
@@ -21,7 +19,6 @@ public:
 
 private:
     // Controller methods.
-    bool hitTest(int, int) override;
     void mouseDown(const MouseEvent& e) override;
 
     JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR(Sun)
