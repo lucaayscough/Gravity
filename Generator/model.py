@@ -422,8 +422,6 @@ class MappingNetwork(nn.Module):
             x = F.leaky_relu(x, 0.2)
 
         return x.unsqueeze(1).expand(-1, self.broadcast, -1)
-            
-        return x
 
 # ------------------------------------------------------------
 # Generator network.
@@ -488,26 +486,36 @@ class Generator(nn.Module):
 
         # Mapping network.
         self.mapping_network = MappingNetwork(broadcast = depth * 2)
-     
+
+# ------------------------------------------------------------
+# Forward pass of the generator network.
+
     def forward(
         self,
         latent_z,
+        step = None,
         is_training = True,
         latent_w = None,
         noise = None,
         return_w = False
     ):     
         if is_training:
-            x = self._train(latent_z, return_w)
+            x = self._train(latent_z, step, return_w)
             return x
         else:
             x = self._generate(latent_z)
             return x
-        
+
+# ------------------------------------------------------------
+# Sample generator.
+
     def _generate(self, latent_z):
         pass
 
-    def _train(self, latent_z, return_w):
+# ------------------------------------------------------------
+# Network trainer.
+
+    def _train(self, latent_z, step, return_w):
         batch_size = latent_z.size(0)
 
         x = self.constant_input(batch_size)
@@ -529,11 +537,16 @@ class Generator(nn.Module):
                 out = self.resample(out, scale_factor = self.scale_factor)
                 out = out + skip
             i += 1
+            if(step == i):
+                break
         
         if return_w:
             return out, latent_w
         else:
             return out
+
+# ------------------------------------------------------------
+# Regularize latent mixture.
 
     def _mixing_regularization(self, latent_z, latent_w, depth):
         latent_z_2 = torch.randn(latent_z.shape).to(latent_z.device)
@@ -609,30 +622,37 @@ class Discriminator(nn.Module):
         )
         
         # List of converters that broadcast channels from "num_channels" to "n".
-        self.converters = EqualizedConv1d(num_channels, self.nf, 1, 1, 0)
-
+        self.converters = nn.ModuleList([])
         self.res_converters = nn.ModuleList([])
         n = self.nf
         for l in range(self.depth):
             if l == self.depth - 1:
+                self.converters.append(EqualizedConv1d(num_channels, n, 1, 1, 0))
                 self.res_converters.append(EqualizedConv1d(n, n * 2 + 1, 1, 1, 0))
             else:
+                self.converters.append(EqualizedConv1d(num_channels, n, 1, 1, 0))
                 self.res_converters.append(EqualizedConv1d(n, n * 2, 1, 1, 0))
             n = n * 2
 
         self.linear = EqualizedLinear(n + 1, num_channels)
 
+# ------------------------------------------------------------
+# Forward pass of the discriminator network.
 
-    def forward(self, x):
-        x = self.converters(x)
+    def forward(self, x, step):
+        if step == None:
+            step = self.depth
+        
+        x = self.converters[self.depth - step](x)
 
         for i in range(self.depth):
-            if i < self.depth - 1:
-                residual = self.res_converters[i](self.resample(x, scale_factor = self.scale_factor))
-            else:
-                residual = self.res_converters[i](self.resample(x, scale_factor = 1 / self.start_size))
-            x = self.layers[i](x)
-            x = (x + residual) * (1 / math.sqrt(2))
+            if self.depth - step <= i:
+                if i < self.depth - 1:
+                    residual = self.res_converters[i](self.resample(x, scale_factor = self.scale_factor))
+                else:
+                    residual = self.res_converters[i](self.resample(x, scale_factor = 1 / self.start_size))
+                x = self.layers[i](x)
+                x = (x + residual) * (1 / math.sqrt(2))
             
         x = self.linear(x.squeeze(2))
 

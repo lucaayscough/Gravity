@@ -5,20 +5,22 @@
 from train import Train
 from utils import build_folder_structure, get_iter
 
-
-### add logger
-### add profiler
+# TODO:
+# Change zero grad function.
+# Add container to hold down sampled sounds.
+# Add logger.
+# Add profiler.
 
 
 config_dict = {
     # Iterarion
     'restart_from_iter': True,
-    'restart_iter_num': 4,
+    'restart_iter_num': 7,
     'epochs': 500,
     'datadir': 'datasets/dataset_2/',
 
     # Training
-    'batch_size': 12,
+    'batch_size': 4,
     
     # Learning
     'learning_rate': 0.002,

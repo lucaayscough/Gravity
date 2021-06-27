@@ -32,13 +32,15 @@ class AudioFolder(Dataset):
         return len(self._walker)
 
 
-def gradient_penalty(discriminator, real, fake, device = 'cpu'):
+def gradient_penalty(discriminator, real, fake, step = None, device = 'cpu'):
     batch_size, channels, samples = real.shape
     epsilon = torch.rand((batch_size, 1,  1)).repeat(1, channels, samples).to(device)
     epsilon = (epsilon - 0.5) * 2
-    interpolated_sounds = real * epsilon + fake * (1 - epsilon)
 
-    mixed_scores = discriminator(interpolated_sounds)
+    real.requires_grad = True
+    
+    interpolated_sounds = real * epsilon + fake * (1 - epsilon)
+    mixed_scores = discriminator(interpolated_sounds, step)
 
     gradient = torch.autograd.grad(
         inputs = interpolated_sounds,

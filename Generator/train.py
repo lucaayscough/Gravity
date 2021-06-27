@@ -1,15 +1,17 @@
 import os
-import torch
-import torch.optim as optim
-import torch.nn as nn
-import torchaudio
-from torch.utils.data import DataLoader
-import torch.autograd.profiler as profiler
-from model import Generator, Discriminator
-from utils import AudioFolder, gradient_penalty
 import time
 import copy
 import math
+
+import torch
+import torch.optim as optim
+import torch.nn.functional as F
+import torchaudio
+from torch.utils.data import DataLoader
+import torch.autograd.profiler as profiler
+
+from model import Generator, Discriminator, Resample
+from utils import AudioFolder, gradient_penalty
 
 
 class Train:
@@ -76,15 +78,16 @@ class Train:
         
         # Initialization
         torch.backends.cudnn.benchmark = True
-        self.mean_path_length = 0
-
+        
         self._init_models()
         self._init_optim()
+        self.downsample = Resample(direction = "down").to(self.device)
 
         if self.restart_from_iter == True:
             self._load_state()
         else:
             self.start_epoch = 1
+            self.mean_path_length = 0
         
         # Creates a shadow copy of the generator.
         self.netG_shadow = copy.deepcopy(self.netG)
@@ -167,9 +170,11 @@ class Train:
         self.netG.load_state_dict(checkpointG['state_dict'])
         self.netD.load_state_dict(checkpointD['state_dict'])
 
+        self.mean_path_length = checkpointG['mean_pl']
+
     def _save_state(self, epoch): 
         checkpointD = {'state_dict': self.netD.state_dict(), 'optimizer': self.opt_dis.state_dict()}
-        checkpointG = {'state_dict': self.netG.state_dict(), 'optimizer': self.opt_gen.state_dict()}    
+        checkpointG = {'state_dict': self.netG.state_dict(), 'optimizer': self.opt_gen.state_dict(), "mean_pl": self.mean_path_length}    
         
         torch.save(checkpointD,
             'runs/iter_{iter_num}/model/checkpoint_{epoch}_D.pth.tar'.format(
@@ -184,7 +189,6 @@ class Train:
             )
         )
         
-
     def _get_checkpoint(self):
         models = os.listdir('runs/iter_{}/model/'.format(self.iter_num))
 
@@ -197,6 +201,9 @@ class Train:
 
 # ------------------------------------------------------------
 # Model training functions.
+
+# ------------------------------------------------------------
+# Main training loop.
 
     def _training_loop(self):
         dataloader = DataLoader(
@@ -234,8 +241,8 @@ class Train:
         
             print("Time elapsed: ", int(time.time() - start_time), " seconds.")
 
-
-
+# ------------------------------------------------------------
+# Train discriminator.
 
     def _train_discriminator(self, real, idx):
         self.netD.zero_grad()
@@ -243,53 +250,58 @@ class Train:
         self._set_grad_flag(self.netD, True)
         self._set_grad_flag(self.netG, False)
 
-        real.requires_grad = True
-        
-        # Train on real samples.
-        disc_real = self.netD(real).reshape(-1)
-        disc_real = nn.functional.softplus(-disc_real).mean()
-        disc_real.backward(retain_graph = True)
-        
-        # Train on fake samples.
-        noise = torch.randn((self.batch_size, self.z_dim)).to(self.device)
-        fake = self.netG(noise)
-        disc_fake = self.netD(fake).reshape(-1)
+        losses = []
 
-        disc_fake = nn.functional.softplus(disc_fake).mean()
-        disc_fake.backward()
+        for step in range(1, self.depth + 1):
+            if step != self.depth:
+                down_real = self._down_sampler(real, step)
+            else:
+                down_real = real
 
-        self.loss_disc = (disc_real + disc_fake) / 2     
-        
-        # R1.
-        if idx % 16 == 0:
-            grad_real = torch.autograd.grad(outputs = disc_real.sum(), inputs = real, create_graph = True)[0]
-            grad_penalty_real = (grad_real.view(grad_real.size(0), -1).norm(2, dim=1) ** 2).mean()
-            grad_penalty_real = 10 / 2 * grad_penalty_real
+            noise = torch.randn((self.batch_size, self.z_dim)).to(self.device)
+            fake = self.netG(noise, step)
+                      
+            disc_real = self.netD(down_real, step)
+            disc_fake = self.netD(fake, step)
+            
+            if idx % 8 == 0:
+                gp = gradient_penalty(self.netD, down_real, fake, step, device = self.device)
+            else:
+                gp = 0
 
-            grad_penalty_real.backward()
+            losses.append(-(torch.mean(disc_real) - torch.mean(disc_fake)) + 10 * gp)
+
+        self.loss_disc = sum(losses) / len(losses)
         
+        self.loss_disc.backward(retain_graph = True)
         self.opt_dis.step()
-       
 
+        del real
 
-    def _train_generator(self, idx):
+# ------------------------------------------------------------
+# Train generator.
+
+    def _train_generator(self, idx): 
         self.netG.zero_grad()
 
         self._set_grad_flag(self.netD, False)
         self._set_grad_flag(self.netG, True)
 
-        noise = torch.randn((self.batch_size, self.z_dim)).to(self.device)
-        fake = self.netG(noise)
-        output = self.netD(fake).reshape(-1)
-
-        output = nn.functional.softplus(-output).mean()
-        output.backward()
+        losses = []
         
-        self.loss_gen = output
+        for step in range(1, self.depth + 1):
+            noise = torch.randn((self.batch_size, self.z_dim)).to(self.device)
+            fake = self.netG(noise, step)
+            output = self.netD(fake, step)
+            
+            losses.append(-torch.mean(output))
+        
+        self.loss_gen = sum(losses) / len(losses)
+        self.loss_gen.backward()
 
-        self.opt_gen.step()
+        if idx % 16 == 0:
+            self.netG.zero_grad()
 
-        if idx % 8 == 0:
             path_batch_size = max(1, self.batch_size // 2)
             noise = torch.randn((self.batch_size, self.z_dim)).to(self.device)
             fake, latents = self.netG(noise, return_w = True)
@@ -302,46 +314,11 @@ class Train:
             path_loss = (path_lengths - path_mean).pow(2).mean()
             self.mean_path_length = path_mean.detach()
 
-            self.netG.zero_grad()
-
             weighted_path_loss = 2 * 8 * path_loss
             weighted_path_loss += 0 * fake[0, 0, 0]
             weighted_path_loss.backward()
 
-            self.opt_gen.step()
-
-
-
-
-    """
-    def _train_discriminator(self, real):
-        noise = torch.randn((self.batch_size, self.z_dim)).to(self.device)
-        fake = self.netG(noise)
-                    
-        disc_real = self.netD(real).reshape(-1)
-        disc_fake = self.netD(fake).reshape(-1)
-        
-        gp = gradient_penalty(self.netD, real, fake, device = self.device)
-
-        self.loss_disc = -(torch.mean(disc_real) - torch.mean(disc_fake)) + 10 * gp
-
-        self.netD.zero_grad()
-        self.loss_disc.backward(retain_graph = True)
-        self.opt_dis.step()
-
-
-    def _train_generator(self): 
-        noise = torch.randn((self.batch_size, self.z_dim)).to(self.device)
-        fake = self.netG(noise)
-        output = self.netD(fake).reshape(-1)
-        
-        self.loss_gen = -torch.mean(output)
-        
-        self.netG.zero_grad()
-        self.loss_gen.backward()
         self.opt_gen.step()
-    """
-
 
 # ------------------------------------------------------------
 # Helper functions.
@@ -376,14 +353,8 @@ class Train:
 # Update exponential moving average of generator.
 
     def _update_average(self, beta):
-        # utility function for toggling the gradient requirements of the models
-        def toggle_grad(model, requires_grad):
-            for p in model.parameters():
-                p.requires_grad_(requires_grad)
-
-        # turn off gradient calculation
-        toggle_grad(self.netG_shadow, False)
-        toggle_grad(self.netG, False)
+        self._set_grad_flag(self.netG_shadow, False)
+        self._set_grad_flag(self.netG, False)
 
         param_dict_src = dict(self.netG.named_parameters())
 
@@ -393,9 +364,20 @@ class Train:
             p_tgt.copy_(beta * p_tgt + (1. - beta) * p_src)
 
         # turn back on the gradient calculation
-        toggle_grad(self.netG_shadow, True)
-        toggle_grad(self.netG, True)
+        self._set_grad_flag(self.netG_shadow, True)
+        self._set_grad_flag(self.netG, True)
+    
+# ------------------------------------------------------------
+# Switch grad caculations on and off.
 
     def _set_grad_flag(self, module, flag):
         for p in module.parameters():
             p.requires_grad = flag
+
+# ------------------------------------------------------------
+# Downsample real data.
+
+    def _down_sampler(self, samples, step):
+        for i in range(self.depth, step, -1):
+            samples = self.downsample(samples, 1 / self.scale_factor)
+        return samples
