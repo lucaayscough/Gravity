@@ -245,8 +245,6 @@ class Train:
 # Train discriminator.
 
     def _train_discriminator(self, real, idx):
-        self._fast_zero_grad(self.netD)
-
         self._set_grad_flag(self.netD, True)
         self._set_grad_flag(self.netG, False)
 
@@ -254,6 +252,8 @@ class Train:
         samples_list = self._down_sampler(real)
 
         for step in range(1, self.depth + 1):
+            self._fast_zero_grad(self.netD)
+
             noise = torch.randn((self.batch_size, self.z_dim)).to(self.device)
             fake = self.netG(noise, step)
 
@@ -264,12 +264,14 @@ class Train:
                 gp = gradient_penalty(self.netD, samples_list[self.depth - step], fake, step, device = self.device)
             else:
                 gp = 0
+            
+            loss = -(torch.mean(disc_real) - torch.mean(disc_fake)) + 10 * gp
+            loss.backward(retain_graph = True)
 
-            losses.append(-(torch.mean(disc_real) - torch.mean(disc_fake)) + 10 * gp)
+            losses.append(loss)
 
-        self.loss_disc = sum(losses)
-        
-        self.loss_disc.backward(retain_graph = True)
+        self.loss_disc = sum(losses) / len(losses)
+
         self.opt_dis.step()
 
         del real
@@ -278,22 +280,23 @@ class Train:
 # Train generator.
 
     def _train_generator(self, idx): 
-        self._fast_zero_grad(self.netG)
-
         self._set_grad_flag(self.netD, False)
         self._set_grad_flag(self.netG, True)
 
         losses = []
         
         for step in range(1, self.depth + 1):
+            self._fast_zero_grad(self.netG)
+
             noise = torch.randn((self.batch_size, self.z_dim)).to(self.device)
             fake = self.netG(noise, step)
             output = self.netD(fake, step)
+            loss = -torch.mean(output)
+            loss.backward()
             
-            losses.append(-torch.mean(output))
-        
-        self.loss_gen = sum(losses)
-        self.loss_gen.backward()
+            losses.append(loss)
+
+        self.loss_gen = sum(losses) / len(losses)
 
         if idx % 16 == 0:
             self._fast_zero_grad(self.netG)

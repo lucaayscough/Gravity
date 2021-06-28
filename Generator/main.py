@@ -14,8 +14,8 @@ from utils import build_folder_structure, get_iter
 
 config_dict = {
     # Iterarion
-    'restart_from_iter': True,
-    'restart_iter_num': 7,
+    'restart_from_iter': False,
+    'restart_iter_num': None,
     'epochs': 500,
     'datadir': 'datasets/dataset_2/',
 
