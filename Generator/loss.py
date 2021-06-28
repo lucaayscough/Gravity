@@ -1,5 +1,5 @@
 
-def _train_discriminator(self, real, idx):
+def _train_discriminator_r1(self, real, idx):
     self._set_grad_flag(self.netD, True)
     self._set_grad_flag(self.netG, False)
     
@@ -32,7 +32,7 @@ def _train_discriminator(self, real, idx):
     self.opt_dis.step()
 
 
-def _train_generator(self, idx):
+def _train_generator_ns(self, idx):
     self.netG.zero_grad()
 
     self._set_grad_flag(self.netD, False)
@@ -66,12 +66,12 @@ def _train_generator(self, idx):
     self.opt_gen.step()
 
 
-def _train_discriminator(self, real):
+def _train_discriminator_wgangp(self, real):
     noise = torch.randn((self.batch_size, self.z_dim)).to(self.device)
     fake = self.netG(noise)
                 
-    disc_real = self.netD(real).reshape(-1)
-    disc_fake = self.netD(fake).reshape(-1)
+    disc_real = self.netD(real)
+    disc_fake = self.netD(fake)
     
     gp = gradient_penalty(self.netD, real, fake, device = self.device)
 
@@ -82,10 +82,10 @@ def _train_discriminator(self, real):
     self.opt_dis.step()
 
 
-def _train_generator(self): 
+def _train_generator_wgangp(self): 
     noise = torch.randn((self.batch_size, self.z_dim)).to(self.device)
     fake = self.netG(noise)
-    output = self.netD(fake).reshape(-1)
+    output = self.netD(fake)
     
     self.loss_gen = -torch.mean(output)
     

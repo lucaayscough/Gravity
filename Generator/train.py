@@ -245,33 +245,29 @@ class Train:
 # Train discriminator.
 
     def _train_discriminator(self, real, idx):
-        self.netD.zero_grad()
+        self._fast_zero_grad(self.netD)
 
         self._set_grad_flag(self.netD, True)
         self._set_grad_flag(self.netG, False)
 
         losses = []
+        samples_list = self._down_sampler(real)
 
         for step in range(1, self.depth + 1):
-            if step != self.depth:
-                down_real = self._down_sampler(real, step)
-            else:
-                down_real = real
-
             noise = torch.randn((self.batch_size, self.z_dim)).to(self.device)
             fake = self.netG(noise, step)
-                      
-            disc_real = self.netD(down_real, step)
+
+            disc_real = self.netD(samples_list[self.depth - step], step)
             disc_fake = self.netD(fake, step)
             
             if idx % 8 == 0:
-                gp = gradient_penalty(self.netD, down_real, fake, step, device = self.device)
+                gp = gradient_penalty(self.netD, samples_list[self.depth - step], fake, step, device = self.device)
             else:
                 gp = 0
 
             losses.append(-(torch.mean(disc_real) - torch.mean(disc_fake)) + 10 * gp)
 
-        self.loss_disc = sum(losses) / len(losses)
+        self.loss_disc = sum(losses)
         
         self.loss_disc.backward(retain_graph = True)
         self.opt_dis.step()
@@ -282,7 +278,7 @@ class Train:
 # Train generator.
 
     def _train_generator(self, idx): 
-        self.netG.zero_grad()
+        self._fast_zero_grad(self.netG)
 
         self._set_grad_flag(self.netD, False)
         self._set_grad_flag(self.netG, True)
@@ -296,11 +292,11 @@ class Train:
             
             losses.append(-torch.mean(output))
         
-        self.loss_gen = sum(losses) / len(losses)
+        self.loss_gen = sum(losses)
         self.loss_gen.backward()
 
         if idx % 16 == 0:
-            self.netG.zero_grad()
+            self._fast_zero_grad(self.netG)
 
             path_batch_size = max(1, self.batch_size // 2)
             noise = torch.randn((self.batch_size, self.z_dim)).to(self.device)
@@ -374,10 +370,21 @@ class Train:
         for p in module.parameters():
             p.requires_grad = flag
 
+    def _fast_zero_grad(self, model):
+        for param in model.parameters():
+            param.grad = None
+
 # ------------------------------------------------------------
 # Downsample real data.
 
-    def _down_sampler(self, samples, step):
-        for i in range(self.depth, step, -1):
-            samples = self.downsample(samples, 1 / self.scale_factor)
-        return samples
+    def _down_sampler(self, samples):
+        samples_list = []
+
+        for i in range(self.depth):
+            if(i == 0):
+                samples_list.append(samples)
+            else:
+                samples = self.downsample(samples, 1 / self.scale_factor)
+                samples_list.append(samples)
+
+        return samples_list
