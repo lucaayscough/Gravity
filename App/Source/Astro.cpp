@@ -36,14 +36,8 @@ void Astro::setCentrePosXY(const int x, const int y){
 
 float Astro::getArea(){return getState().getProperty(Parameters::areaProp);}
 
-float Astro::getFloatDiameter(){
-    float area = getArea();
-    return sqrt(area / 3.1415f) * 2.0f;
-}
-
 int Astro::getDiameter(){
-    float area = getArea();
-    return (int)(sqrt(area / 3.1415f) * 2.0f);
+    return (int)(round((sqrt(getArea() / 3.1415f) * 2.0f) / 2.0f) * 2.0f);
 }
 
 int Astro::getDiameterWithClipBoundary(){return getDiameter() + getClipBoundary();}

@@ -61,14 +61,9 @@ void Planet::resized(){
 }
 
 void Planet::resizePlanet(float area){
-    float new_diameter = sqrt(area / 3.1415f) * 2.0f;
-    float old_diameter = getFloatDiameter();
-
-    new_diameter = round(new_diameter / 2.0f) * 2.0f;
-    area = pow(new_diameter / 2.0f, 2.0f) * 3.1415f;
-
-    float diff = old_diameter - new_diameter;
-    diff = round(diff / 2.0f) * 2;
+    int new_diameter = (int)(round(sqrt(area / 3.1415f)) * 2.0f);
+    int old_diameter = getDiameter();
+    int diff = old_diameter - new_diameter;
     
     setArea(area);
     
@@ -84,6 +79,9 @@ void Planet::resizePlanet(float area){
 }
 
 void Planet::checkCollision(){
+    // TODO:
+    // Fix collision bug.
+
     int centrePosX = getX() + getRadiusWithClipBoundary();
     int centrePosY = getY() + getRadiusWithClipBoundary();
 
@@ -93,9 +91,6 @@ void Planet::checkCollision(){
     {
         int centreXSun = getParentWidth() / 2;
         int centreYSun = getParentHeight() / 2;
-        
-        // TODO:
-        // Fix this value.
         
         int sunRadius = (int)sqrt(Variables::SUN_AREA / 3.1415f);
 
@@ -185,10 +180,10 @@ void Planet::mouseDrag(const MouseEvent& e){
 void Planet::mouseWheelMove(const MouseEvent& e, const MouseWheelDetails& w){
     juce::ignoreUnused(e);
 
-    if(w.deltaY > 0.0f && getArea() < Variables::MAX_PLANET_AREA){
+    if(w.deltaY > 0.0f && getArea() + Variables::AREA_MODIFIER <= Variables::MAX_PLANET_AREA){
         resizePlanet(getArea() + Variables::AREA_MODIFIER);
     }
-    else if(w.deltaY < 0.0f && getArea() > Variables::MIN_PLANET_AREA){
+    else if(w.deltaY < 0.0f && getArea() - Variables::AREA_MODIFIER >= Variables::MIN_PLANET_AREA){
         resizePlanet(getArea() - Variables::AREA_MODIFIER);
     }
 }

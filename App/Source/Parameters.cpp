@@ -181,9 +181,33 @@ float Parameters::getDistance(juce::ValueTree node_a, juce::ValueTree node_b){
 }
 
 float Parameters::getForceVector(juce::ValueTree node_a, juce::ValueTree node_b){
+    // TODO:
+    // Make this better.
+
+    float mass_a, mass_b;
+
+    if(node_a.getType() == sunType){
+        mass_a = (float)node_a.getProperty(areaProp);
+    }
+    else{
+        mass_a = (float)node_a.getProperty(areaProp);
+    }
+
+    if(node_b.getType() == sunType){
+        mass_b = (float)node_b.getProperty(areaProp);
+    }
+    else{
+        mass_b = (float)node_b.getProperty(areaProp);
+    }
+
+    float m = mass_a * mass_b;
     float r = getDistance(node_a, node_b);
-    float m = ((float)node_a.getProperty(areaProp) * (float)node_b.getProperty(areaProp));
-    return (m / pow(r, 2.0f));
+
+    float min_distance = sqrt(Variables::MAX_PLANET_AREA / 3.1415f) + sqrt(Variables::SUN_AREA / 3.1415f);
+    float max_mass = Variables::SUN_AREA * Variables::MAX_PLANET_AREA;
+    float max_value = max_mass / pow(min_distance, 2.0f);
+    
+    return (m / pow(r, 2.0f)) / max_value;
 }
 
 //------------------------------------------------------------//
