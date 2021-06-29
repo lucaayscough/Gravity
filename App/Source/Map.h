@@ -10,6 +10,7 @@ public:
 private:
     // View methods.
     void paint(Graphics&) override;
+    void paintOrbits(Graphics&);
     void resized() override;
     
     void drawSun();

@@ -33,9 +33,10 @@ void Map::paint(Graphics& g){
     g.fillRect(0, 0, getWidth(), getHeight() / 2);
     g.fillRoundedRectangle(0, getHeight() / 2 - rectOverlap, getWidth(), getHeight() / 2 + rectOverlap, 5.0f);
 
-    // TODO:
-    // Clean this up.
+    paintOrbits(g);
+}
 
+void Map::paintOrbits(Graphics& g){
     juce::ValueTree rootPlanetNode =  m_ParametersRef.getRootPlanetNode();
     juce::ValueTree sunNode =  m_ParametersRef.getSunNode();
 
