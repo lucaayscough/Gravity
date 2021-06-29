@@ -130,29 +130,6 @@ void Map::rebuildPlanets(){
 int Map::getMaxNumPlanets(){return Variables::MAX_NUM_PLANETS;}
 int Map::getNumPlanets(){return m_ParametersRef.getRootPlanetNode().getNumChildren();}
 
-float Map::getDistance(Sun& sun, Planet* planet){
-    int centrePlanetX = planet->getCentreX();
-    int centrePlanetY = planet->getCentreY();
-    int centreSunX = sun.getCentreX();
-    int centreSunY = sun.getCentreY();
-
-    float a = (float)pow(centreSunX - centrePlanetX, 2.0f);
-    float b = (float)pow(centreSunY - centrePlanetY, 2.0f);
-    return sqrt(a + b);
-}
-
-float Map::getDistance(Planet* planet_a, Planet* planet_b){  
-    int centreXA = planet_a->getCentreX();
-    int centreYA = planet_a->getCentreY();
-    int centreXB = planet_b->getCentreX();
-    int centreYB = planet_b->getCentreY();
-
-    float a = (float)pow(centreXB - centreXA, 2.0f);
-    float b = (float)pow(centreYB - centreYA, 2.0f);
-
-    return sqrt(a + b);
-}
-
 //--------------------------------------------------//
 // Controller methods.
 

@@ -22,8 +22,6 @@ private:
     // Interface methods
     int getMaxNumPlanets();
     int getNumPlanets();
-    float getDistance(Sun&, Planet*);
-    float getDistance(Planet*, Planet*);
 
     // Controller methods.
     void mouseUp(const MouseEvent&) override;
