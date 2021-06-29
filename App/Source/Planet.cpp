@@ -79,9 +79,6 @@ void Planet::resizePlanet(float area){
 }
 
 void Planet::checkCollision(){
-    // TODO:
-    // Fix collision bug.
-
     int centrePosX = getX() + getRadiusWithClipBoundary();
     int centrePosY = getY() + getRadiusWithClipBoundary();
 
@@ -115,7 +112,7 @@ void Planet::checkCollision(){
             centrePosY2 = planet->getY() + planet->getRadiusWithClipBoundary();
 
             distance = getDistance(centrePosX, centrePosY, centrePosX2, centrePosY2);
-            minDistance = planet->getRadiusWithClipBoundary();
+            minDistance = planet->getRadius() + getRadius();
 
             if(distance <= minDistance){
                 draw(getDiameter(), getPosX(), getPosY());
