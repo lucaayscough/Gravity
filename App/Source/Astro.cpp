@@ -49,12 +49,18 @@ int Astro::getCentreX(){return getState().getProperty(Parameters::posCentreXProp
 int Astro::getCentreY(){return getState().getProperty(Parameters::posCentreYProp);}
 
 float Astro::getDistance(const int xa, const int ya, const int xb, const int yb){
+    // TODO:
+    // This needs to be moved to ValueTree.
+
     float a = (float)pow(xb - xa, 2);
     float b = (float)pow(yb - ya, 2); 
     return sqrt(a + b);
 }
 
 float Astro::getDistance(Astro* astro_a, Astro* astro_b){
+    // TODO:
+    // This needs to be moved to ValueTree.
+
     int centreXA = astro_a->getCentreX();
     int centreYA = astro_a->getCentreY();
     int centreXB = astro_b->getCentreX();
