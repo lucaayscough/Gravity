@@ -6,11 +6,13 @@
 
 ControlPanel::ControlPanel(Parameters& parameters_ref)
     :   m_ParametersRef(parameters_ref){
-    Logger::writeToLog("Control Panel created.");
+    Logger::writeToLog("ControlPanel created.");
     setAlwaysOnTop(true);
 }
 
-ControlPanel::~ControlPanel(){Logger::writeToLog("Control Panel destroyed.");}
+ControlPanel::~ControlPanel(){
+    Logger::writeToLog("ControlPanel destroyed.");
+}
 
 //--------------------------------------------------//
 // View methods.

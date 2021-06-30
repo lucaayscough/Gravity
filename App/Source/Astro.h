@@ -19,7 +19,6 @@ public:
 
     virtual juce::ValueTree getState() = 0;
     virtual float getArea();
-    virtual float getFloatDiameter();
     virtual int getDiameter();
     virtual int getDiameterWithClipBoundary();
     virtual int getRadius();
@@ -50,6 +49,10 @@ protected:
     AudioContainer& m_AudioContainerRef;
     Parameters& m_ParametersRef;
     ControlPanel& m_ControlPanelRef;
+
+public:
+    // Member variables.
+    juce::Value m_ShowForceVectors;
 
 public:
     // Animator class.

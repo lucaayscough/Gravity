@@ -9,6 +9,9 @@ Planet::Planet(juce::OwnedArray<Planet>& planets_ref, AudioContainer& audioconta
         m_PlanetsRef(planets_ref){
     Logger::writeToLog("Planet created.");
 
+    // TODO:
+    // Clean this up.
+
     m_ColourGradient.addColour((double)0.0, juce::Colours::white);
     m_ColourGradient.addColour((double)0.2, juce::Colours::yellow);
     m_ColourGradient.addColour((double)0.4, juce::Colours::orange);
@@ -61,14 +64,9 @@ void Planet::resized(){
 }
 
 void Planet::resizePlanet(float area){
-    float new_diameter = sqrt(area / 3.1415f) * 2.0f;
-    float old_diameter = getFloatDiameter();
-
-    new_diameter = round(new_diameter / 2.0f) * 2.0f;
-    area = pow(new_diameter / 2.0f, 2.0f) * 3.1415f;
-
-    float diff = old_diameter - new_diameter;
-    diff = round(diff / 2.0f) * 2;
+    int new_diameter = (int)(round(sqrt(area / 3.1415f)) * 2.0f);
+    int old_diameter = getDiameter();
+    int diff = old_diameter - new_diameter;
     
     setArea(area);
     
@@ -94,9 +92,6 @@ void Planet::checkCollision(){
         int centreXSun = getParentWidth() / 2;
         int centreYSun = getParentHeight() / 2;
         
-        // TODO:
-        // Fix this value.
-        
         int sunRadius = (int)sqrt(Variables::SUN_AREA / 3.1415f);
 
         distance = getDistance(centrePosX, centrePosY, centreXSun, centreYSun);
@@ -120,7 +115,7 @@ void Planet::checkCollision(){
             centrePosY2 = planet->getY() + planet->getRadiusWithClipBoundary();
 
             distance = getDistance(centrePosX, centrePosY, centrePosX2, centrePosY2);
-            minDistance = planet->getRadiusWithClipBoundary();
+            minDistance = planet->getRadius() + getRadius();
 
             if(distance <= minDistance){
                 draw(getDiameter(), getPosX(), getPosY());
@@ -185,10 +180,10 @@ void Planet::mouseDrag(const MouseEvent& e){
 void Planet::mouseWheelMove(const MouseEvent& e, const MouseWheelDetails& w){
     juce::ignoreUnused(e);
 
-    if(w.deltaY > 0.0f && getArea() < Variables::MAX_PLANET_AREA){
+    if(w.deltaY > 0.0f && getArea() + Variables::AREA_MODIFIER <= Variables::MAX_PLANET_AREA){
         resizePlanet(getArea() + Variables::AREA_MODIFIER);
     }
-    else if(w.deltaY < 0.0f && getArea() > Variables::MIN_PLANET_AREA){
+    else if(w.deltaY < 0.0f && getArea() - Variables::AREA_MODIFIER >= Variables::MIN_PLANET_AREA){
         resizePlanet(getArea() - Variables::AREA_MODIFIER);
     }
 }

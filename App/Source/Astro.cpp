@@ -1,9 +1,6 @@
 #include "Headers.h"
 
 
-#include "Headers.h"
-
-
 //--------------------------------------------------//
 // Constructors and destructors.
 
@@ -36,14 +33,8 @@ void Astro::setCentrePosXY(const int x, const int y){
 
 float Astro::getArea(){return getState().getProperty(Parameters::areaProp);}
 
-float Astro::getFloatDiameter(){
-    float area = getArea();
-    return sqrt(area / 3.1415f) * 2.0f;
-}
-
 int Astro::getDiameter(){
-    float area = getArea();
-    return (int)(sqrt(area / 3.1415f) * 2.0f);
+    return (int)(round((sqrt(getArea() / 3.1415f) * 2.0f) / 2.0f) * 2.0f);
 }
 
 int Astro::getDiameterWithClipBoundary(){return getDiameter() + getClipBoundary();}
@@ -55,12 +46,18 @@ int Astro::getCentreX(){return getState().getProperty(Parameters::posCentreXProp
 int Astro::getCentreY(){return getState().getProperty(Parameters::posCentreYProp);}
 
 float Astro::getDistance(const int xa, const int ya, const int xb, const int yb){
+    // TODO:
+    // This needs to be moved to ValueTree.
+
     float a = (float)pow(xb - xa, 2);
     float b = (float)pow(yb - ya, 2); 
     return sqrt(a + b);
 }
 
 float Astro::getDistance(Astro* astro_a, Astro* astro_b){
+    // TODO:
+    // This needs to be moved to ValueTree.
+
     int centreXA = astro_a->getCentreX();
     int centreYA = astro_a->getCentreY();
     int centreXB = astro_b->getCentreX();
@@ -95,11 +92,15 @@ bool Astro::hitTest(const int x, const int y){
 
 void Astro::mouseEnter(const MouseEvent& e){
     juce::ignoreUnused(e);
+
+    m_ShowForceVectors.setValue(true);
     m_ControlPanelRef.show(getState());
 }
 
 void Astro::mouseExit(const MouseEvent& e){
     juce::ignoreUnused(e);
+
+    m_ShowForceVectors.setValue(false);
     m_ControlPanelRef.unshow();
 }
 

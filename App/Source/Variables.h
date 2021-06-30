@@ -22,6 +22,7 @@ struct Variables{
     static const juce::Colour MAP_BG_COLOUR_1;
     static const juce::Colour MAP_BG_COLOUR_2;
     static const juce::Colour MAP_CIRCLE_COLOUR;
+    static const float FORCE_VECTOR_SIZE;
     
     // Planet variables.
     static const float DEFAULT_PLANET_AREA;
