@@ -639,7 +639,7 @@ class Discriminator(nn.Module):
 # ------------------------------------------------------------
 # Forward pass of the discriminator network.
 
-    def forward(self, x, step):
+    def forward(self, x, step = None):
         if step == None:
             step = self.depth
         

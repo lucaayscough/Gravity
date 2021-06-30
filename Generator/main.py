@@ -2,25 +2,26 @@
 ### StyleGAN 2 TRAINING ###
 ###########################
 
+import warnings
 from train import Train
 from utils import build_folder_structure, get_iter
 
+import torchaudio
+
+
 # TODO:
-# Change zero grad function.
-# Add container to hold down sampled sounds.
 # Add logger.
 # Add profiler.
 
 
 config_dict = {
     # Iterarion
-    'restart_from_iter': False,
-    'restart_iter_num': None,
+    'iter_num': None,
     'epochs': 500,
     'datadir': 'datasets/dataset_2/',
 
     # Training
-    'batch_size': 4,
+    'batch_size': 8,
     
     # Learning
     'learning_rate': 0.002,
@@ -40,24 +41,35 @@ config_dict = {
 }
 
 
-if __name__ == '__main__':
-    if config_dict['restart_from_iter'] == True:
-        iter_num = config_dict['restart_iter_num']
-    else:
-        iter_num = get_iter()
-        config_dict['restart_iter_num'] = None
+def suppress_warnings():
+    warnings.filterwarnings("ignore", category = UserWarning)
 
-    build_folder_structure(iter_num)
+
+def prepare_config():
+    if config_dict['iter_num'] == None:
+        config_dict['iter_num'] = get_iter()
+        restart = False
+    else:
+        restart = True
+
+    build_folder_structure(config_dict['iter_num'])
     
     # Write config to file
-    f = open("runs/iter_" + str(iter_num) + "/log", "w")
+    f = open("runs/iter_" + str(config_dict['iter_num']) + "/log", "w")
     f.write(str(config_dict))
     f.close()
+
+    return restart
+
+
+if __name__ == '__main__':
+    suppress_warnings()
+    restart = prepare_config()
     
     Train(
         # Iteration
-        restart_from_iter = config_dict['restart_from_iter'],
-        iter_num = iter_num,
+        restart = restart,
+        iter_num = config_dict['iter_num'],
         epochs = config_dict['epochs'],
         datadir = config_dict['datadir'],
         

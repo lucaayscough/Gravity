@@ -19,13 +19,13 @@ class Train:
         self,
 
         # Iteration
-        restart_from_iter,
-        iter_num,
-        epochs,
-        datadir,
+        restart: bool,
+        iter_num: int,
+        epochs: int,
+        datadir: str,
         
         # Training
-        batch_size,
+        batch_size: int,
 
         # Learning
         learning_rate,
@@ -44,7 +44,7 @@ class Train:
         device
     ):
         # Iteration
-        self.restart_from_iter = restart_from_iter
+        self.restart = restart
         self.iter_num = iter_num
         self.epochs = epochs
         self.datadir = datadir
@@ -83,7 +83,7 @@ class Train:
         self._init_optim()
         self.downsample = Resample(direction = "down").to(self.device)
 
-        if self.restart_from_iter == True:
+        if self.restart == True:
             self._load_state()
         else:
             self.start_epoch = 1
@@ -211,7 +211,8 @@ class Train:
             batch_size = self.batch_size,
             shuffle = True,
             num_workers = self.num_workers,
-            drop_last = True
+            drop_last = True,
+            pin_memory = True
         )
 
         for epoch in range(self.start_epoch, self.epochs + 1):
@@ -221,83 +222,57 @@ class Train:
             if epoch % self.save_every == 0:
                 self._save_state(epoch)
 
-            # Prepare Data
-                for idx, data in enumerate(dataloader):
-                    real = data[0].to(self.device)
+            for idx, data in enumerate(dataloader):
+                real = data[0].to(self.device)
 
-                    self._train_discriminator(real, idx)
-                    self._train_generator(idx)
-                    
-                    self._update_average(beta = self.ema_beta)
-                    
-                    # Log State
-                    print(
-                        f'Epoch [{epoch}/{self.epochs}] \
-                        Batch {idx} / {len(dataloader)} \
-                        Loss D: {self.loss_disc:.4f}, loss G: {self.loss_gen:.4f}'
-                    )
+                self._train_discriminator(real, idx)
+                self._train_generator(idx)
+                
+                self._update_average(beta = self.ema_beta)
+                
+                print(
+                    f'Epoch [{epoch}/{self.epochs}] \
+                    Batch {idx} / {len(dataloader)} \
+                    Loss D: {self.loss_disc:.4f}, loss G: {self.loss_gen:.4f}'
+                )
 
-                    self._print_examples(idx, epoch, real)
-        
+                self._print_examples(idx, epoch, real)
+                    
             print("Time elapsed: ", int(time.time() - start_time), " seconds.")
-
-# ------------------------------------------------------------
-# Train discriminator.
 
     def _train_discriminator(self, real, idx):
         self._set_grad_flag(self.netD, True)
         self._set_grad_flag(self.netG, False)
+        
+        self._fast_zero_grad(self.netD)
+        
+        noise = torch.randn((self.batch_size, self.z_dim)).to(self.device)
+        fake = self.netG(noise)
+                    
+        disc_real = self.netD(real)
+        disc_fake = self.netD(fake)
+        
+        gp = gradient_penalty(self.netD, real, fake, device = self.device)
 
-        losses = []
-        samples_list = self._down_sampler(real)
+        self.loss_disc = -(torch.mean(disc_real) - torch.mean(disc_fake)) + 10 * gp
 
-        for step in range(1, self.depth + 1):
-            self._fast_zero_grad(self.netD)
-
-            noise = torch.randn((self.batch_size, self.z_dim)).to(self.device)
-            fake = self.netG(noise, step)
-
-            disc_real = self.netD(samples_list[self.depth - step], step)
-            disc_fake = self.netD(fake, step)
-            
-            if idx % 8 == 0:
-                gp = gradient_penalty(self.netD, samples_list[self.depth - step], fake, step, device = self.device)
-            else:
-                gp = 0
-            
-            loss = -(torch.mean(disc_real) - torch.mean(disc_fake)) + 10 * gp
-            loss.backward(retain_graph = True)
-
-            losses.append(loss)
-
-        self.loss_disc = sum(losses) / len(losses)
-
+        self.loss_disc.backward(retain_graph = True)
         self.opt_dis.step()
 
-        del real
 
-# ------------------------------------------------------------
-# Train generator.
-
-    def _train_generator(self, idx): 
+    def _train_generator(self, idx):
         self._set_grad_flag(self.netD, False)
         self._set_grad_flag(self.netG, True)
-
-        losses = []
         
-        for step in range(1, self.depth + 1):
-            self._fast_zero_grad(self.netG)
-
-            noise = torch.randn((self.batch_size, self.z_dim)).to(self.device)
-            fake = self.netG(noise, step)
-            output = self.netD(fake, step)
-            loss = -torch.mean(output)
-            loss.backward()
-            
-            losses.append(loss)
-
-        self.loss_gen = sum(losses) / len(losses)
-
+        self._fast_zero_grad(self.netG)
+    
+        noise = torch.randn((self.batch_size, self.z_dim)).to(self.device)
+        fake = self.netG(noise)
+        output = self.netD(fake)
+        
+        self.loss_gen = -torch.mean(output)
+        self.loss_gen.backward()
+        
         if idx % 16 == 0:
             self._fast_zero_grad(self.netG)
 
@@ -316,16 +291,18 @@ class Train:
             weighted_path_loss = 2 * 8 * path_loss
             weighted_path_loss += 0 * fake[0, 0, 0]
             weighted_path_loss.backward()
-
+       
         self.opt_gen.step()
+
 
 # ------------------------------------------------------------
 # Helper functions.
 
     def _print_examples(self, idx, epoch, real): 
-        if idx % 1000 == 0:
-
-            #REMOVE THIS
+        if idx % 200 == 0:
+            
+            # TODO:
+            # REMOVE THIS
             self._save_state(epoch)
             
             with torch.no_grad():
