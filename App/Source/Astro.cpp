@@ -5,13 +5,7 @@
 // Constructors and destructors.
 
 Astro::Astro(AudioContainer& audiocontainer_ref, Parameters& parameters_ref, ControlPanel& controlpanel_ref)
-    :   m_AudioContainerRef(audiocontainer_ref), m_ParametersRef(parameters_ref), m_ControlPanelRef(controlpanel_ref){
-    m_ColourGradient.addColour((double)0.0, juce::Colours::white);
-    m_ColourGradient.addColour((double)0.2, juce::Colours::yellow);
-    m_ColourGradient.addColour((double)0.4, juce::Colours::orange);
-    m_ColourGradient.addColour((double)0.7, juce::Colours::red);
-    m_ColourGradient.addColour((double)1.0, juce::Colours::darkred);
-}
+    :   m_AudioContainerRef(audiocontainer_ref), m_ParametersRef(parameters_ref), m_ControlPanelRef(controlpanel_ref){}
 
 Astro::~Astro(){}
 

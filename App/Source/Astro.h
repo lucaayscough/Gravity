@@ -52,7 +52,6 @@ protected:
 
 public:
     // Member variables.
-    juce::ColourGradient m_ColourGradient;
     juce::Value m_ShowForceVectors;
 
 public:

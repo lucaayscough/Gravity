@@ -12,6 +12,9 @@ Map::Map(AudioContainer& audiocontainer_ref, Parameters& parameters_ref)
     addChildComponent(m_ControlPanel, -1);
     addChildAndSetID(&m_Sun, m_ParametersRef.SUN_ID);
 
+    // TODO:
+    // Clean this up.
+
     m_ForceVectorGradient.addColour((double)0.0, juce::Colours::darkred);
     m_ForceVectorGradient.addColour((double)0.2, juce::Colours::red);
     m_ForceVectorGradient.addColour((double)0.4, juce::Colours::orange);
@@ -58,6 +61,10 @@ void Map::paintOrbits(Graphics& g){
 }
 
 void Map::paintForceVectors(Graphics& g){
+    // TODO:
+    // Clean this up.
+
+
     g.setColour(juce::Colours::white);
 
     // Draw planet vectors.

@@ -30,6 +30,7 @@ private:
     // Member variables.
     juce::ComponentDragger m_Dragger;
     juce::OwnedArray<Planet>& m_PlanetsRef;
+    juce::ColourGradient m_ColourGradient;
 
     Animator m_Animator;
 
