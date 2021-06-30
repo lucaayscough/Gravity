@@ -21,6 +21,7 @@ const int Variables::MAX_NUM_PLANETS = 20;
 const juce::Colour Variables::MAP_BG_COLOUR_1 = juce::Colour(37, 38, 43);
 const juce::Colour Variables::MAP_BG_COLOUR_2 = juce::Colour(33, 34, 38);
 const juce::Colour Variables::MAP_CIRCLE_COLOUR = juce::Colour(86, 87, 90);
+const float Variables::FORCE_VECTOR_SIZE = 1.0f;
 
 // Planet variables.
 const float Variables::DEFAULT_PLANET_AREA = 2000.0f;

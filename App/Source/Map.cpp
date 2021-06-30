@@ -58,6 +58,8 @@ void Map::paintOrbits(Graphics& g){
 }
 
 void Map::paintForceVectors(Graphics& g){
+    g.setColour(juce::Colours::white);
+
     // Draw planet vectors.
     for(int i = 0; i < m_Planets.size(); i++){
         if(m_Planets[i]->m_ShowForceVectors.getValue() == juce::var(true)){
@@ -69,15 +71,15 @@ void Map::paintForceVectors(Graphics& g){
                 }
                 auto planet_b = m_ParametersRef.getRootPlanetNode().getChildWithProperty(Parameters::idProp, m_Planets[j]->getComponentID());
                 auto force_vector = m_ParametersRef.getForceVector(planet_a, planet_b);
-
-                g.setColour(m_ForceVectorGradient.getColourAtPosition(force_vector));
                 
-                g.drawLine(m_Planets[i]->getCentreX(), m_Planets[i]->getCentreY(), m_Planets[j]->getCentreX(), m_Planets[j]->getCentreY(), 1.5f);
+                g.setOpacity(force_vector);
+                g.drawLine(m_Planets[i]->getCentreX(), m_Planets[i]->getCentreY(), m_Planets[j]->getCentreX(), m_Planets[j]->getCentreY(), Variables::FORCE_VECTOR_SIZE);
             }
-            auto force_vector = m_ParametersRef.getForceVector(m_ParametersRef.getSunNode(), planet_a);
 
-            g.setColour(m_ForceVectorGradient.getColourAtPosition(force_vector));
-            g.drawLine(m_Planets[i]->getCentreX(), m_Planets[i]->getCentreY(), m_Sun.getCentreX(), m_Sun.getCentreY(), 1.5f);
+            auto force_vector = m_ParametersRef.getForceVector(m_ParametersRef.getSunNode(), planet_a);
+            
+            g.setOpacity(force_vector);
+            g.drawLine(m_Planets[i]->getCentreX(), m_Planets[i]->getCentreY(), m_Sun.getCentreX(), m_Sun.getCentreY(), Variables::FORCE_VECTOR_SIZE);
         }
     }
 
@@ -86,9 +88,9 @@ void Map::paintForceVectors(Graphics& g){
         for(int i = 0; i < m_Planets.size(); i++){
             auto planet = m_ParametersRef.getRootPlanetNode().getChildWithProperty(Parameters::idProp, m_Planets[i]->getComponentID());
             auto force_vector = m_ParametersRef.getForceVector(m_ParametersRef.getSunNode(), planet);
-            g.setColour(m_ForceVectorGradient.getColourAtPosition(force_vector));
-            
-            g.drawLine(m_Sun.getCentreX(), m_Sun.getCentreY(), m_Planets[i]->getCentreX(), m_Planets[i]->getCentreY(), 1.5f);
+
+            g.setOpacity(force_vector);
+            g.drawLine(m_Sun.getCentreX(), m_Sun.getCentreY(), m_Planets[i]->getCentreX(), m_Planets[i]->getCentreY(), Variables::FORCE_VECTOR_SIZE);
         }
     }
 }
