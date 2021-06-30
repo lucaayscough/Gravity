@@ -34,11 +34,11 @@ Map::~Map(){
 // View methods.
 
 void Map::paint(Graphics& g){
-    int rectOverlap = 25;
+    int rect_overlap = 25;
 
     g.setGradientFill(m_BackgroundGradient);
     g.fillRect(0, 0, getWidth(), getHeight() / 2);
-    g.fillRoundedRectangle(0, getHeight() / 2 - rectOverlap, getWidth(), getHeight() / 2 + rectOverlap, 5.0f);
+    g.fillRoundedRectangle(0, getHeight() / 2 - rect_overlap, getWidth(), getHeight() / 2 + rect_overlap, 5.0f);
 
     paintOrbits(g);
     paintForceVectors(g);
