@@ -19,6 +19,8 @@
 #include "Map.h"
 
 #include "TopBar.h"
+
+#include "MapButton.h"
 #include "LeftBar.h"
 
 #include "PluginProcessor.h"
