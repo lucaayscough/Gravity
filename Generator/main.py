@@ -6,21 +6,19 @@ from train import Train
 from utils import build_folder_structure, get_iter
 
 # TODO:
-# Change zero grad function.
-# Add container to hold down sampled sounds.
 # Add logger.
 # Add profiler.
 
 
 config_dict = {
     # Iterarion
-    'restart_from_iter': False,
-    'restart_iter_num': None,
+    'restart_from_iter': None,
+    'restart_iter_num': False,
     'epochs': 500,
-    'datadir': 'datasets/dataset_2/',
+    'datadir': 'dataset/',
 
     # Training
-    'batch_size': 4,
+    'batch_size': 8,
     
     # Learning
     'learning_rate': 0.002,
