@@ -12,6 +12,7 @@ AudioPluginAudioProcessorEditor::AudioPluginAudioProcessorEditor(AudioPluginAudi
     Logger::writeToLog("Editor created.");
 
     addAndMakeVisible(m_TopBar);
+    addAndMakeVisible(m_LeftBar);
     addAndMakeVisible(m_Map);
 
     m_TopBar.setAlwaysOnTop(true);
@@ -23,7 +24,9 @@ AudioPluginAudioProcessorEditor::AudioPluginAudioProcessorEditor(AudioPluginAudi
     setResizable(Variables::IS_WIDTH_RESIZABLE, Variables::IS_HEIGHT_RESIZABLE);
 }
 
-AudioPluginAudioProcessorEditor::~AudioPluginAudioProcessorEditor(){Logger::writeToLog("Editor destroyed.");}
+AudioPluginAudioProcessorEditor::~AudioPluginAudioProcessorEditor(){
+    Logger::writeToLog("Editor destroyed.");
+}
 
 //------------------------------------------------------------//
 // View methods.
@@ -39,7 +42,7 @@ void AudioPluginAudioProcessorEditor::resized(){
     m_TopBar.setBounds(topBar);
 
     auto leftBar = r.removeFromLeft(Variables::LEFT_BAR);
-    juce::ignoreUnused(leftBar);
+    m_LeftBar.setBounds(leftBar);
 
     auto mapArea = r.withTrimmedRight(Variables::MAP_TRIM).withTrimmedBottom(Variables::MAP_TRIM);
     m_Map.setBounds(mapArea);

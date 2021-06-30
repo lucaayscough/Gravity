@@ -16,6 +16,7 @@ private:
     AudioPluginAudioProcessor& processorRef;
     
     TopBar m_TopBar;
+    LeftBar m_LeftBar;
     Map m_Map;
 
     juce::DropShadow m_DropShadow;
