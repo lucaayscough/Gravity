@@ -38,12 +38,12 @@ void AudioPluginAudioProcessorEditor::paint(juce::Graphics& g){
 void AudioPluginAudioProcessorEditor::resized(){
     auto r = getLocalBounds();
     
-    auto topBar = r.removeFromTop(Variables::TOP_BAR);
-    m_TopBar.setBounds(topBar);
+    auto top_bar = r.removeFromTop(Variables::TOP_BAR);
+    m_TopBar.setBounds(top_bar);
 
-    auto leftBar = r.removeFromLeft(Variables::LEFT_BAR);
-    m_LeftBar.setBounds(leftBar);
+    auto left_bar = r.removeFromLeft(Variables::LEFT_BAR);
+    m_LeftBar.setBounds(left_bar);
 
-    auto mapArea = r.withTrimmedRight(Variables::MAP_TRIM).withTrimmedBottom(Variables::MAP_TRIM);
-    m_Map.setBounds(mapArea);
+    auto map_area = r.withTrimmedRight(Variables::MAP_TRIM).withTrimmedBottom(Variables::MAP_TRIM);
+    m_Map.setBounds(map_area);
 }

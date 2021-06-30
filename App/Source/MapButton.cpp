@@ -16,7 +16,22 @@ MapButton::~MapButton(){
 // View methods.
 
 void MapButton::paint(Graphics& g){
-    g.fillAll(juce::Colours::white);
+    // TODO:
+    // Fix values.
+
+    g.setColour(Variables::MAP_BG_COLOUR_1);
+    
+    auto r = getLocalBounds().withTrimmedTop(10).withTrimmedLeft(10).withTrimmedBottom(10).withTrimmedRight(30);
+
+    float x = r.getX();
+    float y = r.getY();
+    float width = r.getWidth();
+    float height = r.getHeight();
+
+    juce::Rectangle<float> rect = juce::Rectangle<float>(x, y, width, height);
+    
+    
+    g.fillRoundedRectangle(rect, 6.0f);
 }
 
 void MapButton::resized(){}

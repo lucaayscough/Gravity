@@ -7,7 +7,7 @@ public:
     MapButton();
     ~MapButton() override;
 
-public:
+private:
     // View methods.
     void paint(Graphics&) override;
     void resized() override;
