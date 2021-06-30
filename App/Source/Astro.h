@@ -51,6 +51,11 @@ protected:
     ControlPanel& m_ControlPanelRef;
 
 public:
+    // Member variables.
+    juce::ColourGradient m_ColourGradient;
+    juce::Value m_ShowForceVectors;
+
+public:
     // Animator class.
     class Animator: juce::Timer{
     public:

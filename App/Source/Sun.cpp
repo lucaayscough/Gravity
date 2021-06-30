@@ -10,7 +10,7 @@ Sun::Sun(AudioContainer& audiocontainer_ref, Parameters& parameters_ref, Control
 }
 
 Sun::~Sun(){
-    Logger::writeToLog("Planet destroyed.");
+    Logger::writeToLog("Sun destroyed.");
 }
 
 //------------------------------------------------------------//

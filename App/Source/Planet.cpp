@@ -9,12 +9,6 @@ Planet::Planet(juce::OwnedArray<Planet>& planets_ref, AudioContainer& audioconta
         m_PlanetsRef(planets_ref){
     Logger::writeToLog("Planet created.");
 
-    m_ColourGradient.addColour((double)0.0, juce::Colours::white);
-    m_ColourGradient.addColour((double)0.2, juce::Colours::yellow);
-    m_ColourGradient.addColour((double)0.4, juce::Colours::orange);
-    m_ColourGradient.addColour((double)0.7, juce::Colours::red);
-    m_ColourGradient.addColour((double)1.0, juce::Colours::darkred);
-
     m_Animator.m_DiameterShift.addListener(this);
 }
 

@@ -12,13 +12,17 @@ Map::Map(AudioContainer& audiocontainer_ref, Parameters& parameters_ref)
     addChildComponent(m_ControlPanel, -1);
     addChildAndSetID(&m_Sun, m_ParametersRef.SUN_ID);
 
-    m_ParametersRef.rootNode.addListener(this);
-    m_ParametersRef.updateMap.addListener(this);
+    m_ForceVectorGradient.addColour((double)0.0, juce::Colours::darkred);
+    m_ForceVectorGradient.addColour((double)0.2, juce::Colours::red);
+    m_ForceVectorGradient.addColour((double)0.4, juce::Colours::orange);
+    m_ForceVectorGradient.addColour((double)0.7, juce::Colours::yellow);
+    m_ForceVectorGradient.addColour((double)1.0, juce::Colours::white);
+
+    addListeners();
 }
 
 Map::~Map(){
-    m_ParametersRef.rootNode.removeListener(this);
-    m_ParametersRef.updateMap.removeListener(this);
+    removeListeners();
 
     Logger::writeToLog("Map destroyed.");
 }
@@ -29,11 +33,12 @@ Map::~Map(){
 void Map::paint(Graphics& g){
     int rectOverlap = 25;
 
-    g.setGradientFill(m_ColourGradient);
+    g.setGradientFill(m_BackgroundGradient);
     g.fillRect(0, 0, getWidth(), getHeight() / 2);
     g.fillRoundedRectangle(0, getHeight() / 2 - rectOverlap, getWidth(), getHeight() / 2 + rectOverlap, 5.0f);
 
     paintOrbits(g);
+    paintForceVectors(g);
 }
 
 void Map::paintOrbits(Graphics& g){
@@ -52,11 +57,47 @@ void Map::paintOrbits(Graphics& g){
     }
 }
 
+void Map::paintForceVectors(Graphics& g){
+    // Draw planet vectors.
+    for(int i = 0; i < m_Planets.size(); i++){
+        if(m_Planets[i]->m_ShowForceVectors.getValue() == juce::var(true)){
+            auto planet_a = m_ParametersRef.getRootPlanetNode().getChildWithProperty(Parameters::idProp, m_Planets[i]->getComponentID());
+
+            for(int j = 0; j < m_Planets.size(); j++){
+                if(m_Planets[i]->getComponentID() == m_Planets[j]->getComponentID()){
+                    continue;
+                }
+                auto planet_b = m_ParametersRef.getRootPlanetNode().getChildWithProperty(Parameters::idProp, m_Planets[j]->getComponentID());
+                auto force_vector = m_ParametersRef.getForceVector(planet_a, planet_b);
+
+                g.setColour(m_ForceVectorGradient.getColourAtPosition(force_vector));
+                
+                g.drawLine(m_Planets[i]->getCentreX(), m_Planets[i]->getCentreY(), m_Planets[j]->getCentreX(), m_Planets[j]->getCentreY(), 1.5f);
+            }
+            auto force_vector = m_ParametersRef.getForceVector(m_ParametersRef.getSunNode(), planet_a);
+
+            g.setColour(m_ForceVectorGradient.getColourAtPosition(force_vector));
+            g.drawLine(m_Planets[i]->getCentreX(), m_Planets[i]->getCentreY(), m_Sun.getCentreX(), m_Sun.getCentreY(), 1.5f);
+        }
+    }
+
+    // Draw sun vectors.
+    if(m_Sun.m_ShowForceVectors.getValue() == juce::var(true)){
+        for(int i = 0; i < m_Planets.size(); i++){
+            auto planet = m_ParametersRef.getRootPlanetNode().getChildWithProperty(Parameters::idProp, m_Planets[i]->getComponentID());
+            auto force_vector = m_ParametersRef.getForceVector(m_ParametersRef.getSunNode(), planet);
+            g.setColour(m_ForceVectorGradient.getColourAtPosition(force_vector));
+            
+            g.drawLine(m_Sun.getCentreX(), m_Sun.getCentreY(), m_Planets[i]->getCentreX(), m_Planets[i]->getCentreY(), 1.5f);
+        }
+    }
+}
+
 void Map::resized(){
     drawSun();
     if(getNumPlanets() > 0){rebuildPlanets();}
     m_ControlPanel.setBounds(getLocalBounds());
-    m_ColourGradient = juce::ColourGradient(Variables::MAP_BG_COLOUR_1, getWidth() / 2, getHeight() / 2, Variables::MAP_BG_COLOUR_2, getWidth() / 4, getHeight() / 4, true);
+    m_BackgroundGradient = juce::ColourGradient(Variables::MAP_BG_COLOUR_1, getWidth() / 2, getHeight() / 2, Variables::MAP_BG_COLOUR_2, getWidth() / 4, getHeight() / 4, true);
 }
 
 void Map::drawSun(){
@@ -64,6 +105,10 @@ void Map::drawSun(){
 }
 
 void Map::createPlanet(int x, int y){
+    // TODO:
+    // Clean this up.
+
+
     // TODO:
     // Add check for other astri.
 
@@ -87,6 +132,9 @@ void Map::createPlanet(int x, int y){
 }
 
 void Map::setupPlanet(Planet* planet, int x, int y, juce::ValueTree node){
+    // TODO:
+    // Clean this up.
+
     // Visibility.
     addChildAndSetID(planet, node.getProperty(Parameters::idProp));
 
@@ -96,31 +144,38 @@ void Map::setupPlanet(Planet* planet, int x, int y, juce::ValueTree node){
         y - (planet->getDiameter() / 2) - (planet->getClipBoundary() / 2)
     );
 
+    planet->m_ShowForceVectors.addListener(this);
+
     planet->setPosXY(planet->getX(), planet->getY());
     planet->updateGraph();
 }
 
 void Map::destroyPlanet(juce::String& id){
+    // TODO:
+    // Clean this up.
+
     for(int i = 0; i < m_Planets.size(); i++){
         if(m_Planets[i]->getComponentID() == id){
+            m_Planets[i]->m_ShowForceVectors.removeListener(this);
             m_Planets.remove(i, true);
         }
     }
 }
 
 void Map::rebuildPlanets(){
+    // TODO:
+    // Clean this up.
+
     for(int i = 0; i < getNumPlanets(); i++){
         // Create planet node.
         juce::ValueTree node = m_ParametersRef.getRootPlanetNode().getChild(i);
 
         // Instantiate planet inside planets array.
         m_Planets.add(new Planet(m_Planets, m_AudioContainerRef, m_ParametersRef, m_ControlPanel));
-        
         m_Planets[i]->setComponentID(node.getProperty(Parameters::idProp));
-
         addAndMakeVisible(m_Planets[i]);
-        
         m_Planets[i]->draw();
+        m_Planets[i]->m_ShowForceVectors.addListener(this);
     }
 }
 
@@ -154,13 +209,32 @@ void Map::mouseDoubleClick(const MouseEvent& e){
 //--------------------------------------------------//
 // Callback methods.
 
+void Map::addListeners(){
+    m_ParametersRef.rootNode.addListener(this);
+    m_ParametersRef.updateMap.addListener(this);
+    m_Sun.m_ShowForceVectors.addListener(this);
+}
+
+void Map::removeListeners(){
+    m_ParametersRef.rootNode.removeListener(this);
+    m_ParametersRef.updateMap.removeListener(this);
+    m_Sun.m_ShowForceVectors.removeListener(this);
+}
+
 void Map::valueChanged(juce::Value& value){
     juce::ignoreUnused(value);
     
+    // Check if map needs updating.
     if(m_ParametersRef.updateMap.getValue() == juce::var(true)){
         rebuildPlanets();
         m_ParametersRef.updateMap.setValue(false);
     }
+
+    // Check if force vectors need to be painted.
+    for(int i = 0; i < m_Planets.size(); i++){
+        if(m_Planets[i]->m_ShowForceVectors.getValue() == juce::var(true)){repaint();}
+    }
+    if(m_Sun.m_ShowForceVectors.getValue() == juce::var(true)){repaint();}
 }
 
 void Map::valueTreePropertyChanged(juce::ValueTree& node, const juce::Identifier& id){

@@ -11,6 +11,7 @@ private:
     // View methods.
     void paint(Graphics&) override;
     void paintOrbits(Graphics&);
+    void paintForceVectors(Graphics&);
     void resized() override;
     
     void drawSun();
@@ -28,6 +29,8 @@ private:
     void mouseDoubleClick(const MouseEvent&) override;
 
     // Callback methods.
+    void addListeners();
+    void removeListeners();
     void valueChanged(juce::Value&) override;
     void valueTreePropertyChanged(juce::ValueTree&, const juce::Identifier&) override;
     void valueTreeChildRemoved(juce::ValueTree&, juce::ValueTree&, int) override;
@@ -40,7 +43,8 @@ private:
     ControlPanel m_ControlPanel;
     Sun m_Sun;
 
-    juce::ColourGradient m_ColourGradient;
+    juce::ColourGradient m_BackgroundGradient;
+    juce::ColourGradient m_ForceVectorGradient;
 
     JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR(Map)
 };
