@@ -19,13 +19,13 @@ class Train:
         self,
 
         # Iteration
-        restart_from_iter,
-        iter_num,
-        epochs,
-        datadir,
+        restart: bool,
+        iter_num: int,
+        epochs: int,
+        datadir: str,
         
         # Training
-        batch_size,
+        batch_size: int,
 
         # Learning
         learning_rate,
@@ -44,7 +44,7 @@ class Train:
         device
     ):
         # Iteration
-        self.restart_from_iter = restart_from_iter
+        self.restart = restart
         self.iter_num = iter_num
         self.epochs = epochs
         self.datadir = datadir
@@ -83,7 +83,7 @@ class Train:
         self._init_optim()
         self.downsample = Resample(direction = "down").to(self.device)
 
-        if self.restart_from_iter == True:
+        if self.restart == True:
             self._load_state()
         else:
             self.start_epoch = 1
