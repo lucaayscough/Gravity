@@ -17,6 +17,10 @@ struct Variables{
     // Top bar variables.
     static const juce::Colour TOP_BAR_SHADOW_COLOUR;
 
+    // Left bar variables.
+    static const int LEFT_BAR_TOP_BOUNDARY;
+    static const int LEFT_BAR_BOTTOM_BOUNDARY;
+
     // Map variables.
     static const int NUM_MAPS;
     static const int MAX_NUM_PLANETS;

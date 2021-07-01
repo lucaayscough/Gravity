@@ -16,6 +16,10 @@ const int Variables::MAP_TRIM = 8;
 // Top bar variables.
 const juce::Colour Variables::TOP_BAR_SHADOW_COLOUR = juce::Colour(16, 16, 16);
 
+// Left bar variables.
+const int Variables::LEFT_BAR_TOP_BOUNDARY = 20;
+const int Variables::LEFT_BAR_BOTTOM_BOUNDARY = 20;
+
 // Map variables.
 const int Variables::NUM_MAPS = 8;
 const int Variables::MAX_NUM_PLANETS = 20;

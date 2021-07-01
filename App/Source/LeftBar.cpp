@@ -24,6 +24,6 @@ void LeftBar::resized(){
     // TODO:
     // Clean this up.
 
-    auto r = getLocalBounds().withTrimmedTop(20).withTrimmedBottom(20);
-    auto button_height = r.getHeight() / 8;
+    auto r = getLocalBounds().withTrimmedTop(Variables::LEFT_BAR_TOP_BOUNDARY).withTrimmedBottom(Variables::LEFT_BAR_BOTTOM_BOUNDARY);
+    auto button_height = r.getHeight() / Variables::NUM_MAPS;
 }
