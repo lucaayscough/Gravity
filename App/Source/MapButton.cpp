@@ -27,7 +27,7 @@ void MapButton::resized(){
     Map& map = *(m_MapsRef[getButtonIndex()]);
 
     m_MapImage.setImage(map.createComponentSnapshot(map.getLocalBounds(), true, 0.1f));
-    m_MapImage.setBounds(getLocalBounds());
+    m_MapImage.setBounds(getLocalBounds().withTrimmedTop(Variables::LEFT_BAR_MAP_BOUNDARY).withTrimmedBottom(Variables::LEFT_BAR_MAP_BOUNDARY).withTrimmedLeft(Variables::LEFT_BAR_MAP_BOUNDARY));
 }
 
 //------------------------------------------------------------//
@@ -40,8 +40,6 @@ int MapButton::getButtonIndex(){return getComponentID().getIntValue();}
 
 void MapButton::mouseDown(const MouseEvent& e){
     juce::ignoreUnused(e);
-
-    Logger::writeToLog("Pressedeede");
     
     for(int i = 0; i < Variables::NUM_MAPS; i++){
         if(i == getButtonIndex()){

@@ -19,6 +19,7 @@ const juce::Colour Variables::TOP_BAR_SHADOW_COLOUR = juce::Colour(16, 16, 16);
 // Left bar variables.
 const int Variables::LEFT_BAR_TOP_BOUNDARY = 20;
 const int Variables::LEFT_BAR_BOTTOM_BOUNDARY = 20;
+const int Variables::LEFT_BAR_MAP_BOUNDARY = 5;
 
 // Map variables.
 const int Variables::NUM_MAPS = 8;

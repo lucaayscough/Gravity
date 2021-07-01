@@ -20,6 +20,7 @@ struct Variables{
     // Left bar variables.
     static const int LEFT_BAR_TOP_BOUNDARY;
     static const int LEFT_BAR_BOTTOM_BOUNDARY;
+    static const int LEFT_BAR_MAP_BOUNDARY;
 
     // Map variables.
     static const int NUM_MAPS;
