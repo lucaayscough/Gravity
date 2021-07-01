@@ -18,6 +18,7 @@ struct Variables{
     static const juce::Colour TOP_BAR_SHADOW_COLOUR;
 
     // Map variables.
+    static const int NUM_MAPS;
     static const int MAX_NUM_PLANETS;
     static const juce::Colour MAP_BG_COLOUR_1;
     static const juce::Colour MAP_BG_COLOUR_2;
