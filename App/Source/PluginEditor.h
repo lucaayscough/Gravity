@@ -17,7 +17,7 @@ private:
     
     TopBar m_TopBar;
     LeftBar m_LeftBar;
-    Map m_Map;
+    juce::OwnedArray<Map> m_Maps;
 
     juce::DropShadow m_DropShadow;
     juce::DropShadower m_DropShadower;

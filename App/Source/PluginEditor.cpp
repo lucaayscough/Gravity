@@ -7,13 +7,18 @@
 AudioPluginAudioProcessorEditor::AudioPluginAudioProcessorEditor(AudioPluginAudioProcessor& p)
     :   AudioProcessorEditor(&p),
         processorRef(p),
-        m_Map(processorRef.m_AudioContainer, processorRef.m_Parameters),
         m_DropShadow(Variables::TOP_BAR_SHADOW_COLOUR, 10, juce::Point<int>({0, 0})), m_DropShadower(m_DropShadow){
     Logger::writeToLog("Editor created.");
 
+    m_Maps.ensureStorageAllocated(Variables::NUM_MAPS);
+
+    for(int i = 0; i < Variables::NUM_MAPS; i++){
+        m_Maps.add(new Map(processorRef.m_AudioContainer, processorRef.m_Parameters));
+        addChildComponent(m_Maps[i]);
+    }
+
     addAndMakeVisible(m_TopBar);
     addAndMakeVisible(m_LeftBar);
-    addAndMakeVisible(m_Map);
 
     m_TopBar.setAlwaysOnTop(true);
 
@@ -39,11 +44,13 @@ void AudioPluginAudioProcessorEditor::resized(){
     auto r = getLocalBounds();
     
     auto top_bar = r.removeFromTop(Variables::TOP_BAR);
-    m_TopBar.setBounds(top_bar);
-
     auto left_bar = r.removeFromLeft(Variables::LEFT_BAR);
-    m_LeftBar.setBounds(left_bar);
-
     auto map_area = r.withTrimmedRight(Variables::MAP_TRIM).withTrimmedBottom(Variables::MAP_TRIM);
-    m_Map.setBounds(map_area);
+
+    for(Map* map : m_Maps){
+        map->setBounds(map_area);
+    }
+
+    m_LeftBar.setBounds(left_bar);
+    m_TopBar.setBounds(top_bar);
 }
