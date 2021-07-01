@@ -4,8 +4,11 @@
 //------------------------------------------------------------//
 // Constructors and destructors.
 
-MapButton::MapButton(){
+MapButton::MapButton(juce::OwnedArray<Map>& maps_ref)
+    :   m_MapsRef(maps_ref){
     Logger::writeToLog("Created MapButton.");
+
+    addAndMakeVisible(m_MapImage);
 }
 
 MapButton::~MapButton(){
@@ -15,23 +18,17 @@ MapButton::~MapButton(){
 //------------------------------------------------------------//
 // View methods.
 
-void MapButton::paint(Graphics& g){
-    // TODO:
-    // Fix values.
+void MapButton::paint(Graphics& g){}
 
-    g.setColour(Variables::MAP_BG_COLOUR_1);
-    
-    auto r = getLocalBounds().withTrimmedTop(10).withTrimmedLeft(10).withTrimmedBottom(10).withTrimmedRight(30);
+void MapButton::resized(){
+    Map& map = *(m_MapsRef[getButtonIndex()]);
 
-    float x = r.getX();
-    float y = r.getY();
-    float width = r.getWidth();
-    float height = r.getHeight();
-
-    juce::Rectangle<float> rect = juce::Rectangle<float>(x, y, width, height);
-    
-    
-    g.fillRoundedRectangle(rect, 6.0f);
+    auto image = map.createComponentSnapshot(map.getLocalBounds(), true, 0.1f);
+    m_MapImage.setImage(image);
+    m_MapImage.setBounds(getLocalBounds());
 }
 
-void MapButton::resized(){}
+//------------------------------------------------------------//
+// Interface methods.
+
+int MapButton::getButtonIndex(){return getComponentID().getIntValue();}

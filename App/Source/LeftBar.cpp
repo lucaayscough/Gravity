@@ -8,9 +8,11 @@ LeftBar::LeftBar(juce::OwnedArray<Map>& maps_ref)
     :   m_MapsRef(maps_ref){
     Logger::writeToLog("Created LeftBar.");
 
+    m_MapButtons.ensureStorageAllocated(Variables::NUM_MAPS);
+
     for(int i = 0; i < Variables::NUM_MAPS; i++){
-        m_MapButtons.add(new MapButton());
-        addAndMakeVisible(m_MapButtons[i]);
+        m_MapButtons.add(new MapButton(m_MapsRef));
+        addChildAndSetID(m_MapButtons[i], juce::String(i));
     }
 }
 
