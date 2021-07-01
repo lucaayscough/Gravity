@@ -14,6 +14,7 @@ private:
 
 public:
     juce::OwnedArray<Map>& m_MapsRef;
+    juce::OwnedArray<MapButton> m_MapButtons;
 
     JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR(LeftBar)
 };

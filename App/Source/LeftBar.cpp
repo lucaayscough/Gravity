@@ -7,6 +7,11 @@
 LeftBar::LeftBar(juce::OwnedArray<Map>& maps_ref)
     :   m_MapsRef(maps_ref){
     Logger::writeToLog("Created LeftBar.");
+
+    for(int i = 0; i < Variables::NUM_MAPS; i++){
+        m_MapButtons.add(new MapButton());
+        addAndMakeVisible(m_MapButtons[i]);
+    }
 }
 
 LeftBar::~LeftBar(){
@@ -21,9 +26,11 @@ void LeftBar::paint(Graphics& g){
 }
 
 void LeftBar::resized(){
-    // TODO:
-    // Clean this up.
-
     auto r = getLocalBounds().withTrimmedTop(Variables::LEFT_BAR_TOP_BOUNDARY).withTrimmedBottom(Variables::LEFT_BAR_BOTTOM_BOUNDARY);
     auto button_height = r.getHeight() / Variables::NUM_MAPS;
+
+    for(MapButton* map_button : m_MapButtons){
+        auto map_button_area = r.removeFromTop(button_height);
+        map_button->setBounds(map_button_area);
+    }
 }
