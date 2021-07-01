@@ -17,6 +17,10 @@ public:
     int getButtonIndex();
 
 private:
+    // Controller methods.
+    void mouseDown(const MouseEvent&) override;
+
+private:
     // Member variables.
     juce::OwnedArray<Map>& m_MapsRef;
     juce::ImageComponent m_MapImage;
