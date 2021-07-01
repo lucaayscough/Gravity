@@ -9,25 +9,39 @@ Map::Map(AudioContainer& audiocontainer_ref, Parameters& parameters_ref)
         m_Sun(m_AudioContainerRef, m_ParametersRef, m_ControlPanel){
     Logger::writeToLog("Map created.");
 
-    addChildComponent(m_ControlPanel, -1);
-    addChildAndSetID(&m_Sun, m_ParametersRef.SUN_ID);
-
-    // TODO:
-    // Clean this up.
-
-    m_ForceVectorGradient.addColour((double)0.0, juce::Colours::darkred);
-    m_ForceVectorGradient.addColour((double)0.2, juce::Colours::red);
-    m_ForceVectorGradient.addColour((double)0.4, juce::Colours::orange);
-    m_ForceVectorGradient.addColour((double)0.7, juce::Colours::yellow);
-    m_ForceVectorGradient.addColour((double)1.0, juce::Colours::white);
-
+    setComponents();
+    setGradients();
     addListeners();
 }
 
 Map::~Map(){
     removeListeners();
-
     Logger::writeToLog("Map destroyed.");
+}
+
+void Map::setComponents(){
+    addChildComponent(m_ControlPanel, -1);
+    addChildAndSetID(&m_Sun, m_ParametersRef.SUN_ID);
+}
+
+void Map::setGradients(){
+    m_ForceVectorGradient.addColour((double)0.0, juce::Colours::darkred);
+    m_ForceVectorGradient.addColour((double)0.2, juce::Colours::red);
+    m_ForceVectorGradient.addColour((double)0.4, juce::Colours::orange);
+    m_ForceVectorGradient.addColour((double)0.7, juce::Colours::yellow);
+    m_ForceVectorGradient.addColour((double)1.0, juce::Colours::white);
+}
+
+void Map::addListeners(){
+    m_ParametersRef.rootNode.addListener(this);
+    m_ParametersRef.updateMap.addListener(this);
+    m_Sun.m_ShowForceVectors.addListener(this);
+}
+
+void Map::removeListeners(){
+    m_ParametersRef.rootNode.removeListener(this);
+    m_ParametersRef.updateMap.removeListener(this);
+    m_Sun.m_ShowForceVectors.removeListener(this);
 }
 
 //--------------------------------------------------//
@@ -61,45 +75,40 @@ void Map::paintOrbits(Graphics& g){
 }
 
 void Map::paintForceVectors(Graphics& g){
-    // TODO:
-    // Clean this up.
-
-
-    g.setColour(juce::Colours::white);
-
     // Draw planet vectors.
-    for(int i = 0; i < m_Planets.size(); i++){
-        if(m_Planets[i]->m_ShowForceVectors.getValue() == juce::var(true)){
-            auto planet_a = m_ParametersRef.getRootPlanetNode().getChildWithProperty(Parameters::idProp, m_Planets[i]->getComponentID());
+    for(Planet* planet_a : m_Planets){
+        if(planet_a->m_ShowForceVectors.getValue() == juce::var(true)){
+            auto planet_node_a = m_ParametersRef.getRootPlanetNode().getChildWithProperty(Parameters::idProp, planet_a->getComponentID());
 
-            for(int j = 0; j < m_Planets.size(); j++){
-                if(m_Planets[i]->getComponentID() == m_Planets[j]->getComponentID()){
+            for(Planet* planet_b : m_Planets){
+                if(planet_a->getComponentID() == planet_b->getComponentID()){
                     continue;
                 }
-                auto planet_b = m_ParametersRef.getRootPlanetNode().getChildWithProperty(Parameters::idProp, m_Planets[j]->getComponentID());
-                auto force_vector = m_ParametersRef.getForceVector(planet_a, planet_b);
-                
-                g.setOpacity(force_vector);
-                g.drawLine(m_Planets[i]->getCentreX(), m_Planets[i]->getCentreY(), m_Planets[j]->getCentreX(), m_Planets[j]->getCentreY(), Variables::FORCE_VECTOR_SIZE);
+
+                auto planet_node_b = m_ParametersRef.getRootPlanetNode().getChildWithProperty(Parameters::idProp, planet_b->getComponentID());
+                float force_vector = m_ParametersRef.getForceVector(planet_node_a, planet_node_b);
+                drawForceVector(*planet_a, *planet_b, force_vector, g);
             }
 
-            auto force_vector = m_ParametersRef.getForceVector(m_ParametersRef.getSunNode(), planet_a);
-            
-            g.setOpacity(force_vector);
-            g.drawLine(m_Planets[i]->getCentreX(), m_Planets[i]->getCentreY(), m_Sun.getCentreX(), m_Sun.getCentreY(), Variables::FORCE_VECTOR_SIZE);
+            float force_vector = m_ParametersRef.getForceVector(m_ParametersRef.getSunNode(), planet_node_a);
+            drawForceVector(*planet_a, m_Sun, force_vector, g);
         }
     }
 
     // Draw sun vectors.
     if(m_Sun.m_ShowForceVectors.getValue() == juce::var(true)){
-        for(int i = 0; i < m_Planets.size(); i++){
-            auto planet = m_ParametersRef.getRootPlanetNode().getChildWithProperty(Parameters::idProp, m_Planets[i]->getComponentID());
-            auto force_vector = m_ParametersRef.getForceVector(m_ParametersRef.getSunNode(), planet);
-
-            g.setOpacity(force_vector);
-            g.drawLine(m_Sun.getCentreX(), m_Sun.getCentreY(), m_Planets[i]->getCentreX(), m_Planets[i]->getCentreY(), Variables::FORCE_VECTOR_SIZE);
+        for(Planet* planet : m_Planets){
+            auto planet_node = m_ParametersRef.getRootPlanetNode().getChildWithProperty(Parameters::idProp, planet->getComponentID());
+            auto force_vector = m_ParametersRef.getForceVector(m_ParametersRef.getSunNode(), planet_node);
+            drawForceVector(*planet, m_Sun, force_vector, g);
         }
     }
+}
+
+void Map::drawForceVector(Astro& astro_a, Astro& astro_b, float force_vector, Graphics& g){
+    g.setColour(juce::Colours::white);
+    g.setOpacity(force_vector);
+    g.drawLine(astro_a.getCentreX(), astro_a.getCentreY(), astro_b.getCentreX(), astro_b.getCentreY(), Variables::FORCE_VECTOR_SIZE);
 }
 
 void Map::resized(){
@@ -217,18 +226,6 @@ void Map::mouseDoubleClick(const MouseEvent& e){
 
 //--------------------------------------------------//
 // Callback methods.
-
-void Map::addListeners(){
-    m_ParametersRef.rootNode.addListener(this);
-    m_ParametersRef.updateMap.addListener(this);
-    m_Sun.m_ShowForceVectors.addListener(this);
-}
-
-void Map::removeListeners(){
-    m_ParametersRef.rootNode.removeListener(this);
-    m_ParametersRef.updateMap.removeListener(this);
-    m_Sun.m_ShowForceVectors.removeListener(this);
-}
 
 void Map::valueChanged(juce::Value& value){
     juce::ignoreUnused(value);

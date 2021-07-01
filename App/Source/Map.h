@@ -7,11 +7,17 @@ public:
     Map(AudioContainer&, Parameters&);
     ~Map() override;
 
+    void setComponents();
+    void addListeners();
+    void setGradients();
+    void removeListeners();
+
 private:
     // View methods.
     void paint(Graphics&) override;
     void paintOrbits(Graphics&);
     void paintForceVectors(Graphics&);
+    void drawForceVector(Astro&, Astro&, float, Graphics&);
     void resized() override;
     
     void drawSun();
@@ -29,8 +35,6 @@ private:
     void mouseDoubleClick(const MouseEvent&) override;
 
     // Callback methods.
-    void addListeners();
-    void removeListeners();
     void valueChanged(juce::Value&) override;
     void valueTreePropertyChanged(juce::ValueTree&, const juce::Identifier&) override;
     void valueTreeChildRemoved(juce::ValueTree&, juce::ValueTree&, int) override;
