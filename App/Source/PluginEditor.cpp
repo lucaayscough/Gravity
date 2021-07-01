@@ -5,8 +5,8 @@
 // Constructors and destructors.
 
 AudioPluginAudioProcessorEditor::AudioPluginAudioProcessorEditor(AudioPluginAudioProcessor& p)
-    :   AudioProcessorEditor(&p),
-        processorRef(p),
+    :   AudioProcessorEditor(&p), processorRef(p),
+        m_LeftBar(m_Maps),
         m_DropShadow(Variables::TOP_BAR_SHADOW_COLOUR, 10, juce::Point<int>({0, 0})), m_DropShadower(m_DropShadow){
     Logger::writeToLog("Editor created.");
 
