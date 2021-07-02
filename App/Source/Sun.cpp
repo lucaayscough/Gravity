@@ -40,7 +40,11 @@ void Sun::draw(){
 //------------------------------------------------------------//
 // Interface methods.
 
-juce::ValueTree Sun::getState(){return m_ParametersRef.getSunNode();}
+juce::ValueTree Sun::getState(){
+    auto id = getParentComponent()->getComponentID();
+    auto mapNode = m_ParametersRef.getMapNode(id);
+    return m_ParametersRef.getSunNode(mapNode);
+}
 
 //------------------------------------------------------------//
 // Controller methods.

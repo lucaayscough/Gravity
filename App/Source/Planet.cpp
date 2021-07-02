@@ -145,7 +145,11 @@ void Planet::checkBounds(){
 //--------------------------------------------------//
 // Interface methods.
 
-juce::ValueTree Planet::getState(){return m_ParametersRef.getRootPlanetNode().getChildWithProperty(Parameters::idProp, getComponentID());}
+juce::ValueTree Planet::getState(){
+    auto id = getParentComponent()->getComponentID();
+    auto mapNode = m_ParametersRef.getMapNode(id);
+    return m_ParametersRef.getRootPlanetNode(mapNode).getChildWithProperty(Parameters::idProp, getComponentID());
+}
 
 //--------------------------------------------------//
 // Controller methods.
@@ -166,7 +170,7 @@ void Planet::mouseUp(const MouseEvent& e){
     
     // Destroys planet if clicked with right mouse button.
     else if(e.mods.isRightButtonDown()){
-        m_ParametersRef.removePlanetNode(getComponentID());
+        m_ParametersRef.removePlanetNode(getState());
     }
 }
 

@@ -14,7 +14,7 @@ AudioPluginAudioProcessorEditor::AudioPluginAudioProcessorEditor(AudioPluginAudi
 
     for(int i = 0; i < Variables::NUM_MAPS; i++){
         m_Maps.add(new Map(processorRef.m_AudioContainer, processorRef.m_Parameters));
-        addChildComponent(m_Maps[i]);
+        addChildAndSetID(m_Maps[i], juce::String(i));
     }
 
     addAndMakeVisible(m_TopBar);

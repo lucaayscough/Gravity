@@ -5,31 +5,47 @@
 // Constructors and destructors.
 
 Parameters::Parameters(juce::ValueTree v)
-    :   rootNode(v){
+    :   m_RootNode(v){
     Logger::writeToLog("Parameters created.");
 
     // Listeners.
-    rootNode.addListener(this);
-    updateMap.setValue(false);
+    m_RootNode.addListener(this);
+    m_UpdateMap.setValue(false);
 
-    // Basic elements.
-    addSunNode();
-    juce::ValueTree rootPlanetNode(rootPlanetType);
-    rootNode.addChild(rootPlanetNode, -1, nullptr);
+    addMapNodes();
 }
 
 Parameters::~Parameters(){
-    rootNode.removeListener(this);
+    m_RootNode.removeListener(this);
     Logger::writeToLog("Parameters destroyed.");
 }
 
 //------------------------------------------------------------//
 // Structuring methods.
 
-void Parameters::addSunNode(){
+void Parameters::addMapNodes(){
+    for(int i = 0; i < Variables::NUM_MAPS; i++){
+        // Create map node.
+        juce::ValueTree mapNode(mapType);
+        mapNode.setProperty(idProp, juce::String(i), nullptr);
+
+        // Create sun node.
+        addSunNode(mapNode);
+
+        // Create root node for planets.
+        juce::ValueTree rootPlanetNode(rootPlanetType);
+        mapNode.addChild(rootPlanetNode, -1, nullptr);
+
+        // Attach map to root node.
+        m_RootNode.addChild(mapNode, -1, nullptr);
+    }
+}
+
+void Parameters::addSunNode(juce::ValueTree mapNode){
+    // Create sun node.
     juce::ValueTree sunNode(sunType);
     sunNode.setProperty(areaProp, Variables::SUN_AREA, nullptr);
-    sunNode.setProperty(idProp, SUN_ID, nullptr);
+    sunNode.setProperty(idProp, M_SUN_ID, nullptr);
 
     // Listeners.
     sunNode.setProperty(updateGraphSignal, false, nullptr);
@@ -37,11 +53,12 @@ void Parameters::addSunNode(){
 
     // Sample.
     generateNewSample(sunNode);
-    rootNode.addChild(sunNode, -1, nullptr);
+    mapNode.addChild(sunNode, -1, nullptr);
     setActivePlanet(sunNode);
 }
 
-void Parameters::addPlanetNode(){
+void Parameters::addPlanetNode(const juce::String& id){
+    // Create planet node.
     juce::ValueTree planetNode(planetType);
     setRandomID(planetNode);
     planetNode.setProperty(areaProp, Variables::DEFAULT_PLANET_AREA, nullptr);
@@ -52,47 +69,51 @@ void Parameters::addPlanetNode(){
     
     // Sample.
     generateNewSample(planetNode);
-    getRootPlanetNode().addChild(planetNode, -1, nullptr);
+    getRootPlanetNode(getMapNode(id)).addChild(planetNode, -1, nullptr);
 }
 
-void Parameters::removePlanetNode(const juce::String& id){
-    for(int i = 0; i < getRootPlanetNode().getNumChildren(); i++){
-        if(getRootPlanetNode().getChild(i).getProperty(idProp) == id){
-            getRootPlanetNode().removeChild(i, nullptr);
-        }
-    }
+void Parameters::removePlanetNode(juce::ValueTree node){
+    getRootPlanetNode(getMapNode(node)).removeChild(node, nullptr);
 }
 
-void Parameters::clearSamples(juce::ValueTree node){
+void Parameters::clearSamples(juce::ValueTree rootNode){
     // TODO:
     // Cleanup this function.
 
-    for(int i = 0; i < node.getChildWithName(rootPlanetType).getNumChildren(); i++){
-        node.getChildWithName(rootPlanetType).getChild(i).removeProperty(latentsProp, nullptr);
-        node.getChildWithName(rootPlanetType).getChild(i).removeProperty(lerpLatentsProp, nullptr);
-        node.getChildWithName(rootPlanetType).getChild(i).removeProperty(sampleProp, nullptr);
+    for(int i = 0; i < Variables::NUM_MAPS; i++){
+        auto map = rootNode.getChild(i);
+
+        for(int j = 0; j < map.getChildWithName(rootPlanetType).getNumChildren(); j++){
+            map.getChildWithName(rootPlanetType).getChild(j).removeProperty(latentsProp, nullptr);
+            map.getChildWithName(rootPlanetType).getChild(j).removeProperty(lerpLatentsProp, nullptr);
+            map.getChildWithName(rootPlanetType).getChild(j).removeProperty(sampleProp, nullptr);
+        }
+        
+        map.getChildWithName(sunType).removeProperty(latentsProp, nullptr);
+        map.getChildWithName(sunType).removeProperty(lerpLatentsProp, nullptr);
+        map.getChildWithName(sunType).removeProperty(sampleProp, nullptr);
     }
-    
-    node.getChildWithName(sunType).removeProperty(latentsProp, nullptr);
-    node.getChildWithName(sunType).removeProperty(lerpLatentsProp, nullptr);
-    node.getChildWithName(sunType).removeProperty(sampleProp, nullptr);
 }
 
 void Parameters::rebuildSamples(){
     // TODO:
     // Cleanup this function.
 
-    for(int i = 0; i < getRootPlanetNode().getNumChildren(); i++){
-        generateLatents(getRootPlanetNode().getChild(i));
-        generateLerpLatents(getRootPlanetNode().getChild(i));
-        generateSample(getRootPlanetNode().getChild(i), getLatents(getRootPlanetNode().getChild(i), latentsProp));
+    for(int i = 0; i < Variables::NUM_MAPS; i++){
+        auto map = m_RootNode.getChild(i);
+
+        for(int j = 0; j < getRootPlanetNode(map).getNumChildren(); j++){
+            generateLatents(getRootPlanetNode(map).getChild(j));
+            generateLerpLatents(getRootPlanetNode(map).getChild(j));
+            generateSample(getRootPlanetNode(map).getChild(j), getLatents(getRootPlanetNode(map).getChild(j), latentsProp));
+        }
+
+        generateLatents(map.getChildWithName(sunType));
+        generateLerpLatents(map.getChildWithName(sunType));
+        generateSample(map.getChildWithName(sunType), getLatents(map.getChildWithName(sunType), latentsProp));
+    
+        mixLatents(map);
     }
-
-    generateLatents(rootNode.getChildWithName(sunType));
-    generateLerpLatents(rootNode.getChildWithName(sunType));
-    generateSample(rootNode.getChildWithName(sunType), getLatents(rootNode.getChildWithName(sunType), latentsProp));
-
-    mixLatents();
 }
 
 //------------------------------------------------------------//
@@ -119,19 +140,21 @@ void Parameters::generateNewSample(juce::ValueTree node){
     generateSample(node, getLatents(node, latentsProp));
 }
 
-void Parameters::mixLatents(){
+void Parameters::mixLatents(juce::ValueTree mapNode){
     float forceVector;
+    auto sunNode = getSunNode(mapNode);
+    auto rootPlanetNode = getRootPlanetNode(mapNode);
 
-    generateLerpLatents(getSunNode());
+    generateLerpLatents(sunNode);
 
-    for(int i = 0; i < getRootPlanetNode().getNumChildren(); i++){
-        auto planet_a = getRootPlanetNode().getChild(i);
+    for(int i = 0; i < rootPlanetNode.getNumChildren(); i++){
+        auto planet_a = rootPlanetNode.getChild(i);
         generateLerpLatents(planet_a);
 
-        for(int j = 0; j < getRootPlanetNode().getNumChildren(); j++){
+        for(int j = 0; j < rootPlanetNode.getNumChildren(); j++){
             if(i == j){continue;}
 
-            auto planet_b = getRootPlanetNode().getChild(j);
+            auto planet_b = rootPlanetNode.getChild(j);
             if(getID(planet_a) == getID(planet_b)){continue;}
             
             forceVector = getForceVector(planet_a, planet_b);
@@ -140,30 +163,46 @@ void Parameters::mixLatents(){
         }
     }
 
-    for(int i = 0; i < getRootPlanetNode().getNumChildren(); i++){
-        auto planet = getRootPlanetNode().getChild(i);
+    for(int i = 0; i < rootPlanetNode.getNumChildren(); i++){
+        auto planet = rootPlanetNode.getChild(i);
 
-        forceVector = getForceVector(getSunNode(), planet);
-        at::Tensor newLatents = at::lerp(getLatents(getSunNode(), lerpLatentsProp), getLatents(planet, lerpLatentsProp), forceVector);
-        setLatents(getSunNode(), lerpLatentsProp, newLatents);
+        forceVector = getForceVector(sunNode, planet);
+        at::Tensor newLatents = at::lerp(getLatents(sunNode, lerpLatentsProp), getLatents(planet, lerpLatentsProp), forceVector);
+        setLatents(sunNode, lerpLatentsProp, newLatents);
     }
 
-    generateSample(getSunNode(), getLatents(getSunNode(), lerpLatentsProp));
+    generateSample(sunNode, getLatents(sunNode, lerpLatentsProp));
 }
 
 //------------------------------------------------------------//
 // Get methods.
 
-juce::ValueTree Parameters::getActivePlanet(){
-    for(int i = 0; i < getRootPlanetNode().getNumChildren(); i++){
-        if(getRootPlanetNode().getChild(i).getProperty(isActiveProp)){return getRootPlanetNode().getChild(i);}
+juce::ValueTree Parameters::getActivePlanet(const juce::String& id){
+    auto mapNode = getMapNode(id);
+    auto rootPlanetNode = getRootPlanetNode(mapNode);
+
+    for(int i = 0; i < rootPlanetNode.getNumChildren(); i++){
+        if(rootPlanetNode.getChild(i).getProperty(isActiveProp)){
+            return rootPlanetNode.getChild(i);
+        }
     }
     
-    return getSunNode();
+    return getSunNode(mapNode);
 }
 
-juce::ValueTree Parameters::getSunNode(){return rootNode.getChildWithName(sunType);}
-juce::ValueTree Parameters::getRootPlanetNode(){return rootNode.getChildWithName(rootPlanetType);}
+juce::ValueTree Parameters::getMapNode(const juce::String& id){return m_RootNode.getChild(id.getIntValue());}
+
+juce::ValueTree Parameters::getMapNode(juce::ValueTree node){
+    if(node.getParent().getParent().hasType(mapType)){
+        return node.getParent().getParent();
+    }
+    else{
+        return node.getParent();
+    } 
+}
+
+juce::ValueTree Parameters::getSunNode(juce::ValueTree mapNode){return mapNode.getChildWithName(sunType);}
+juce::ValueTree Parameters::getRootPlanetNode(juce::ValueTree mapNode){return mapNode.getChildWithName(rootPlanetType);}
 std::int64_t Parameters::getSeed(juce::ValueTree node){return node.getProperty(seedProp);}
 at::Tensor Parameters::getLatents(juce::ValueTree node, juce::Identifier& id){return ((ReferenceCountedTensor*)node.getProperty(id).getObject())->getTensor();}
 juce::String Parameters::getID(juce::ValueTree node){return node.getProperty(idProp);}
@@ -214,20 +253,26 @@ float Parameters::getForceVector(juce::ValueTree node_a, juce::ValueTree node_b)
 // Set methods.
 
 void Parameters::setActivePlanet(juce::ValueTree node){
-    for(int i = 0; i < getRootPlanetNode().getNumChildren(); i++){getRootPlanetNode().getChild(i).setProperty(isActiveProp, false, nullptr);}
-    getSunNode().setProperty(isActiveProp, false, nullptr);
+    auto mapNode = getMapNode(node);
 
+    for(int i = 0; i < getRootPlanetNode(mapNode).getNumChildren(); i++){
+        getRootPlanetNode(mapNode).getChild(i).setProperty(isActiveProp, false, nullptr);
+    }
+    
+    getSunNode(mapNode).setProperty(isActiveProp, false, nullptr);
     node.setProperty(isActiveProp, true, nullptr);
 }
 
 void Parameters::setRandomID(juce::ValueTree node){
+    auto rootPlanetNode = getRootPlanetNode(getMapNode(node));
+
     // Generate random ID for component.
     auto randomID = juce::String(juce::Random::getSystemRandom().nextInt(1000));    
 
     // Check if ID is unique.
-    for(int i = 0; i < getRootPlanetNode().getNumChildren() - 1; i++){
-        if(getRootPlanetNode().getChild(i).getProperty(idProp) == randomID){
-            while(getRootPlanetNode().getChild(i).getProperty(idProp) == randomID){
+    for(int i = 0; i < rootPlanetNode.getNumChildren() - 1; i++){
+        if(rootPlanetNode.getChild(i).getProperty(idProp) == randomID){
+            while(rootPlanetNode.getChild(i).getProperty(idProp) == randomID){
                 randomID = juce::String(juce::Random::getSystemRandom().nextInt(1000)); 
             }
         }
@@ -263,7 +308,7 @@ void Parameters::valueTreePropertyChanged(juce::ValueTree& node, const juce::Ide
 
     if(id == updateGraphSignal){
         if((bool)node.getProperty(id) == true){
-            mixLatents();
+            mixLatents(getMapNode(node));
             node.setProperty(id, false, nullptr);
             Logger::writeToLog("Update graph.");
         }
@@ -273,6 +318,7 @@ void Parameters::valueTreePropertyChanged(juce::ValueTree& node, const juce::Ide
 //------------------------------------------------------------//
 // Type identifiers.
 
+juce::Identifier Parameters::mapType("Map");
 juce::Identifier Parameters::sunType("Sun");
 juce::Identifier Parameters::rootPlanetType("Root_Planet");
 juce::Identifier Parameters::planetType("Planet");

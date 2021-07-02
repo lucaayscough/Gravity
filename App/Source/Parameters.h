@@ -7,9 +7,10 @@ struct Parameters: public juce::ValueTree::Listener{
     ~Parameters() override;
 
     // Restructuring methods.
-    void addSunNode();
-    void addPlanetNode();
-    void removePlanetNode(const juce::String&);
+    void addMapNodes();
+    void addSunNode(juce::ValueTree);
+    void addPlanetNode(const juce::String&);
+    void removePlanetNode(juce::ValueTree);
     void clearSamples(juce::ValueTree);
     void rebuildSamples();
 
@@ -19,14 +20,16 @@ struct Parameters: public juce::ValueTree::Listener{
     void generateSample(juce::ValueTree, at::Tensor);
     void generateOldSample(juce::ValueTree);
     void generateNewSample(juce::ValueTree);
-    void mixLatents();
+    void mixLatents(juce::ValueTree);
 
     // Get methods.
-    juce::ValueTree getSunNode();
-    juce::ValueTree getRootPlanetNode();
+    juce::ValueTree getMapNode(const juce::String&);
+    juce::ValueTree getMapNode(juce::ValueTree);
+    juce::ValueTree getSunNode(juce::ValueTree);
+    juce::ValueTree getRootPlanetNode(juce::ValueTree);
     std::int64_t getSeed(juce::ValueTree);
     at::Tensor getLatents(juce::ValueTree, juce::Identifier&);
-    juce::ValueTree getActivePlanet();
+    juce::ValueTree getActivePlanet(const juce::String&);
     juce::String getID(juce::ValueTree);
     float getDistance(juce::ValueTree, juce::ValueTree);
     float getForceVector(juce::ValueTree, juce::ValueTree);
@@ -41,12 +44,13 @@ struct Parameters: public juce::ValueTree::Listener{
     void valueTreePropertyChanged(juce::ValueTree&, const juce::Identifier&) override;
 
     // Member variables.
-    juce::ValueTree rootNode;
-    bool isInit = false;
-    juce::Value updateMap;
-    const juce::String SUN_ID = "Sun";
+    juce::ValueTree m_RootNode;
+    bool m_IsInit = false;
+    juce::Value m_UpdateMap;
+    const juce::String M_SUN_ID = "Sun";
 
     // Type identifiers.
+    static juce::Identifier mapType;
     static juce::Identifier sunType;
     static juce::Identifier rootPlanetType;
     static juce::Identifier planetType;

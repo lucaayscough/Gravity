@@ -21,7 +21,7 @@ Map::~Map(){
 
 void Map::setComponents(){
     addChildComponent(m_ControlPanel, -1);
-    addChildAndSetID(&m_Sun, m_ParametersRef.SUN_ID);
+    addChildAndSetID(&m_Sun, m_ParametersRef.M_SUN_ID);
 }
 
 void Map::setGradients(){
@@ -33,14 +33,14 @@ void Map::setGradients(){
 }
 
 void Map::addListeners(){
-    m_ParametersRef.rootNode.addListener(this);
-    m_ParametersRef.updateMap.addListener(this);
+    m_ParametersRef.m_RootNode.addListener(this);
+    m_ParametersRef.m_UpdateMap.addListener(this);
     m_Sun.m_ShowForceVectors.addListener(this);
 }
 
 void Map::removeListeners(){
-    m_ParametersRef.rootNode.removeListener(this);
-    m_ParametersRef.updateMap.removeListener(this);
+    m_ParametersRef.m_RootNode.removeListener(this);
+    m_ParametersRef.m_UpdateMap.removeListener(this);
     m_Sun.m_ShowForceVectors.removeListener(this);
 }
 
@@ -59,8 +59,8 @@ void Map::paint(Graphics& g){
 }
 
 void Map::paintOrbits(Graphics& g){
-    juce::ValueTree rootPlanetNode =  m_ParametersRef.getRootPlanetNode();
-    juce::ValueTree sunNode =  m_ParametersRef.getSunNode();
+    auto rootPlanetNode = getRootPlanetNode();
+    auto sunNode = getSunNode();
 
     for(int i = 0; i < rootPlanetNode.getNumChildren(); i++){
         g.setColour(Variables::MAP_CIRCLE_COLOUR);
@@ -78,19 +78,19 @@ void Map::paintForceVectors(Graphics& g){
     // Draw planet vectors.
     for(Planet* planet_a : m_Planets){
         if(planet_a->m_ShowForceVectors.getValue() == juce::var(true)){
-            auto planet_node_a = m_ParametersRef.getRootPlanetNode().getChildWithProperty(Parameters::idProp, planet_a->getComponentID());
+            auto planet_node_a = getRootPlanetNode().getChildWithProperty(Parameters::idProp, planet_a->getComponentID());
 
             for(Planet* planet_b : m_Planets){
                 if(planet_a->getComponentID() == planet_b->getComponentID()){
                     continue;
                 }
 
-                auto planet_node_b = m_ParametersRef.getRootPlanetNode().getChildWithProperty(Parameters::idProp, planet_b->getComponentID());
+                auto planet_node_b = getRootPlanetNode().getChildWithProperty(Parameters::idProp, planet_b->getComponentID());
                 float force_vector = m_ParametersRef.getForceVector(planet_node_a, planet_node_b);
                 drawForceVector(*planet_a, *planet_b, force_vector, g);
             }
 
-            float force_vector = m_ParametersRef.getForceVector(m_ParametersRef.getSunNode(), planet_node_a);
+            float force_vector = m_ParametersRef.getForceVector(getSunNode(), planet_node_a);
             drawForceVector(*planet_a, m_Sun, force_vector, g);
         }
     }
@@ -98,8 +98,8 @@ void Map::paintForceVectors(Graphics& g){
     // Draw sun vectors.
     if(m_Sun.m_ShowForceVectors.getValue() == juce::var(true)){
         for(Planet* planet : m_Planets){
-            auto planet_node = m_ParametersRef.getRootPlanetNode().getChildWithProperty(Parameters::idProp, planet->getComponentID());
-            auto force_vector = m_ParametersRef.getForceVector(m_ParametersRef.getSunNode(), planet_node);
+            auto planet_node = getRootPlanetNode().getChildWithProperty(Parameters::idProp, planet->getComponentID());
+            auto force_vector = m_ParametersRef.getForceVector(getSunNode(), planet_node);
             drawForceVector(*planet, m_Sun, force_vector, g);
         }
     }
@@ -139,8 +139,8 @@ void Map::createPlanet(int x, int y){
     else if(y + default_radius > getHeight()){y = y - ((y + default_radius) - getHeight());}
 
     // Create planet node.
-    m_ParametersRef.addPlanetNode();
-    juce::ValueTree node = m_ParametersRef.getRootPlanetNode().getChild(m_ParametersRef.getRootPlanetNode().getNumChildren() - 1);
+    m_ParametersRef.addPlanetNode(getComponentID());
+    juce::ValueTree node = getRootPlanetNode().getChild(getRootPlanetNode().getNumChildren() - 1);
 
     // Instantiate planet inside planets array.
     m_Planets.add(new Planet(m_Planets, m_AudioContainerRef, m_ParametersRef, m_ControlPanel));
@@ -186,7 +186,7 @@ void Map::rebuildPlanets(){
 
     for(int i = 0; i < getNumPlanets(); i++){
         // Create planet node.
-        juce::ValueTree node = m_ParametersRef.getRootPlanetNode().getChild(i);
+        juce::ValueTree node = getRootPlanetNode().getChild(i);
 
         // Instantiate planet inside planets array.
         m_Planets.add(new Planet(m_Planets, m_AudioContainerRef, m_ParametersRef, m_ControlPanel));
@@ -201,7 +201,10 @@ void Map::rebuildPlanets(){
 // Interface methods.
 
 int Map::getMaxNumPlanets(){return Variables::MAX_NUM_PLANETS;}
-int Map::getNumPlanets(){return m_ParametersRef.getRootPlanetNode().getNumChildren();}
+int Map::getNumPlanets(){return getRootPlanetNode().getNumChildren();}
+juce::ValueTree Map::getMapNode(){return m_ParametersRef.getMapNode(getComponentID());}
+juce::ValueTree Map::getSunNode(){return m_ParametersRef.getSunNode(m_ParametersRef.getMapNode(getComponentID()));}
+juce::ValueTree Map::getRootPlanetNode(){return m_ParametersRef.getRootPlanetNode(m_ParametersRef.getMapNode(getComponentID()));}
 
 //--------------------------------------------------//
 // Controller methods.
@@ -231,9 +234,9 @@ void Map::valueChanged(juce::Value& value){
     juce::ignoreUnused(value);
     
     // Check if map needs updating.
-    if(m_ParametersRef.updateMap.getValue() == juce::var(true)){
+    if(m_ParametersRef.m_UpdateMap.getValue() == juce::var(true)){
         rebuildPlanets();
-        m_ParametersRef.updateMap.setValue(false);
+        m_ParametersRef.m_UpdateMap.setValue(false);
     }
 
     // Check if force vectors need to be painted.

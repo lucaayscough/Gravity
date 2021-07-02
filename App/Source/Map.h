@@ -29,6 +29,9 @@ private:
     // Interface methods
     int getMaxNumPlanets();
     int getNumPlanets();
+    juce::ValueTree getMapNode();
+    juce::ValueTree getSunNode();
+    juce::ValueTree getRootPlanetNode();
 
     // Controller methods.
     void mouseUp(const MouseEvent&) override;

@@ -44,9 +44,11 @@ void MapButton::mouseDown(const MouseEvent& e){
     for(int i = 0; i < Variables::NUM_MAPS; i++){
         if(i == getButtonIndex()){
             m_MapsRef[i]->setVisible(true);
+            m_MapsRef[i]->setInterceptsMouseClicks(true, true);
         }
         else{
             m_MapsRef[i]->setVisible(false);
+            m_MapsRef[i]->setInterceptsMouseClicks(false, false);
         }
     }
 }

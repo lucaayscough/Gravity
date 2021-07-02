@@ -133,13 +133,13 @@ void AudioPluginAudioProcessor::changeProgramName (int index, const juce::String
 // State methods.
 
 void AudioPluginAudioProcessor::getStateInformation(juce::MemoryBlock& destData){
-    if(m_Parameters.isInit){
+    if(m_Parameters.m_IsInit){
         auto stateCopy = m_ValueTreeState.state.createCopy();
         m_Parameters.clearSamples(stateCopy);
         std::unique_ptr<juce::XmlElement> xml(stateCopy.createXml());
         copyXmlToBinary(*xml, destData);
     }
-    else{m_Parameters.isInit = true;}
+    else{m_Parameters.m_IsInit = true;}
 }
 
 void AudioPluginAudioProcessor::setStateInformation(const void* data, int sizeInBytes){
@@ -154,7 +154,7 @@ void AudioPluginAudioProcessor::setStateInformation(const void* data, int sizeIn
 
 void AudioPluginAudioProcessor::rebuildState(){
     m_Parameters.rebuildSamples();
-    m_Parameters.updateMap.setValue(true);
+    m_Parameters.m_UpdateMap.setValue(true);
 }
 
 //------------------------------------------------------------//
