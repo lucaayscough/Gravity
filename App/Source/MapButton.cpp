@@ -14,6 +14,13 @@ MapButton::MapButton(juce::OwnedArray<Map>& maps_ref, const juce::String& id)
 MapButton::~MapButton(){}
 
 //------------------------------------------------------------//
+// Init methods.
+
+void MapButton::setListeners(){
+    getMap().m_UpdateImage.addListener(this);
+}
+
+//------------------------------------------------------------//
 // View methods.
 
 void MapButton::paint(Graphics& g){
@@ -33,10 +40,6 @@ void MapButton::resized(){
 
 int MapButton::getButtonIndex(){return getComponentID().getIntValue();}
 Map& MapButton::getMap(){return *m_MapsRef[getButtonIndex()];}
-
-void MapButton::setListeners(){
-    getMap().m_UpdateImage.addListener(this);
-}
 
 void MapButton::setImage(){
     Map& map = getMap();

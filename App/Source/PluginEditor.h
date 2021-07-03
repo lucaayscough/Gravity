@@ -9,7 +9,8 @@ public:
 
 public:
     // Init methods.
-    void setComponents();
+    void allocateStorage();
+    void initComponents();
     void setListeners();
 
 public:

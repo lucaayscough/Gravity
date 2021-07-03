@@ -8,7 +8,8 @@ AudioPluginAudioProcessorEditor::AudioPluginAudioProcessorEditor(AudioPluginAudi
     :   AudioProcessorEditor(&p), m_ProcessorRef(p),
         m_LeftBar(m_Maps),
         m_DropShadow(Variables::TOP_BAR_SHADOW_COLOUR, 10, juce::Point<int>({0, 0})), m_DropShadower(m_DropShadow){
-    setComponents();
+    allocateStorage();
+    initComponents();
     setListeners();
     
     // Main window.
@@ -18,9 +19,14 @@ AudioPluginAudioProcessorEditor::AudioPluginAudioProcessorEditor(AudioPluginAudi
 
 AudioPluginAudioProcessorEditor::~AudioPluginAudioProcessorEditor(){}
 
-void AudioPluginAudioProcessorEditor::setComponents(){
-    m_Maps.ensureStorageAllocated(Variables::NUM_MAPS);
+//------------------------------------------------------------//
+// Init methods.
 
+void AudioPluginAudioProcessorEditor::allocateStorage(){
+    m_Maps.ensureStorageAllocated(Variables::NUM_MAPS);
+}
+
+void AudioPluginAudioProcessorEditor::initComponents(){
     // Create maps.
     for(int i = 0; i < Variables::NUM_MAPS; i++){
         auto id = juce::String(i);
@@ -28,13 +34,14 @@ void AudioPluginAudioProcessorEditor::setComponents(){
         Map& map = *m_Maps[i];
 
         addChildComponent(map);
-        auto mapNode = m_ProcessorRef.m_Parameters.getMapNode(id);
+        bool isActive = m_ProcessorRef.m_Parameters.getMapNode(id).getProperty(Parameters::isActiveProp);
 
-        if((bool)mapNode.getProperty(Parameters::isActiveProp) == true)
+        if(isActive == true)
             map.setVisible(true);
         else map.setVisible(false);
     }
 
+    // Setup other components.
     addAndMakeVisible(m_TopBar);
     addAndMakeVisible(m_LeftBar);
 
@@ -42,9 +49,7 @@ void AudioPluginAudioProcessorEditor::setComponents(){
     m_DropShadower.setOwner(&m_TopBar);
 }
 
-void AudioPluginAudioProcessorEditor::setListeners(){
-    m_LeftBar.setListeners();
-}
+void AudioPluginAudioProcessorEditor::setListeners(){m_LeftBar.setListeners();}
 
 //------------------------------------------------------------//
 // View methods.
