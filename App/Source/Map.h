@@ -4,7 +4,7 @@
 class Map: public juce::Component, public juce::Value::Listener, juce::ValueTree::Listener{
 public:
     // Constructors and destructors.
-    Map(AudioContainer&, Parameters&);
+    Map(AudioContainer&, Parameters&, const juce::String&);
     ~Map() override;
 
     void setComponents();
@@ -41,6 +41,10 @@ private:
     void valueChanged(juce::Value&) override;
     void valueTreePropertyChanged(juce::ValueTree&, const juce::Identifier&) override;
     void valueTreeChildRemoved(juce::ValueTree&, juce::ValueTree&, int) override;
+
+public:
+    // Member variables.
+    juce::Value m_UpdateImage;
 
 private:
     // Member variables.

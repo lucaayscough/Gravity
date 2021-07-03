@@ -13,6 +13,10 @@ private:
     void resized() override;
 
 public:
+    // Interface methods.
+    void setListeners();
+
+public:
     juce::OwnedArray<Map>& m_MapsRef;
     juce::OwnedArray<MapButton> m_MapButtons;
 

@@ -4,9 +4,12 @@
 //--------------------------------------------------//
 // Constructors and destructors.
 
-Map::Map(AudioContainer& audiocontainer_ref, Parameters& parameters_ref)
+Map::Map(AudioContainer& audiocontainer_ref, Parameters& parameters_ref, const juce::String& id)
     :   m_AudioContainerRef(audiocontainer_ref), m_ParametersRef(parameters_ref), m_ControlPanel(m_ParametersRef),
         m_Sun(m_AudioContainerRef, m_ParametersRef, m_ControlPanel){
+    setComponentID(id);
+    m_UpdateImage = false;
+
     setComponents();
     setGradients();
     addListeners();
@@ -241,7 +244,10 @@ void Map::valueChanged(juce::Value& value){
 void Map::valueTreePropertyChanged(juce::ValueTree& node, const juce::Identifier& id){
     juce::ignoreUnused(node);
     if(id == Parameters::isActiveProp){repaint();}
-    if(id == Parameters::posXProp || id == Parameters::posYProp){repaint();}
+    if(id == Parameters::posXProp || id == Parameters::posYProp){
+        m_UpdateImage = true;
+        repaint();
+    }
 }
 
 void Map::valueTreeChildRemoved(juce::ValueTree& parentNode, juce::ValueTree& removedNode, int index){

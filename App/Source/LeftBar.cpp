@@ -9,8 +9,8 @@ LeftBar::LeftBar(juce::OwnedArray<Map>& maps_ref)
     m_MapButtons.ensureStorageAllocated(Variables::NUM_MAPS);
 
     for(int i = 0; i < Variables::NUM_MAPS; i++){
-        m_MapButtons.add(new MapButton(m_MapsRef));
-        addChildAndSetID(m_MapButtons[i], juce::String(i));
+        m_MapButtons.add(new MapButton(m_MapsRef, juce::String(i)));
+        addAndMakeVisible(m_MapButtons[i]);
     }
 }
 
@@ -32,3 +32,14 @@ void LeftBar::resized(){
         map_button->setBounds(map_button_area);
     }
 }
+
+//------------------------------------------------------------//
+// Interface methods.
+
+void LeftBar::setListeners(){
+    for(MapButton* map_button : m_MapButtons){
+        map_button->setListeners();
+    }
+}
+
+

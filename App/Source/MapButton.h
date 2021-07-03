@@ -1,11 +1,15 @@
 #pragma once
 
 
-class MapButton: public juce::Component{
+class MapButton: public juce::Component, public juce::Value::Listener{
 public:
     // Constructors and destructors.
-    MapButton(juce::OwnedArray<Map>&);
+    MapButton(juce::OwnedArray<Map>&, const juce::String&);
     ~MapButton() override;
+
+public:
+    // Init methods.
+    void setListeners();
 
 private:
     // View methods.
@@ -16,10 +20,15 @@ public:
     // Interface methods.
     int getButtonIndex();
     Map& getMap();
+    void setImage();
 
 private:
     // Controller methods.
     void mouseDown(const MouseEvent&) override;
+
+private:
+    // Callback methods.
+    void valueChanged(juce::Value&) override;
 
 private:
     // Member variables.
