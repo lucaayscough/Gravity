@@ -6,6 +6,7 @@ public:
     // Constructors and destructors.
     explicit AudioPluginAudioProcessorEditor (AudioPluginAudioProcessor&);
     ~AudioPluginAudioProcessorEditor() override;
+    void setComponents();
 
     // View methods.
     void paint (juce::Graphics&) override;
@@ -13,7 +14,7 @@ public:
 
 private:
     // Member variables.
-    AudioPluginAudioProcessor& processorRef;
+    AudioPluginAudioProcessor& m_ProcessorRef;
     
     TopBar m_TopBar;
     LeftBar m_LeftBar;

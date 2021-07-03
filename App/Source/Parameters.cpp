@@ -29,6 +29,12 @@ void Parameters::addMapNodes(){
         juce::ValueTree mapNode(mapType);
         mapNode.setProperty(idProp, juce::String(i), nullptr);
 
+        bool isActive;
+        if(i == 0) isActive = true;
+        else isActive = false;
+        
+        mapNode.setProperty(isActiveProp, isActive, nullptr);
+
         // Create sun node.
         addSunNode(mapNode);
 

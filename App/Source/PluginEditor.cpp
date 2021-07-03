@@ -5,24 +5,10 @@
 // Constructors and destructors.
 
 AudioPluginAudioProcessorEditor::AudioPluginAudioProcessorEditor(AudioPluginAudioProcessor& p)
-    :   AudioProcessorEditor(&p), processorRef(p),
+    :   AudioProcessorEditor(&p), m_ProcessorRef(p),
         m_LeftBar(m_Maps),
         m_DropShadow(Variables::TOP_BAR_SHADOW_COLOUR, 10, juce::Point<int>({0, 0})), m_DropShadower(m_DropShadow){
     Logger::writeToLog("Editor created.");
-
-    m_Maps.ensureStorageAllocated(Variables::NUM_MAPS);
-
-    for(int i = 0; i < Variables::NUM_MAPS; i++){
-        m_Maps.add(new Map(processorRef.m_AudioContainer, processorRef.m_Parameters));
-        addChildAndSetID(m_Maps[i], juce::String(i));
-    }
-
-    addAndMakeVisible(m_TopBar);
-    addAndMakeVisible(m_LeftBar);
-
-    m_TopBar.setAlwaysOnTop(true);
-
-    m_DropShadower.setOwner(&m_TopBar);
 
     // Main window.
     setSize(Variables::WINDOW_WIDTH, Variables::WINDOW_HEIGHT);
@@ -31,6 +17,28 @@ AudioPluginAudioProcessorEditor::AudioPluginAudioProcessorEditor(AudioPluginAudi
 
 AudioPluginAudioProcessorEditor::~AudioPluginAudioProcessorEditor(){
     Logger::writeToLog("Editor destroyed.");
+}
+
+void AudioPluginProcessorEditor::setComponents(){
+    m_Maps.ensureStorageAllocated(Variables::NUM_MAPS);
+
+    // Create maps.
+    for(int i = 0; i < Variables::NUM_MAPS; i++){
+        m_Maps.add(new Map(m_ProcessorRef.m_AudioContainer, m_ProcessorRef.m_Parameters));
+        addChildComponent(m_Maps[i]);
+        m_Maps[i]->setComponentID(juce::String(i));
+        auto mapNode = m_ProcessorRef.m_Parameters.getMapNode(juce::String(i));
+
+        if((bool)mapNode.getProperty(Parameters::isActiveProp) == true)
+            m_Maps[i]->setVisible(true);
+        else m_Maps[i]->setVisible(false);
+    }
+
+    addAndMakeVisible(m_TopBar);
+    addAndMakeVisible(m_LeftBar);
+
+    m_TopBar.setAlwaysOnTop(true);
+    m_DropShadower.setOwner(&m_TopBar);
 }
 
 //------------------------------------------------------------//
