@@ -1,11 +1,7 @@
 #include "Headers.h"
 
-AudioContainer::AudioContainer(){
-    Logger::writeToLog("AudioContainer created.");
-}
 
-AudioContainer::~AudioContainer(){
-    Logger::writeToLog("AudioContainer destroyed.");
-}
+AudioContainer::AudioContainer(){}
+AudioContainer::~AudioContainer(){}
 
 const int AudioContainer::NUM_SAMPLES = 131072;

@@ -6,8 +6,6 @@
 
 LeftBar::LeftBar(juce::OwnedArray<Map>& maps_ref)
     :   m_MapsRef(maps_ref){
-    Logger::writeToLog("Created LeftBar.");
-
     m_MapButtons.ensureStorageAllocated(Variables::NUM_MAPS);
 
     for(int i = 0; i < Variables::NUM_MAPS; i++){
@@ -16,9 +14,7 @@ LeftBar::LeftBar(juce::OwnedArray<Map>& maps_ref)
     }
 }
 
-LeftBar::~LeftBar(){
-    Logger::writeToLog("Destroyed LeftBar.");
-}
+LeftBar::~LeftBar(){}
 
 //------------------------------------------------------------//
 // View methods.

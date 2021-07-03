@@ -5,13 +5,9 @@
 // Constructors and destructors.
 
 Sun::Sun(AudioContainer& audiocontainer_ref, Parameters& parameters_ref, ControlPanel& controlpanel_ref)
-    :   Astro(audiocontainer_ref, parameters_ref, controlpanel_ref){
-    Logger::writeToLog("Sun created.");
-}
+    :   Astro(audiocontainer_ref, parameters_ref, controlpanel_ref){}
 
-Sun::~Sun(){
-    Logger::writeToLog("Sun destroyed.");
-}
+Sun::~Sun(){}
 
 //------------------------------------------------------------//
 // View methods.

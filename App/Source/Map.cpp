@@ -7,8 +7,6 @@
 Map::Map(AudioContainer& audiocontainer_ref, Parameters& parameters_ref)
     :   m_AudioContainerRef(audiocontainer_ref), m_ParametersRef(parameters_ref), m_ControlPanel(m_ParametersRef),
         m_Sun(m_AudioContainerRef, m_ParametersRef, m_ControlPanel){
-    Logger::writeToLog("Map created.");
-
     setComponents();
     setGradients();
     addListeners();
@@ -16,7 +14,6 @@ Map::Map(AudioContainer& audiocontainer_ref, Parameters& parameters_ref)
 
 Map::~Map(){
     removeListeners();
-    Logger::writeToLog("Map destroyed.");
 }
 
 void Map::setComponents(){
@@ -212,17 +209,12 @@ juce::ValueTree Map::getRootPlanetNode(){return m_ParametersRef.getRootPlanetNod
 void Map::mouseUp(const MouseEvent& e){juce::ignoreUnused(e);}
 
 void Map::mouseDoubleClick(const MouseEvent& e){
-    Logger::writeToLog("Detected double click.");
-
     if(e.mods.isLeftButtonDown()){
         int eventX = e.getMouseDownX();
         int eventY = e.getMouseDownY();
 
         if(getNumPlanets() < getMaxNumPlanets()){
             createPlanet(eventX, eventY);
-        }
-        else{
-            Logger::writeToLog("Maximum number of planets reached.");
         }
     }
 }

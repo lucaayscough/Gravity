@@ -6,8 +6,6 @@
 
 Parameters::Parameters(juce::ValueTree v)
     :   m_RootNode(v){
-    Logger::writeToLog("Parameters created.");
-
     // Listeners.
     m_RootNode.addListener(this);
     m_UpdateMap.setValue(false);
@@ -17,7 +15,6 @@ Parameters::Parameters(juce::ValueTree v)
 
 Parameters::~Parameters(){
     m_RootNode.removeListener(this);
-    Logger::writeToLog("Parameters destroyed.");
 }
 
 //------------------------------------------------------------//
@@ -308,7 +305,6 @@ void Parameters::valueTreePropertyChanged(juce::ValueTree& node, const juce::Ide
         if((bool)node.getProperty(id) == true){
             generateNewSample(node);
             node.setProperty(id, false, nullptr);
-            Logger::writeToLog("New sample.");
         }
     }
 
@@ -316,7 +312,6 @@ void Parameters::valueTreePropertyChanged(juce::ValueTree& node, const juce::Ide
         if((bool)node.getProperty(id) == true){
             mixLatents(getMapNode(node));
             node.setProperty(id, false, nullptr);
-            Logger::writeToLog("Update graph.");
         }
     }
 }

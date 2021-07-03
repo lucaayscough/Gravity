@@ -8,8 +8,6 @@ AudioPluginAudioProcessorEditor::AudioPluginAudioProcessorEditor(AudioPluginAudi
     :   AudioProcessorEditor(&p), m_ProcessorRef(p),
         m_LeftBar(m_Maps),
         m_DropShadow(Variables::TOP_BAR_SHADOW_COLOUR, 10, juce::Point<int>({0, 0})), m_DropShadower(m_DropShadow){
-    Logger::writeToLog("Editor created.");
-    
     setComponents();
     
     // Main window.
@@ -17,9 +15,7 @@ AudioPluginAudioProcessorEditor::AudioPluginAudioProcessorEditor(AudioPluginAudi
     setResizable(Variables::IS_WIDTH_RESIZABLE, Variables::IS_HEIGHT_RESIZABLE);
 }
 
-AudioPluginAudioProcessorEditor::~AudioPluginAudioProcessorEditor(){
-    Logger::writeToLog("Editor destroyed.");
-}
+AudioPluginAudioProcessorEditor::~AudioPluginAudioProcessorEditor(){}
 
 void AudioPluginAudioProcessorEditor::setComponents(){
     m_Maps.ensureStorageAllocated(Variables::NUM_MAPS);

@@ -7,7 +7,6 @@
 Planet::Planet(juce::OwnedArray<Planet>& planets_ref, AudioContainer& audiocontainer_ref, Parameters& parameters_ref, ControlPanel& controlpanel_ref)
     :   Astro(audiocontainer_ref, parameters_ref, controlpanel_ref),
         m_PlanetsRef(planets_ref){
-    Logger::writeToLog("Planet created.");
 
     // TODO:
     // Clean this up.
@@ -23,8 +22,6 @@ Planet::Planet(juce::OwnedArray<Planet>& planets_ref, AudioContainer& audioconta
 
 Planet::~Planet(){
     m_Animator.m_DiameterShift.removeListener(this);
-
-    Logger::writeToLog("Planet destroyed.");
 }
 
 //--------------------------------------------------//

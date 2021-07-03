@@ -75,7 +75,6 @@ void Astro::updateGraph(){getState().setProperty(Parameters::updateGraphSignal, 
 void Astro::generateSample(){getState().setProperty(Parameters::generateSampleSignal, true, nullptr);}
 
 void Astro::playSample(){
-    Logger::writeToLog("Playing audio...");
     m_ParametersRef.setActivePlanet(getState());
     m_AudioContainerRef.sampleIndex.clear();
     m_AudioContainerRef.playAudio = true;

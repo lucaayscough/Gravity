@@ -6,15 +6,11 @@
 
 MapButton::MapButton(juce::OwnedArray<Map>& maps_ref)
     :   m_MapsRef(maps_ref){
-    Logger::writeToLog("Created MapButton.");
-
     addAndMakeVisible(m_MapImage);
     m_MapImage.setInterceptsMouseClicks(false, false);
 }
 
-MapButton::~MapButton(){
-    Logger::writeToLog("Destroyed MapButton.");
-}
+MapButton::~MapButton(){}
 
 //------------------------------------------------------------//
 // View methods.
