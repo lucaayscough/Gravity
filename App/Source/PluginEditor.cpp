@@ -9,7 +9,9 @@ AudioPluginAudioProcessorEditor::AudioPluginAudioProcessorEditor(AudioPluginAudi
         m_LeftBar(m_Maps),
         m_DropShadow(Variables::TOP_BAR_SHADOW_COLOUR, 10, juce::Point<int>({0, 0})), m_DropShadower(m_DropShadow){
     Logger::writeToLog("Editor created.");
-
+    
+    setComponents();
+    
     // Main window.
     setSize(Variables::WINDOW_WIDTH, Variables::WINDOW_HEIGHT);
     setResizable(Variables::IS_WIDTH_RESIZABLE, Variables::IS_HEIGHT_RESIZABLE);
@@ -19,19 +21,21 @@ AudioPluginAudioProcessorEditor::~AudioPluginAudioProcessorEditor(){
     Logger::writeToLog("Editor destroyed.");
 }
 
-void AudioPluginProcessorEditor::setComponents(){
+void AudioPluginAudioProcessorEditor::setComponents(){
     m_Maps.ensureStorageAllocated(Variables::NUM_MAPS);
 
     // Create maps.
     for(int i = 0; i < Variables::NUM_MAPS; i++){
         m_Maps.add(new Map(m_ProcessorRef.m_AudioContainer, m_ProcessorRef.m_Parameters));
-        addChildComponent(m_Maps[i]);
-        m_Maps[i]->setComponentID(juce::String(i));
+        Map& map = *m_Maps[i];
+
+        addChildComponent(map);
+        map.setComponentID(juce::String(i));
         auto mapNode = m_ProcessorRef.m_Parameters.getMapNode(juce::String(i));
 
         if((bool)mapNode.getProperty(Parameters::isActiveProp) == true)
-            m_Maps[i]->setVisible(true);
-        else m_Maps[i]->setVisible(false);
+            map.setVisible(true);
+        else map.setVisible(false);
     }
 
     addAndMakeVisible(m_TopBar);
