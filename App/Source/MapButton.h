@@ -15,6 +15,7 @@ private:
 public:
     // Interface methods.
     int getButtonIndex();
+    Map& getMap();
 
 private:
     // Controller methods.

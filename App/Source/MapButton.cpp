@@ -16,11 +16,14 @@ MapButton::~MapButton(){}
 // View methods.
 
 void MapButton::paint(Graphics& g){
-    juce::ignoreUnused(g);
+    if(getMap().isVisible())
+        g.fillAll(juce::Colours::white);
+    else
+        g.fillAll(juce::Colours::black);
 }
 
 void MapButton::resized(){
-    Map& map = *(m_MapsRef[getButtonIndex()]);
+    Map& map = getMap();
 
     m_MapImage.setImage(map.createComponentSnapshot(map.getLocalBounds(), true, 0.1f));
     m_MapImage.setBounds(getLocalBounds().withTrimmedTop(Variables::LEFT_BAR_MAP_BOUNDARY).withTrimmedBottom(Variables::LEFT_BAR_MAP_BOUNDARY).withTrimmedLeft(Variables::LEFT_BAR_MAP_BOUNDARY));
@@ -30,6 +33,7 @@ void MapButton::resized(){
 // Interface methods.
 
 int MapButton::getButtonIndex(){return getComponentID().getIntValue();}
+Map& MapButton::getMap(){return *(m_MapsRef[getButtonIndex()]);}
 
 //------------------------------------------------------------//
 // Controller methods.
@@ -47,4 +51,6 @@ void MapButton::mouseDown(const MouseEvent& e){
             m_MapsRef[i]->setInterceptsMouseClicks(false, false);
         }
     }
+
+    getParentComponent()->repaint();
 }
