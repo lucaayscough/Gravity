@@ -22,7 +22,7 @@ struct Parameters: public juce::ValueTree::Listener{
     void generateNewSample(juce::ValueTree);
     void mixLatents(juce::ValueTree);
 
-    // Get methods.
+    // Interface methods.
     juce::ValueTree getMapNode(const juce::String&);
     juce::ValueTree getMapNode(juce::ValueTree);
     juce::ValueTree getSunNode(juce::ValueTree);
@@ -34,13 +34,13 @@ struct Parameters: public juce::ValueTree::Listener{
     float getDistance(juce::ValueTree, juce::ValueTree);
     float getForceVector(juce::ValueTree, juce::ValueTree);
 
-    // Set methods.
     void setActivePlanet(juce::ValueTree);
     void setRandomID(juce::ValueTree);
     void setRandomSeed(juce::ValueTree);
     void setLatents(juce::ValueTree, juce::Identifier&, at::Tensor&);
 
     // Callback methods.
+    void sendMapUpdate();
     void valueTreePropertyChanged(juce::ValueTree&, const juce::Identifier&) override;
 
     // Member variables.

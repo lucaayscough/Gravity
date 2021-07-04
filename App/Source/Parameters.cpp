@@ -133,6 +133,9 @@ void Parameters::generateLerpLatents(juce::ValueTree node){
 }
 
 void Parameters::generateSample(juce::ValueTree node, at::Tensor tensor){
+    // TODO:
+    // Make it take a reference.
+
     node.setProperty(sampleProp, Generator::generateSample(tensor), nullptr);
 }
 
@@ -178,7 +181,7 @@ void Parameters::mixLatents(juce::ValueTree mapNode){
 }
 
 //------------------------------------------------------------//
-// Get methods.
+// Interface methods.
 
 juce::ValueTree Parameters::getActivePlanet(const juce::String& id){
     auto mapNode = getMapNode(id);
@@ -252,9 +255,6 @@ float Parameters::getForceVector(juce::ValueTree node_a, juce::ValueTree node_b)
     return (m / pow(r, 2.0f)) / max_value;
 }
 
-//------------------------------------------------------------//
-// Set methods.
-
 void Parameters::setActivePlanet(juce::ValueTree node){
     auto mapNode = getMapNode(node);
 
@@ -300,6 +300,11 @@ void Parameters::setLatents(juce::ValueTree node, juce::Identifier& id, at::Tens
 //------------------------------------------------------------//
 // Callback methods.
 
+void Parameters::sendMapUpdate(){
+    m_UpdateMap = true;
+    m_UpdateMap = false;
+}
+
 void Parameters::valueTreePropertyChanged(juce::ValueTree& node, const juce::Identifier& id){
     if(id == generateSampleSignal){
         if((bool)node.getProperty(id) == true){
@@ -315,6 +320,9 @@ void Parameters::valueTreePropertyChanged(juce::ValueTree& node, const juce::Ide
         }
     }
 }
+
+//------------------------------------------------------------//
+// Member variables.
 
 juce::String Parameters::M_SUN_ID("Sun");
 

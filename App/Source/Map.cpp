@@ -113,7 +113,10 @@ void Map::drawForceVector(Astro& astro_a, Astro& astro_b, float force_vector, Gr
 
 void Map::resized(){
     drawSun();
-    if(getNumPlanets() > 0){rebuildPlanets();}
+
+    if(m_Planets.size() < getNumPlanets())
+        rebuildPlanets();
+
     m_ControlPanel.setBounds(getLocalBounds());
     m_BackgroundGradient = juce::ColourGradient(Variables::MAP_BG_COLOUR_1, getWidth() / 2, getHeight() / 2, Variables::MAP_BG_COLOUR_2, getWidth() / 4, getHeight() / 4, true);
 }
@@ -183,6 +186,7 @@ void Map::rebuildPlanets(){
     // TODO:
     // Clean this up.
 
+
     for(int i = 0; i < getNumPlanets(); i++){
         // Create planet node.
         juce::ValueTree node = getRootPlanetNode().getChild(i);
@@ -228,17 +232,10 @@ void Map::mouseDoubleClick(const MouseEvent& e){
 void Map::valueChanged(juce::Value& value){
     juce::ignoreUnused(value);
     
-    // Check if map needs updating.
-    if(m_ParametersRef.m_UpdateMap.getValue() == juce::var(true)){
+    if(m_Planets.size() < getNumPlanets())
         rebuildPlanets();
-        m_ParametersRef.m_UpdateMap = false;
-    }
-
-    // Check if force vectors need to be painted.
-    for(int i = 0; i < m_Planets.size(); i++){
-        if(m_Planets[i]->m_ShowForceVectors.getValue() == juce::var(true)){repaint();}
-    }
-    if(m_Sun.m_ShowForceVectors.getValue() == juce::var(true)){repaint();}
+    
+    repaint();
 }
 
 void Map::valueTreePropertyChanged(juce::ValueTree& node, const juce::Identifier& id){
