@@ -316,6 +316,8 @@ void Parameters::valueTreePropertyChanged(juce::ValueTree& node, const juce::Ide
     }
 }
 
+juce::String Parameters::M_SUN_ID("Sun");
+
 //------------------------------------------------------------//
 // Type identifiers.
 

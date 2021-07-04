@@ -4,8 +4,10 @@
 //--------------------------------------------------//
 // Constructors and destructors.
 
-Astro::Astro(AudioContainer& audiocontainer_ref, Parameters& parameters_ref, ControlPanel& controlpanel_ref)
-    :   m_AudioContainerRef(audiocontainer_ref), m_ParametersRef(parameters_ref), m_ControlPanelRef(controlpanel_ref){}
+Astro::Astro(juce::String& id, AudioContainer& audiocontainer, Parameters& parameters, ControlPanel& controlpanel)
+    :   m_AudioContainerRef(audiocontainer), m_ParametersRef(parameters), m_ControlPanelRef(controlpanel){
+    setComponentID(id);
+}
 
 Astro::~Astro(){}
 

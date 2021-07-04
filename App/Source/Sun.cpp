@@ -4,8 +4,8 @@
 //------------------------------------------------------------//
 // Constructors and destructors.
 
-Sun::Sun(AudioContainer& audiocontainer_ref, Parameters& parameters_ref, ControlPanel& controlpanel_ref)
-    :   Astro(audiocontainer_ref, parameters_ref, controlpanel_ref){}
+Sun::Sun(AudioContainer& audiocontainer, Parameters& parameters, ControlPanel& controlpanel)
+    :   Astro(Parameters::M_SUN_ID, audiocontainer, parameters, controlpanel){}
 
 Sun::~Sun(){}
 

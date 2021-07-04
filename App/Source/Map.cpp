@@ -21,7 +21,7 @@ Map::~Map(){
 
 void Map::setComponents(){
     addChildComponent(m_ControlPanel, -1);
-    addChildAndSetID(&m_Sun, m_ParametersRef.M_SUN_ID);
+    addAndMakeVisible(m_Sun);
 }
 
 void Map::setGradients(){
@@ -141,9 +141,10 @@ void Map::createPlanet(int x, int y){
     // Create planet node.
     m_ParametersRef.addPlanetNode(getComponentID());
     juce::ValueTree node = getRootPlanetNode().getChild(getRootPlanetNode().getNumChildren() - 1);
-
+    juce::String id = node.getProperty(Parameters::idProp);
+    
     // Instantiate planet inside planets array.
-    m_Planets.add(new Planet(m_Planets, m_AudioContainerRef, m_ParametersRef, m_ControlPanel));
+    m_Planets.add(new Planet(id, m_Planets, m_AudioContainerRef, m_ParametersRef, m_ControlPanel));
 
     // Extra setup for planet object.
     setupPlanet(m_Planets[getNumPlanets() - 1], x, y, node);
@@ -154,7 +155,7 @@ void Map::setupPlanet(Planet* planet, int x, int y, juce::ValueTree node){
     // Clean this up.
 
     // Visibility.
-    addChildAndSetID(planet, node.getProperty(Parameters::idProp));
+    addAndMakeVisible(planet);
 
     planet->draw(
         planet->getDiameter(),
@@ -187,10 +188,11 @@ void Map::rebuildPlanets(){
     for(int i = 0; i < getNumPlanets(); i++){
         // Create planet node.
         juce::ValueTree node = getRootPlanetNode().getChild(i);
+        juce::String id = node.getProperty(Parameters::idProp);
 
         // Instantiate planet inside planets array.
-        m_Planets.add(new Planet(m_Planets, m_AudioContainerRef, m_ParametersRef, m_ControlPanel));
-        m_Planets[i]->setComponentID(node.getProperty(Parameters::idProp));
+        m_Planets.add(new Planet(id, m_Planets, m_AudioContainerRef, m_ParametersRef, m_ControlPanel));
+        
         addAndMakeVisible(m_Planets[i]);
         m_Planets[i]->draw();
         m_Planets[i]->m_ShowForceVectors.addListener(this);

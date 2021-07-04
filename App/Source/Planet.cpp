@@ -4,25 +4,31 @@
 //--------------------------------------------------//
 // Constructors and destructors.
 
-Planet::Planet(juce::OwnedArray<Planet>& planets_ref, AudioContainer& audiocontainer_ref, Parameters& parameters_ref, ControlPanel& controlpanel_ref)
-    :   Astro(audiocontainer_ref, parameters_ref, controlpanel_ref),
+Planet::Planet(juce::String& id, juce::OwnedArray<Planet>& planets_ref, AudioContainer& audiocontainer_ref, Parameters& parameters_ref, ControlPanel& controlpanel_ref)
+    :   Astro(id, audiocontainer_ref, parameters_ref, controlpanel_ref),
         m_PlanetsRef(planets_ref){
-
-    // TODO:
-    // Clean this up.
-
-    m_ColourGradient.addColour((double)0.0, juce::Colours::white);
-    m_ColourGradient.addColour((double)0.2, juce::Colours::yellow);
-    m_ColourGradient.addColour((double)0.4, juce::Colours::orange);
-    m_ColourGradient.addColour((double)0.7, juce::Colours::red);
-    m_ColourGradient.addColour((double)1.0, juce::Colours::darkred);
-
-    m_Animator.m_DiameterShift.addListener(this);
+    setGradients();
+    setListeners();
 }
 
 Planet::~Planet(){
     m_Animator.m_DiameterShift.removeListener(this);
 }
+
+void Planet::setGradients(){
+    m_ColourGradient.addColour((double)0.0, juce::Colours::white);
+    m_ColourGradient.addColour((double)0.2, juce::Colours::yellow);
+    m_ColourGradient.addColour((double)0.4, juce::Colours::orange);
+    m_ColourGradient.addColour((double)0.7, juce::Colours::red);
+    m_ColourGradient.addColour((double)1.0, juce::Colours::darkred);
+}
+
+void Planet::setListeners(){
+    m_Animator.m_DiameterShift.addListener(this);
+}
+
+//--------------------------------------------------//
+// Init methods.
 
 //--------------------------------------------------//
 // View methods.

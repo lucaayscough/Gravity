@@ -4,7 +4,7 @@
 class Astro: public juce::Component, public juce::Value::Listener{
 public: 
     // Constructors and destructors.
-    Astro(AudioContainer&, Parameters&, ControlPanel&);
+    Astro(juce::String&, AudioContainer&, Parameters&, ControlPanel&);
     ~Astro() override;
    
 public:

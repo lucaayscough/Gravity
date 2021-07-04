@@ -4,8 +4,12 @@
 class Planet: public Astro{
 public: 
     // Constructors and destructors.
-    Planet(juce::OwnedArray<Planet>&, AudioContainer&, Parameters&, ControlPanel&);
+    Planet(juce::String&, juce::OwnedArray<Planet>&, AudioContainer&, Parameters&, ControlPanel&);
     ~Planet() override;
+
+public:
+    void setGradients();
+    void setListeners();
    
 public:
     // View methods.
