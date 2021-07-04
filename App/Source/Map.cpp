@@ -133,46 +133,44 @@ void Map::createPlanet(int x, int y){
     // Check creation position.
     int default_radius = (int)sqrt(Variables::DEFAULT_PLANET_AREA / 3.1415f);
 
-    if(x - default_radius < 0){x = x + abs(x - default_radius);}
-    else if(x + default_radius > getWidth()){x = x - ((x + default_radius) - getWidth());}
-    if(y - default_radius < 0){y = y + abs(y - default_radius);}
-    else if(y + default_radius > getHeight()){y = y - ((y + default_radius) - getHeight());}
+    if(x - default_radius < 0)
+        x = x + abs(x - default_radius);
+    else if(x + default_radius > getWidth())
+        x = x - ((x + default_radius) - getWidth());
+    
+    if(y - default_radius < 0)
+        y = y + abs(y - default_radius);
+    else if(y + default_radius > getHeight())
+        y = y - ((y + default_radius) - getHeight());
 
     // Create planet node.
     m_ParametersRef.addPlanetNode(getComponentID());
     juce::ValueTree node = getRootPlanetNode().getChild(getRootPlanetNode().getNumChildren() - 1);
-    juce::String id = node.getProperty(Parameters::idProp);
-    
-    // Instantiate planet inside planets array.
-    m_Planets.add(new Planet(id, m_Planets, m_AudioContainerRef, m_ParametersRef, m_ControlPanel));
 
     // Extra setup for planet object.
-    setupPlanet(m_Planets[getNumPlanets() - 1], x, y, node);
+    setupPlanet(x, y, node);
 }
 
-void Map::setupPlanet(Planet* planet, int x, int y, juce::ValueTree node){
-    // TODO:
-    // Clean this up.
+void Map::setupPlanet(int x, int y, juce::ValueTree node){
+    juce::String id = node.getProperty(Parameters::idProp);
+    m_Planets.add(new Planet(id, m_Planets, m_AudioContainerRef, m_ParametersRef, m_ControlPanel));
 
-    // Visibility.
+    Planet& planet = *m_Planets[m_Planets.size() - 1];
     addAndMakeVisible(planet);
 
-    planet->draw(
-        planet->getDiameter(),
-        x - (planet->getDiameter() / 2) - (planet->getClipBoundary() / 2),
-        y - (planet->getDiameter() / 2) - (planet->getClipBoundary() / 2)
-    );
+    if(node.hasProperty(Parameters::posXProp)){
+        planet.draw();
+    }
+    else{
+        planet.draw(planet.getDiameter(), x - planet.getRadiusWithClipBoundary(), y - planet.getRadiusWithClipBoundary());
+        planet.setPosXY(planet.getX(), planet.getY());
+    }
 
-    planet->m_ShowForceVectors.addListener(this);
-
-    planet->setPosXY(planet->getX(), planet->getY());
-    planet->updateGraph();
+    planet.m_ShowForceVectors.addListener(this);
+    planet.updateGraph();
 }
 
 void Map::destroyPlanet(juce::String& id){
-    // TODO:
-    // Clean this up.
-
     for(int i = 0; i < m_Planets.size(); i++){
         if(m_Planets[i]->getComponentID() == id){
             m_Planets[i]->m_ShowForceVectors.removeListener(this);
