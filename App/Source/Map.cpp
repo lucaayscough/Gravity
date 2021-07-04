@@ -35,13 +35,11 @@ void Map::setGradients(){
 void Map::addListeners(){
     m_ParametersRef.m_RootNode.addListener(this);
     m_ParametersRef.m_UpdateMap.addListener(this);
-    m_Sun.m_ShowForceVectors.addListener(this);
 }
 
 void Map::removeListeners(){
     m_ParametersRef.m_RootNode.removeListener(this);
     m_ParametersRef.m_UpdateMap.removeListener(this);
-    m_Sun.m_ShowForceVectors.removeListener(this);
 }
 
 //--------------------------------------------------//
@@ -77,7 +75,7 @@ void Map::paintOrbits(Graphics& g){
 void Map::paintForceVectors(Graphics& g){
     // Draw planet vectors.
     for(Planet* planet_a : m_Planets){
-        if(planet_a->m_ShowForceVectors.getValue() == juce::var(true)){
+        if((bool)planet_a->m_ShowForceVectors.getValue() == true){
             auto planet_node_a = getRootPlanetNode().getChildWithProperty(Parameters::idProp, planet_a->getComponentID());
 
             for(Planet* planet_b : m_Planets){
@@ -96,7 +94,7 @@ void Map::paintForceVectors(Graphics& g){
     }
 
     // Draw sun vectors.
-    if(m_Sun.m_ShowForceVectors.getValue() == juce::var(true)){
+    if((bool)m_Sun.m_ShowForceVectors.getValue() == true){
         for(Planet* planet : m_Planets){
             auto planet_node = getRootPlanetNode().getChildWithProperty(Parameters::idProp, planet->getComponentID());
             auto force_vector = m_ParametersRef.getForceVector(getSunNode(), planet_node);
@@ -169,14 +167,12 @@ void Map::setupPlanet(int x, int y, juce::ValueTree node){
         planet.setPosXY(planet.getX(), planet.getY());
     }
 
-    planet.m_ShowForceVectors.addListener(this);
     planet.updateGraph();
 }
 
 void Map::destroyPlanet(juce::String& id){
     for(int i = 0; i < m_Planets.size(); i++){
         if(m_Planets[i]->getComponentID() == id){
-            m_Planets[i]->m_ShowForceVectors.removeListener(this);
             m_Planets.remove(i, true);
         }
     }
@@ -197,7 +193,6 @@ void Map::rebuildPlanets(){
         
         addAndMakeVisible(m_Planets[i]);
         m_Planets[i]->draw();
-        m_Planets[i]->m_ShowForceVectors.addListener(this);
     }
 }
 

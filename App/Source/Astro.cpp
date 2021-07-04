@@ -90,6 +90,8 @@ void Astro::mouseEnter(const MouseEvent& e){
 
     m_ShowForceVectors = true;
     m_ControlPanelRef.show(getState());
+
+    getParentComponent()->repaint();
 }
 
 void Astro::mouseExit(const MouseEvent& e){
