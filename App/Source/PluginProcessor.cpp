@@ -154,7 +154,7 @@ void AudioPluginAudioProcessor::setStateInformation(const void* data, int sizeIn
 
 void AudioPluginAudioProcessor::rebuildState(){
     m_Parameters.rebuildSamples();
-    m_Parameters.m_UpdateMap.setValue(true);
+    m_Parameters.m_UpdateMap = true;
 }
 
 //------------------------------------------------------------//

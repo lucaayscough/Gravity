@@ -88,14 +88,14 @@ bool Astro::hitTest(const int x, const int y){
 void Astro::mouseEnter(const MouseEvent& e){
     juce::ignoreUnused(e);
 
-    m_ShowForceVectors.setValue(true);
+    m_ShowForceVectors = true;
     m_ControlPanelRef.show(getState());
 }
 
 void Astro::mouseExit(const MouseEvent& e){
     juce::ignoreUnused(e);
 
-    m_ShowForceVectors.setValue(false);
+    m_ShowForceVectors = false;
     m_ControlPanelRef.unshow();
 }
 
@@ -111,7 +111,7 @@ void Astro::valueChanged(juce::Value& value){
 // Constructors and destructors.
 
 Astro::Animator::Animator(){
-    m_DiameterShift.setValue(0);
+    m_DiameterShift = 0;
     startTimer(17);
 }
 
@@ -136,9 +136,9 @@ void Astro::Animator::timerCallback(){
     }
 
     if(m_DiameterShiftDirection == true){
-        m_DiameterShift.setValue((int)m_DiameterShift.getValue() + 1);
+        m_DiameterShift = (int)m_DiameterShift.getValue() + 1;
     }
     else{
-        m_DiameterShift.setValue((int)m_DiameterShift.getValue() - 1);
+        m_DiameterShift = (int)m_DiameterShift.getValue() - 1;
     }
 }

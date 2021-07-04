@@ -8,7 +8,7 @@ Parameters::Parameters(juce::ValueTree v)
     :   m_RootNode(v){
     // Listeners.
     m_RootNode.addListener(this);
-    m_UpdateMap.setValue(false);
+    m_UpdateMap = false;
 
     addMapNodes();
 }

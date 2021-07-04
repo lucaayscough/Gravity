@@ -231,7 +231,7 @@ void Map::valueChanged(juce::Value& value){
     // Check if map needs updating.
     if(m_ParametersRef.m_UpdateMap.getValue() == juce::var(true)){
         rebuildPlanets();
-        m_ParametersRef.m_UpdateMap.setValue(false);
+        m_ParametersRef.m_UpdateMap = false;
     }
 
     // Check if force vectors need to be painted.
