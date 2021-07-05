@@ -22,7 +22,7 @@ private:
     
     void drawSun();
     void createPlanet(int, int);
-    void setPlanet(int x, int y, juce::ValueTree);
+    void setPlanet(juce::ValueTree);
     void rebuildPlanets();
     void destroyPlanet(juce::String&);
 

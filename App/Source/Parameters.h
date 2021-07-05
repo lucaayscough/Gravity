@@ -9,7 +9,7 @@ struct Parameters: public juce::ValueTree::Listener{
     // Restructuring methods.
     void addMapNodes();
     void addSunNode(juce::ValueTree);
-    void addPlanetNode(const juce::String&);
+    void addPlanetNode(const juce::String&, const int x, const int y);
     void removePlanetNode(juce::ValueTree);
     void clearSamples(juce::ValueTree);
     void rebuildSamples();

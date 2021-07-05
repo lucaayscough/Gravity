@@ -60,11 +60,13 @@ void Parameters::addSunNode(juce::ValueTree mapNode){
     setActivePlanet(sunNode);
 }
 
-void Parameters::addPlanetNode(const juce::String& id){
+void Parameters::addPlanetNode(const juce::String& id, const int x, const int y){
     // Create planet node.
     juce::ValueTree planetNode(planetType);
     setRandomID(planetNode);
     planetNode.setProperty(areaProp, Variables::DEFAULT_PLANET_AREA, nullptr);
+    planetNode.setProperty(posXProp, x, nullptr);
+    planetNode.setProperty(posYProp, y, nullptr);
 
     // Listeners.
     planetNode.setProperty(updateGraphSignal, false, nullptr);
@@ -114,8 +116,6 @@ void Parameters::rebuildSamples(){
         generateLatents(map.getChildWithName(sunType));
         generateLerpLatents(map.getChildWithName(sunType));
         generateSample(map.getChildWithName(sunType), getLatents(map.getChildWithName(sunType), latentsProp));
-    
-        mixLatents(map);
     }
 }
 

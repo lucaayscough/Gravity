@@ -125,14 +125,10 @@ void Map::drawSun(){
 
 void Map::createPlanet(int x, int y){
     // TODO:
-    // Clean this up.
-
-
-    // TODO:
     // Add check for other astri.
 
     // Check creation position.
-    int default_radius = (int)sqrt(Variables::DEFAULT_PLANET_AREA / 3.1415f);
+    int default_radius = Variables::getDefaultPlanetRadius();
 
     if(x - default_radius < 0)
         x = x + abs(x - default_radius);
@@ -145,28 +141,25 @@ void Map::createPlanet(int x, int y){
         y = y - ((y + default_radius) - getHeight());
 
     // Create planet node.
-    m_ParametersRef.addPlanetNode(getComponentID());
-    juce::ValueTree node = getRootPlanetNode().getChild(getRootPlanetNode().getNumChildren() - 1);
+    m_ParametersRef.addPlanetNode(
+        getComponentID(),
+        x - Variables::getDefaultPlanetRadiusWithClipBoundary(),
+        y - Variables::getDefaultPlanetRadiusWithClipBoundary()
+    );
+    juce::ValueTree planet = getRootPlanetNode().getChild(getRootPlanetNode().getNumChildren() - 1);
 
-    // Extra setup for planet object.
-    setPlanet(x, y, node);
+    // Set planet component.
+    setPlanet(planet);
 }
 
-void Map::setPlanet(int x, int y, juce::ValueTree node){
+void Map::setPlanet(juce::ValueTree node){
     juce::String id = node.getProperty(Parameters::idProp);
     m_Planets.add(new Planet(id, m_Planets, m_AudioContainerRef, m_ParametersRef, m_ControlPanel));
 
     Planet& planet = *m_Planets[m_Planets.size() - 1];
     addAndMakeVisible(planet);
 
-    if(node.hasProperty(Parameters::posXProp)){
-        planet.draw();
-    }
-    else{
-        planet.draw(planet.getDiameter(), x - planet.getRadiusWithClipBoundary(), y - planet.getRadiusWithClipBoundary());
-        planet.setPosXY(planet.getX(), planet.getY());
-    }
-
+    planet.draw();
     planet.updateGraph();
 }
 
@@ -175,7 +168,9 @@ void Map::rebuildPlanets(){
         // Create planet node.
         juce::ValueTree planet = getRootPlanetNode().getChild(i);
         juce::String id = planet.getProperty(Parameters::idProp);
-        setPlanet(0, 0, planet);
+
+        // Set planet component.
+        setPlanet(planet);
     }
 }
 
@@ -227,7 +222,9 @@ void Map::valueChanged(juce::Value& value){
 
 void Map::valueTreePropertyChanged(juce::ValueTree& node, const juce::Identifier& id){
     juce::ignoreUnused(node);
-    if(id == Parameters::isActiveProp){repaint();}
+    if(id == Parameters::isActiveProp){
+        repaint();
+    }
     if(id == Parameters::posXProp || id == Parameters::posYProp){
         m_UpdateImage = true;
         repaint();
@@ -236,6 +233,7 @@ void Map::valueTreePropertyChanged(juce::ValueTree& node, const juce::Identifier
 
 void Map::valueTreeChildRemoved(juce::ValueTree& parentNode, juce::ValueTree& removedNode, int index){
     juce::ignoreUnused(parentNode, index);
+
     if(removedNode.getType() == Parameters::planetType){
         juce::String id = removedNode.getProperty(Parameters::idProp).toString();
         destroyPlanet(id);
