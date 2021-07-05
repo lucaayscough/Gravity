@@ -25,14 +25,13 @@ void MapButton::setListeners(){
 
 void MapButton::paint(Graphics& g){
     if(getMap().isVisible())
-        g.fillAll(juce::Colours::white);
+        g.fillAll(Variables::MAP_BUTTON_BG_COLOUR_1);
     else
-        g.fillAll(juce::Colours::black);
+        g.fillAll(Variables::EDITOR_BG_COLOUR);
 }
 
 void MapButton::resized(){
     setImage();
-    m_MapImage.setBounds(getLocalBounds().withTrimmedTop(Variables::LEFT_BAR_MAP_BOUNDARY).withTrimmedBottom(Variables::LEFT_BAR_MAP_BOUNDARY).withTrimmedLeft(Variables::LEFT_BAR_MAP_BOUNDARY));
 }
 
 //------------------------------------------------------------//
@@ -43,7 +42,8 @@ Map& MapButton::getMap(){return *m_MapsRef[getButtonIndex()];}
 
 void MapButton::setImage(){
     Map& map = getMap();
-    m_MapImage.setImage(map.createComponentSnapshot(map.getLocalBounds(), true, 0.1f));
+    m_MapImage.setImage(map.createComponentSnapshot(map.getLocalBounds(), true, 0.1f), juce::RectanglePlacement::xLeft);
+    m_MapImage.setBounds(getLocalBounds().withTrimmedLeft(Variables::LEFT_BAR_MAP_BOUNDARY).withTrimmedTop(Variables::LEFT_BAR_MAP_BOUNDARY).withTrimmedBottom(Variables::LEFT_BAR_MAP_BOUNDARY));
     getMap().m_UpdateImage = false;
 }
 

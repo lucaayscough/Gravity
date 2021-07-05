@@ -22,6 +22,10 @@ struct Variables{
     static const int LEFT_BAR_BOTTOM_BOUNDARY;
     static const int LEFT_BAR_MAP_BOUNDARY;
 
+    // MapButton variables.
+    static const juce::Colour MAP_BUTTON_BG_COLOUR_1;
+    static const juce::Colour MAP_BUTTON_BG_COLOUR_2;
+
     // Map variables.
     static const int NUM_MAPS;
     static const int MAX_NUM_PLANETS;
