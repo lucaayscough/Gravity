@@ -4,8 +4,8 @@
 //--------------------------------------------------//
 // Constructors and destructors.
 
-Map::Map(AudioContainer& audiocontainer_ref, Parameters& parameters_ref, const juce::String& id)
-    :   m_AudioContainerRef(audiocontainer_ref), m_ParametersRef(parameters_ref), m_ControlPanel(m_ParametersRef),
+Map::Map(AudioContainer& audiocontainer, Parameters& parameters, const juce::String& id)
+    :   m_AudioContainerRef(audiocontainer), m_ParametersRef(parameters), m_ControlPanel(m_ParametersRef),
         m_Sun(m_AudioContainerRef, m_ParametersRef, m_ControlPanel){
     setComponentID(id);
     m_UpdateImage = false;

@@ -4,9 +4,9 @@
 //--------------------------------------------------//
 // Constructors and destructors.
 
-Planet::Planet(juce::String& id, juce::OwnedArray<Planet>& planets_ref, AudioContainer& audiocontainer_ref, Parameters& parameters_ref, ControlPanel& controlpanel_ref)
-    :   Astro(id, audiocontainer_ref, parameters_ref, controlpanel_ref),
-        m_PlanetsRef(planets_ref){
+Planet::Planet(juce::String& id, juce::OwnedArray<Planet>& planets, AudioContainer& audiocontainer, Parameters& parameters, ControlPanel& controlpanel)
+    :   Astro(id, audiocontainer, parameters, controlpanel),
+        m_PlanetsRef(planets){
     setGradients();
     setListeners();
 }

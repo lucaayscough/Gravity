@@ -4,8 +4,8 @@
 //--------------------------------------------------//
 // Constructors and destructors.
 
-ControlPanel::ControlPanel(Parameters& parameters_ref)
-    :   m_ParametersRef(parameters_ref){
+ControlPanel::ControlPanel(Parameters& parameters)
+    :   m_ParametersRef(parameters){
     setAlwaysOnTop(true);
 }
 

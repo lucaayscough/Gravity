@@ -2,8 +2,8 @@
 
 
 struct ReferenceCountedTensor: public ReferenceCountedObject{
-    ReferenceCountedTensor(at::Tensor t):
-    tensor(t){}
+    ReferenceCountedTensor(at::Tensor t)
+    :   tensor(t){}
     at::Tensor tensor;
     using Ptr = ReferenceCountedObjectPtr<ReferenceCountedTensor>;
     at::Tensor& getTensor(){return tensor;}
