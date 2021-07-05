@@ -150,6 +150,7 @@ void Map::createPlanet(int x, int y){
 
     // Set planet component.
     setPlanet(planet);
+    m_ParametersRef.mixLatents(getMapNode());
 }
 
 void Map::setPlanet(juce::ValueTree node){
@@ -160,7 +161,6 @@ void Map::setPlanet(juce::ValueTree node){
     addAndMakeVisible(planet);
 
     planet.draw();
-    planet.updateGraph();
 }
 
 void Map::rebuildPlanets(){
@@ -172,6 +172,8 @@ void Map::rebuildPlanets(){
         // Set planet component.
         setPlanet(planet);
     }
+
+    m_ParametersRef.mixLatents(getMapNode());
 }
 
 void Map::destroyPlanet(juce::String& id){
@@ -181,6 +183,8 @@ void Map::destroyPlanet(juce::String& id){
             m_ControlPanel.unshow();
         }
     }
+
+    m_ParametersRef.mixLatents(getMapNode());
 }
 
 //--------------------------------------------------//

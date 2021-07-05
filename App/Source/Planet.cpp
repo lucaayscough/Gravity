@@ -81,7 +81,7 @@ void Planet::resizePlanet(float area){
 
     // TODO:
     // NEED A WAY TO UPDATE GRAPH WHEN DONE ZOOMING IN ON SOUND
-    //updateGraph();
+    //mixLatents();
 }
 
 void Planet::checkCollision(){
@@ -162,19 +162,21 @@ void Planet::mouseDown(const MouseEvent& e){m_Dragger.startDraggingComponent(thi
 void Planet::mouseUp(const MouseEvent& e){
     if(e.mods.isLeftButtonDown()){
         // Generates new sample if double clicked with left mouse button.
-        if(e.getNumberOfClicks() > 1){generateSample();}
+        if(e.getNumberOfClicks() > 1)
+            generateSample();
         
         // Plays sample if clicked once with left mouse button.
-        else if(e.getNumberOfClicks() == 1 && e.mouseWasClicked()){playSample();}
+        else if(e.getNumberOfClicks() == 1 && e.mouseWasClicked())
+            playSample();
 
         // Updates latent mixture graph if there has been a dragging motion.
-        else if(e.mouseWasDraggedSinceMouseDown()){updateGraph();}
+        else if(e.mouseWasDraggedSinceMouseDown())
+            m_ParametersRef.mixLatents(getMapNode());
     }
     
     // Destroys planet if clicked with right mouse button.
-    else if(e.mods.isRightButtonDown()){
+    else if(e.mods.isRightButtonDown())
         m_ParametersRef.removePlanetNode(getState());
-    }
 }
 
 void Planet::mouseDrag(const MouseEvent& e){
@@ -187,10 +189,10 @@ void Planet::mouseDrag(const MouseEvent& e){
 void Planet::mouseWheelMove(const MouseEvent& e, const MouseWheelDetails& w){
     juce::ignoreUnused(e);
 
-    if(w.deltaY > 0.0f && getArea() + Variables::AREA_MODIFIER <= Variables::MAX_PLANET_AREA){
+    if(w.deltaY > 0.0f && getArea() + Variables::AREA_MODIFIER <= Variables::MAX_PLANET_AREA)
         resizePlanet(getArea() + Variables::AREA_MODIFIER);
-    }
-    else if(w.deltaY < 0.0f && getArea() - Variables::AREA_MODIFIER >= Variables::MIN_PLANET_AREA){
+
+    else if(w.deltaY < 0.0f && getArea() - Variables::AREA_MODIFIER >= Variables::MIN_PLANET_AREA)
         resizePlanet(getArea() - Variables::AREA_MODIFIER);
-    }
+
 }

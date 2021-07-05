@@ -33,6 +33,7 @@ void Astro::setCentrePosXY(const int x, const int y){
     getState().setProperty(Parameters::posCentreYProp, y + getClipBoundary() / 2, nullptr);
 }
 
+juce::ValueTree Astro::getMapNode(){return m_ParametersRef.getMapNode(getState());}
 float Astro::getArea(){return getState().getProperty(Parameters::areaProp);}
 int Astro::getDiameter(){return (int)(round((sqrt(getArea() / 3.1415f) * 2.0f) / 2.0f) * 2.0f);}
 int Astro::getDiameterWithClipBoundary(){return getDiameter() + getClipBoundary();}
@@ -63,7 +64,6 @@ float Astro::getDistance(Astro* astro_a, Astro* astro_b){
 
 int Astro::getClipBoundary(){return Variables::CLIP_BOUNDARY;}
 
-void Astro::updateGraph(){getState().setProperty(Parameters::updateGraphSignal, true, nullptr);}
 void Astro::generateSample(){getState().setProperty(Parameters::generateSampleSignal, true, nullptr);}
 
 void Astro::playSample(){

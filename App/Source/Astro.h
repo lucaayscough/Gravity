@@ -18,6 +18,7 @@ public:
     virtual void setCentrePosXY(const int, const int);
 
     virtual juce::ValueTree getState() = 0;
+    virtual juce::ValueTree getMapNode();
     virtual float getArea();
     virtual int getDiameter();
     virtual int getDiameterWithClipBoundary();
@@ -32,7 +33,6 @@ public:
     virtual float getDistance(const int, const int, const int, const int);
     virtual float getDistance(Astro*, Astro*);
 
-    virtual void updateGraph();
     virtual void generateSample();
 
     virtual void playSample();

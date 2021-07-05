@@ -51,7 +51,6 @@ void Parameters::addSunNode(juce::ValueTree mapNode){
     sunNode.setProperty(idProp, M_SUN_ID, nullptr);
 
     // Listeners.
-    sunNode.setProperty(updateGraphSignal, false, nullptr);
     sunNode.setProperty(generateSampleSignal, false, nullptr);
 
     // Sample.
@@ -69,7 +68,6 @@ void Parameters::addPlanetNode(const juce::String& id, const int x, const int y)
     planetNode.setProperty(posYProp, y, nullptr);
 
     // Listeners.
-    planetNode.setProperty(updateGraphSignal, false, nullptr);
     planetNode.setProperty(generateSampleSignal, false, nullptr);
     
     // Sample.
@@ -312,13 +310,6 @@ void Parameters::valueTreePropertyChanged(juce::ValueTree& node, const juce::Ide
             node.setProperty(id, false, nullptr);
         }
     }
-
-    if(id == updateGraphSignal){
-        if((bool)node.getProperty(id) == true){
-            mixLatents(getMapNode(node));
-            node.setProperty(id, false, nullptr);
-        }
-    }
 }
 
 //------------------------------------------------------------//
@@ -353,7 +344,6 @@ juce::Identifier Parameters::sampleProp("Sample");
 //------------------------------------------------------------//
 // Callback signalers.
 
-juce::Identifier Parameters::updateGraphSignal("Update_Graph");
 juce::Identifier Parameters::generateSampleSignal("Generate_Sample");
 
 //------------------------------------------------------------//

@@ -70,7 +70,6 @@ struct Parameters: public juce::ValueTree::Listener{
     static juce::Identifier sampleProp;
 
     // Callback signalers.
-    static juce::Identifier updateGraphSignal;
     static juce::Identifier generateSampleSignal;
 
     // Threads.
