@@ -4,11 +4,11 @@
 //------------------------------------------------------------//
 // Constructors and destructors.
 
-MapButton::MapButton(juce::OwnedArray<Map>& maps_ref, const juce::String& id)
-    :   m_MapsRef(maps_ref){
+MapButton::MapButton(juce::OwnedArray<Map>& maps, const juce::String& id)
+    :   m_MapsRef(maps){
     setComponentID(id);
-    addAndMakeVisible(m_MapImage);
     m_MapImage.setInterceptsMouseClicks(false, false);
+    addAndMakeVisible(m_MapImage);
 }
 
 MapButton::~MapButton(){}

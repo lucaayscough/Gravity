@@ -4,8 +4,8 @@
 //------------------------------------------------------------//
 // Constructors and destructors.
 
-LeftBar::LeftBar(juce::OwnedArray<Map>& maps_ref)
-    :   m_MapsRef(maps_ref){
+LeftBar::LeftBar(juce::OwnedArray<Map>& maps)
+    :   m_MapsRef(maps){
     m_MapButtons.ensureStorageAllocated(Variables::NUM_MAPS);
 
     for(int i = 0; i < Variables::NUM_MAPS; i++){
