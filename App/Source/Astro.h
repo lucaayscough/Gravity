@@ -63,14 +63,15 @@ public:
         ~Animator() override;
 
         // Interface methods.
-        int getDiameterShift();
+        float applyAreaShift(float);
+        float getShiftedDiameter(float area);
 
         // Callback methods.
         void timerCallback() override;
 
         // Member variables.
-        juce::Value m_DiameterShift;
-        bool m_DiameterShiftDirection = true;
+        juce::Value m_AreaShift;
+        bool m_AreaShiftDirection = true;
     };
 
     JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR(Astro)

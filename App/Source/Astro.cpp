@@ -109,7 +109,7 @@ void Astro::valueChanged(juce::Value& value){
 // Constructors and destructors.
 
 Astro::Animator::Animator(){
-    m_DiameterShift = 0;
+    m_AreaShift = 0.0f;
     startTimer(17);
 }
 
@@ -120,23 +120,27 @@ Astro::Animator::~Animator(){
 //--------------------------------------------------//
 // Interface methods.
 
-int Astro::Animator::getDiameterShift(){return (int)m_DiameterShift.getValue();}
+float Astro::Animator::applyAreaShift(float area){return area + (float)m_AreaShift.getValue();}
+
+float Astro::Animator::getShiftedDiameter(float area){
+    return sqrt(applyAreaShift(area) / 3.1415f) * 2.0f;
+}
 
 //--------------------------------------------------//
 // Callback methods.
 
 void Astro::Animator::timerCallback(){
-    if((int)m_DiameterShift.getValue() >= 20){
-        m_DiameterShiftDirection = false;
+    if((float)m_AreaShift.getValue() >= 500.0f){
+        m_AreaShiftDirection = false;
     }
-    else if((int)m_DiameterShift.getValue() <= -20){
-        m_DiameterShiftDirection = true;
+    else if((float)m_AreaShift.getValue() <= -500.0f){
+        m_AreaShiftDirection = true;
     }
 
-    if(m_DiameterShiftDirection == true){
-        m_DiameterShift = (int)m_DiameterShift.getValue() + 1;
+    if((float)m_AreaShiftDirection == true){
+        m_AreaShift = (float)m_AreaShift.getValue() + 20.0f;
     }
     else{
-        m_DiameterShift = (int)m_DiameterShift.getValue() - 1;
+        m_AreaShift = (float)m_AreaShift.getValue() - 20.0f;
     }
 }

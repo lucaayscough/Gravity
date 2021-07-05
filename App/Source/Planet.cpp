@@ -12,7 +12,7 @@ Planet::Planet(juce::String& id, juce::OwnedArray<Planet>& planets, AudioContain
 }
 
 Planet::~Planet(){
-    m_Animator.m_DiameterShift.removeListener(this);
+    m_Animator.m_AreaShift.removeListener(this);
 }
 
 void Planet::setGradients(){
@@ -23,12 +23,12 @@ void Planet::setGradients(){
     m_ColourGradient.addColour((double)1.0, juce::Colours::darkred);
 }
 
-void Planet::setListeners(){
-    m_Animator.m_DiameterShift.addListener(this);
-}
-
 //--------------------------------------------------//
 // Init methods.
+
+void Planet::setListeners(){
+    m_Animator.m_AreaShift.addListener(this);
+}
 
 //--------------------------------------------------//
 // View methods.
@@ -44,20 +44,13 @@ void Planet::paint(Graphics& g){
         g.setColour(m_ColourGradient.getColourAtPosition(pos));
     }
 
-    /*
-    g.fillEllipse(
-        getClipBoundary() / 2 - m_Animator.getDiameterShift(),
-        getClipBoundary() / 2 - m_Animator.getDiameterShift(),
-        getDiameter() + m_Animator.getDiameterShift() * 2,
-        getDiameter() + m_Animator.getDiameterShift() * 2
-    );
-    */
+    float shift = m_Animator.getShiftedDiameter(getArea()) - getDiameter();
 
     g.fillEllipse(
-        getClipBoundary() / 2,
-        getClipBoundary() / 2,
-        getDiameter(),
-        getDiameter()
+        (float)getClipBoundary() / 2.0f - shift / 2.0f,
+        (float)getClipBoundary() / 2.0f - shift / 2.0f,
+        (float)getDiameter() + shift,
+        (float)getDiameter() + shift
     );
 }
 
