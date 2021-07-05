@@ -240,7 +240,11 @@ void Map::valueTreeChildRemoved(juce::ValueTree& parentNode, juce::ValueTree& re
 
     if(removedNode.getType() == Parameters::planetType){
         juce::String id = removedNode.getProperty(Parameters::idProp).toString();
+
+        
         destroyPlanet(id);
+        
+        
         repaint();
     }
 }
