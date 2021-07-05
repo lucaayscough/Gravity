@@ -149,10 +149,10 @@ void Map::createPlanet(int x, int y){
     juce::ValueTree node = getRootPlanetNode().getChild(getRootPlanetNode().getNumChildren() - 1);
 
     // Extra setup for planet object.
-    setupPlanet(x, y, node);
+    setPlanet(x, y, node);
 }
 
-void Map::setupPlanet(int x, int y, juce::ValueTree node){
+void Map::setPlanet(int x, int y, juce::ValueTree node){
     juce::String id = node.getProperty(Parameters::idProp);
     m_Planets.add(new Planet(id, m_Planets, m_AudioContainerRef, m_ParametersRef, m_ControlPanel));
 
@@ -170,30 +170,21 @@ void Map::setupPlanet(int x, int y, juce::ValueTree node){
     planet.updateGraph();
 }
 
+void Map::rebuildPlanets(){
+    for(int i = 0; i < getNumPlanets(); i++){
+        // Create planet node.
+        juce::ValueTree planet = getRootPlanetNode().getChild(i);
+        juce::String id = planet.getProperty(Parameters::idProp);
+        setPlanet(0, 0, planet);
+    }
+}
+
 void Map::destroyPlanet(juce::String& id){
     for(int i = 0; i < m_Planets.size(); i++){
         if(m_Planets[i]->getComponentID() == id){
             m_Planets.remove(i, true);
             m_ControlPanel.unshow();
         }
-    }
-}
-
-void Map::rebuildPlanets(){
-    // TODO:
-    // Clean this up.
-
-
-    for(int i = 0; i < getNumPlanets(); i++){
-        // Create planet node.
-        juce::ValueTree node = getRootPlanetNode().getChild(i);
-        juce::String id = node.getProperty(Parameters::idProp);
-
-        // Instantiate planet inside planets array.
-        m_Planets.add(new Planet(id, m_Planets, m_AudioContainerRef, m_ParametersRef, m_ControlPanel));
-        
-        addAndMakeVisible(m_Planets[i]);
-        m_Planets[i]->draw();
     }
 }
 

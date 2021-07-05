@@ -37,6 +37,12 @@ struct Variables{
     static const float AREA_MODIFIER;
     static const int CLIP_BOUNDARY;
 
+    // Planet methods.
+    static int getDefaultPlanetDiameter();
+    static int getDefaultPlanetDiameterWithClipBoundary();
+    static int getDefaultPlanetRadius();
+    static int getDefaultPlanetRadiusWithClipBoundary();
+
     // Sun variables.
     static const float SUN_AREA;
 };

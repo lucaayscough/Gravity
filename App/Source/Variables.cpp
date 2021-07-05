@@ -36,5 +36,11 @@ const float Variables::MIN_PLANET_AREA = 1000.0f;
 const float Variables::AREA_MODIFIER = 200.0f;
 const int Variables::CLIP_BOUNDARY = 100.0f;
 
+// Planet methods.
+int Variables::getDefaultPlanetDiameter(){return (int)(round((sqrt(DEFAULT_PLANET_AREA / 3.1415f) * 2.0f) / 2.0f) * 2.0f);}
+int Variables::getDefaultPlanetDiameterWithClipBoundary(){return getDefaultPlanetDiameter() + CLIP_BOUNDARY;}
+int Variables::getDefaultPlanetRadius(){return getDefaultPlanetDiameter() / 2;}
+int Variables::getDefaultPlanetRadiusWithClipBoundary(){return getDefaultPlanetDiameter() / 2 + CLIP_BOUNDARY / 2;}
+
 // Sun variables.
 const float Variables::SUN_AREA = 7000.0f;
