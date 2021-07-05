@@ -181,10 +181,9 @@ void Map::destroyPlanet(juce::String& id){
         if(m_Planets[i]->getComponentID() == id){
             m_Planets.remove(i, true);
             m_ControlPanel.unshow();
+            m_ParametersRef.mixLatents(getMapNode());
         }
     }
-
-    m_ParametersRef.mixLatents(getMapNode());
 }
 
 //--------------------------------------------------//
@@ -240,11 +239,7 @@ void Map::valueTreeChildRemoved(juce::ValueTree& parentNode, juce::ValueTree& re
 
     if(removedNode.getType() == Parameters::planetType){
         juce::String id = removedNode.getProperty(Parameters::idProp).toString();
-
-        
         destroyPlanet(id);
-        
-        
         repaint();
     }
 }
