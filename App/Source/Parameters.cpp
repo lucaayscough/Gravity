@@ -121,7 +121,7 @@ void Parameters::rebuildSamples(){
 // Tensor operations.
 
 void Parameters::generateLatents(juce::ValueTree node){
-    ReferenceCountedTensor::Ptr latents = new ReferenceCountedTensor(Generator::generateLatents(getSeed(node)));
+    ReferenceCountedTensor::Ptr latents = new ReferenceCountedTensor(m_Generator.generateLatents(getSeed(node)));
     node.setProperty(latentsProp, juce::var(latents), nullptr);
 }
 
@@ -134,7 +134,7 @@ void Parameters::generateSample(juce::ValueTree node, at::Tensor tensor){
     // TODO:
     // Make it take a reference.
 
-    node.setProperty(sampleProp, Generator::generateSample(tensor), nullptr);
+    node.setProperty(sampleProp, m_Generator.generateSample(tensor), nullptr);
 }
 
 void Parameters::generateNewSample(juce::ValueTree node){

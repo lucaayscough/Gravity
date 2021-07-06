@@ -48,6 +48,7 @@ struct Parameters: public juce::ValueTree::Listener{
     bool m_IsInit = false;
     juce::Value m_UpdateMap;
     static juce::String M_SUN_ID;
+    Generator m_Generator;
 
     // Type identifiers.
     static juce::Identifier mapType;

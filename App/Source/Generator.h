@@ -12,12 +12,12 @@ struct ReferenceCountedTensor: public ReferenceCountedObject{
 
 class Generator{
 public:
-    static torch::jit::script::Module generator_module, mapper_module;
+    torch::jit::script::Module m_GeneratorModule, m_MapperModule;
 
     // Constructors and destructors.
     Generator();
     ~Generator();
 
-    static at::Tensor generateLatents(std::int64_t);
-    static juce::var generateSample(at::Tensor&);
+    at::Tensor generateLatents(std::int64_t);
+    juce::var generateSample(at::Tensor&);
 };

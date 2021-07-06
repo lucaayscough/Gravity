@@ -1,42 +1,62 @@
 #include "Headers.h"
+#include <chrono>
 
-
-torch::jit::script::Module Generator::generator_module = torch::jit::load(
-    #ifdef _WIN64
-        "C:\\Program Files\\Gravity\\Generators\\generator_module.pt"
-    #else
-        "/Users/lucaayscough/dev/Gravity/Generator/scripted_modules/generator_module.pt"
-    #endif
-);
-torch::jit::script::Module Generator::mapper_module = torch::jit::load(
-    #ifdef _WIN64
-        "C:\\Program Files\\Gravity\\Generators\\mapper_module.pt"
-    #else
-        "/Users/lucaayscough/dev/Gravity/Generator/scripted_modules/mapper_module.pt"
-    #endif
-);
 
 //------------------------------------------------------------//
 // Constructors and destructors.
 
-Generator::Generator(){}
+Generator::Generator(){
+
+    m_GeneratorModule = torch::jit::load(
+        #ifdef _WIN64
+            "C:\\Program Files\\Gravity\\Generators\\generator_module.pt"
+        #else
+            "/Users/lucaayscough/dev/Gravity/Generator/scripted_modules/generator_module.pt"
+        #endif
+    );
+
+    m_MapperModule = torch::jit::load(
+        #ifdef _WIN64
+            "C:\\Program Files\\Gravity\\Generators\\mapper_module.pt"
+        #else
+            "/Users/lucaayscough/dev/Gravity/Generator/scripted_modules/mapper_module.pt"
+        #endif
+    );
+    
+    m_MapperModule.to(torch::kCPU);
+    m_GeneratorModule.to(torch::kCPU);
+    
+    m_MapperModule.eval();
+    m_GeneratorModule.eval();
+    
+}
+
 Generator::~Generator(){}
 
 at::Tensor Generator::generateLatents(std::int64_t seed){
+    auto start = std::chrono::high_resolution_clock::now();
+
     torch::NoGradGuard no_grad;
     torch::manual_seed((std::uint64_t)seed);
 
     // Create random input tensor.
     std::vector<torch::jit::IValue> inputs;
-    inputs.push_back(torch::randn({1, 512}));
+    inputs.push_back(torch::randn({1, 512}).to(torch::kCPU));
 
     // Forward input to module.
-    at::Tensor output = mapper_module.forward(inputs).toTensor();
+    at::Tensor output = m_MapperModule.forward(inputs).toTensor();
+
+    auto finish = std::chrono::high_resolution_clock::now();
+    std::chrono::duration<double> elapsed = finish - start;
+
+    Logger::writeToLog("Mapper network time: " + std::to_string(elapsed.count()));
 
     return output;
 }
 
 juce::var Generator::generateSample(at::Tensor& latents){
+    auto start = std::chrono::high_resolution_clock::now();
+
     torch::NoGradGuard no_grad;
 
     // Create input tensor with latents.
@@ -44,14 +64,22 @@ juce::var Generator::generateSample(at::Tensor& latents){
     inputs.push_back(latents);
 
     // Forward input to module.
-    at::Tensor output = generator_module.forward(inputs).toTensor();
+    at::Tensor output = m_GeneratorModule.forward(inputs).toTensor();
 
     juce::var sample;
+    sample.resize(AudioContainer::NUM_SAMPLES);
+
+    float* data =  output.contiguous().data_ptr<float>();
 
     // Copy tensor to array.
     for(int i = 0; i < AudioContainer::NUM_SAMPLES; i++){
-        sample.append(output[0][0][i].item<float>());
+        sample[i] = data[i];
     }
+
+    auto finish = std::chrono::high_resolution_clock::now();
+    std::chrono::duration<double> elapsed = finish - start;
+    Logger::writeToLog("Synthesis network time: " + std::to_string(elapsed.count()));
+    
 
     return sample;
 }
