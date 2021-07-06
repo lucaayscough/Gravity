@@ -22,8 +22,13 @@ def modulate(x: Tensor, styles: Tensor, weight: Tensor):
     x = x * styles.reshape(x.size(0), -1, 1)
     return x, dcoefs
 
+@torch.jit.script
+def demodulate(x: Tensor, dcoefs: Tensor) -> Tensor:
+    return x * dcoefs.reshape(x.size(0), -1, 1)
 
-
+@torch.jit.script
+def blur(x: Tensor, kernel: Tensor) -> Tensor:
+    return F.conv1d(x, kernel, stride = 1, padding = 2, groups = x.size(1))
 
 
 # ------------------------------------------------------------
@@ -126,13 +131,8 @@ class ApplyStyle(nn.Module):
     
     def forward(self, x: Tensor, styles: Tensor, weight: Tensor) -> Tensor:
         styles = self.lin(styles)
-
-        # Calculate per-sample weights and demodulation coefficients.
         x, dcoefs = modulate(x, styles, weight)
-        x = self.conv(x)
-        x = x * dcoefs.reshape(x.size(0), -1, 1)
-
-        return x
+        return demodulate(self.conv(x), dcoefs)
 
 # ------------------------------------------------------------
 # Resample layers.
@@ -149,14 +149,7 @@ class Resample(nn.Module):
 
     def _blur(self, x):
         kernel = self.kernel.expand(x.size(1), -1, -1)
-        x = F.conv1d(
-            x,
-            kernel,
-            stride = 1,
-            padding = 2,
-            groups = x.size(1)
-        )
-        return x
+        return blur(x, kernel)
 
     def forward(self, x, scale_factor):
         if self.direction == "up":
