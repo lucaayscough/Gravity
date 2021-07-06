@@ -2,6 +2,10 @@ import torch
 from script_model import Generator, Mapper
 
 
+torch._C._jit_set_profiling_executor(False)
+torch._C._jit_set_profiling_mode(False)
+
+
 # Instantiate model
 mapper = Mapper(
     z_dim = 512,
