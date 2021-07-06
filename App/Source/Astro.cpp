@@ -21,11 +21,12 @@ void Astro::setListeners(){
 }
 
 void Astro::setGradients(){
-    m_ColourGradient.addColour((double)0.0, juce::Colours::white);
-    m_ColourGradient.addColour((double)0.2, juce::Colours::yellow);
-    m_ColourGradient.addColour((double)0.4, juce::Colours::orange);
-    m_ColourGradient.addColour((double)0.7, juce::Colours::red);
-    m_ColourGradient.addColour((double)1.0, juce::Colours::darkred);
+    m_ColourGradient.addColour((double)0.0, juce::Colour(255, 255, 255));
+    m_ColourGradient.addColour((double)0.2, juce::Colour(255, 237, 63));
+    m_ColourGradient.addColour((double)0.4, juce::Colour(255, 141, 0));
+    m_ColourGradient.addColour((double)0.6, juce::Colour(255, 81, 0));
+    m_ColourGradient.addColour((double)0.8, juce::Colour(241, 25, 25));
+    m_ColourGradient.addColour((double)1.0, juce::Colour(212, 28, 28));
 }
 
 //--------------------------------------------------//
