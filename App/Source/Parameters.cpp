@@ -226,6 +226,7 @@ float Parameters::getDistance(juce::ValueTree node_a, juce::ValueTree node_b){
 float Parameters::getForceVector(juce::ValueTree node_a, juce::ValueTree node_b){
     // TODO:
     // Make this better.
+    // Need to fix algorithm to avoid number going over 1.0.
 
     float mass_a, mass_b;
 
