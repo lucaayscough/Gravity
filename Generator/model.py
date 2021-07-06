@@ -1,11 +1,31 @@
 import torch
 import torch.nn as nn
 import torch.nn.functional as F
+from torch import Tensor
 import numpy as np
 import random
 import math
+import time
 
-s
+
+
+@torch.jit.script
+def pixel_norm(x: Tensor, epsilon: float = 1e-8) -> Tensor:
+    return x / (x.pow(2.0).mean(dim = 1, keepdim = True).add(epsilon).sqrt())
+
+@torch.jit.script
+def modulate(x: Tensor, styles: Tensor, weight: Tensor):
+    w = weight.unsqueeze(0)
+    w = w * styles.reshape(x.size(0), 1, -1, 1)
+    torch.flip(w, [0, 1, 2, 3])
+    dcoefs = (w.square().sum(dim=[2,3]) + 1e-8).rsqrt()
+    x = x * styles.reshape(x.size(0), -1, 1)
+    return x, dcoefs
+
+
+
+
+
 # ------------------------------------------------------------
 # Low level network components.
 
@@ -104,39 +124,16 @@ class ApplyStyle(nn.Module):
         self.conv = conv
         self.lin = EqualizedLinear(latent_size, channels, gain = 1)
     
-    def forward(self, x, styles, weight):
-        batch_size = x.shape[0]
-
+    def forward(self, x: Tensor, styles: Tensor, weight: Tensor) -> Tensor:
         styles = self.lin(styles)
 
         # Calculate per-sample weights and demodulation coefficients.
-        w = weight.unsqueeze(0)
-        w = w * styles.reshape(batch_size, 1, -1, 1)
-        
-        torch.flip(w, [0, 1, 2, 3])
-
-        dcoefs = (w.square().sum(dim=[2,3]) + 1e-8).rsqrt()
-
-        w = w * dcoefs.reshape(batch_size, -1, 1, 1) 
-
-        x = x * styles.reshape(batch_size, -1, 1)
-
+        x, dcoefs = modulate(x, styles, weight)
         x = self.conv(x)
-        x = x * dcoefs.reshape(batch_size, -1, 1)
+        x = x * dcoefs.reshape(x.size(0), -1, 1)
 
         return x
 
-# ------------------------------------------------------------
-# Normalization layer.
-
-class PixelNorm(nn.Module):
-    def __init__(self):
-        super().__init__()
-    
-    def forward(self, x, epsilon: float = 1e-8):
-        x = x / (x.pow(2.0).mean(dim = 1, keepdim = True).add(epsilon).sqrt())
-        return x
-    
 # ------------------------------------------------------------
 # Resample layers.
 
@@ -411,11 +408,8 @@ class MappingNetwork(nn.Module):
         
         self.layers.append(EqualizedLinear(in_channels = z_dim, out_channels = z_dim, lrmul = lrmul))
 
-        # Normalization layer.
-        self.pixel_norm = PixelNorm()
-
-    def forward(self, x):
-        x = self.pixel_norm(x)
+    def forward(self, x: Tensor) -> Tensor:
+        x = pixel_norm(x)
 
         for layer in self.layers:
             x = layer(x)
@@ -498,7 +492,7 @@ class Generator(nn.Module):
         latent_w = None,
         noise = None,
         return_w = False
-    ):     
+    ):  
         if is_training:
             x = self._train(latent_z, step, return_w)
             return x
