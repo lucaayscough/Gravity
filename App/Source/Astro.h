@@ -6,12 +6,19 @@ public:
     // Constructors and destructors.
     Astro(juce::String&, AudioContainer&, Parameters&, ControlPanel&);
     ~Astro() override;
-   
+
+public:
+    // Init methods.
+    virtual void setListeners();
+    virtual void setGradients();
+
 public:
     // View methods.
+    void paint(Graphics&) override;
     virtual void draw();
     virtual void draw(const int, const int, const int);
 
+public:
     // Interface methods.
     virtual void setArea(const float);
     virtual void setPosXY(const int, int);
@@ -50,6 +57,8 @@ protected:
     Parameters& m_ParametersRef;
     ControlPanel& m_ControlPanelRef;
 
+    juce::ColourGradient m_ColourGradient;
+
 public:
     // Member variables.
     juce::Value m_ShowForceVectors;
@@ -73,6 +82,10 @@ public:
         juce::Value m_AreaShift;
         bool m_AreaShiftDirection = true;
     };
+
+protected:
+    // Member variables.
+    Animator m_Animator;
 
     JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR(Astro)
 };

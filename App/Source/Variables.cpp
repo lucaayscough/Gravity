@@ -3,14 +3,14 @@
 
 // Window variables.
 const int Variables::WINDOW_WIDTH = 1080;
-const int Variables::WINDOW_HEIGHT = 720;
+const int Variables::WINDOW_HEIGHT = 610;
 const bool Variables::IS_WIDTH_RESIZABLE = false;
 const bool Variables::IS_HEIGHT_RESIZABLE = false;
 
 // Editor variables.
 const juce::Colour Variables::EDITOR_BG_COLOUR = juce::Colour(46, 48, 53);
-const int Variables::LEFT_BAR = 180;
-const int Variables::TOP_BAR = 40;
+const int Variables::LEFT_BAR = 140;
+const int Variables::TOP_BAR = 35;
 const int Variables::MAP_TRIM = 8;
 
 // Top bar variables.
@@ -34,10 +34,10 @@ const juce::Colour Variables::MAP_CIRCLE_COLOUR = juce::Colour(86, 87, 90);
 const float Variables::FORCE_VECTOR_SIZE = 1.0f;
 
 // Planet variables.
-const float Variables::DEFAULT_PLANET_AREA = 2000.0f;
-const float Variables::MAX_PLANET_AREA = 5000.0f;
-const float Variables::MIN_PLANET_AREA = 1000.0f;
-const float Variables::AREA_MODIFIER = 200.0f;
+const float Variables::DEFAULT_PLANET_AREA = 1200.0f;
+const float Variables::MAX_PLANET_AREA = 3000.0f;
+const float Variables::MIN_PLANET_AREA = 500.0f;
+const float Variables::AREA_MODIFIER = 100.0f;
 const int Variables::CLIP_BOUNDARY = 100.0f;
 
 // Planet methods.
@@ -47,4 +47,4 @@ int Variables::getDefaultPlanetRadius(){return getDefaultPlanetDiameter() / 2;}
 int Variables::getDefaultPlanetRadiusWithClipBoundary(){return getDefaultPlanetDiameter() / 2 + CLIP_BOUNDARY / 2;}
 
 // Sun variables.
-const float Variables::SUN_AREA = 7000.0f;
+const float Variables::SUN_AREA = 2000.0f;

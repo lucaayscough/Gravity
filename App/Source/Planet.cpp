@@ -6,53 +6,12 @@
 
 Planet::Planet(juce::String& id, juce::OwnedArray<Planet>& planets, AudioContainer& audiocontainer, Parameters& parameters, ControlPanel& controlpanel)
     :   Astro(id, audiocontainer, parameters, controlpanel),
-        m_PlanetsRef(planets){
-    setGradients();
-    setListeners();
-}
+        m_PlanetsRef(planets){}
 
-Planet::~Planet(){
-    m_Animator.m_AreaShift.removeListener(this);
-}
-
-void Planet::setGradients(){
-    m_ColourGradient.addColour((double)0.0, juce::Colours::white);
-    m_ColourGradient.addColour((double)0.2, juce::Colours::yellow);
-    m_ColourGradient.addColour((double)0.4, juce::Colours::orange);
-    m_ColourGradient.addColour((double)0.7, juce::Colours::red);
-    m_ColourGradient.addColour((double)1.0, juce::Colours::darkred);
-}
-
-//--------------------------------------------------//
-// Init methods.
-
-void Planet::setListeners(){
-    m_Animator.m_AreaShift.addListener(this);
-}
+Planet::~Planet(){}
 
 //--------------------------------------------------//
 // View methods.
-
-void Planet::paint(Graphics& g){
-    if(getState().getProperty(Parameters::isActiveProp)){
-        g.setColour(juce::Colours::green);
-    }
-    else{
-        double max_distance = sqrt((double)(pow(getParentWidth() / 2, 2)) + (double)(pow(getParentHeight() / 2, 2)));
-        double pos = (getDistance(getCentreX(), getCentreY(), getParentWidth() / 2, getParentHeight() / 2)) / max_distance;
-        
-        g.setColour(m_ColourGradient.getColourAtPosition(pos));
-    }
-
-    float shift = m_Animator.getShiftedDiameter(getArea()) - getDiameter();
-
-    g.fillEllipse(
-        (float)getClipBoundary() / 2.0f - shift / 2.0f,
-        (float)getClipBoundary() / 2.0f - shift / 2.0f,
-        (float)getDiameter() + shift,
-        (float)getDiameter() + shift
-    );
-}
 
 void Planet::resized(){
     draw(getDiameter(), getX(), getY());
@@ -187,5 +146,4 @@ void Planet::mouseWheelMove(const MouseEvent& e, const MouseWheelDetails& w){
 
     else if(w.deltaY < 0.0f && getArea() - Variables::AREA_MODIFIER >= Variables::MIN_PLANET_AREA)
         resizePlanet(getArea() - Variables::AREA_MODIFIER);
-
 }
