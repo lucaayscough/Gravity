@@ -148,7 +148,7 @@ void Astro::valueChanged(juce::Value& value){
 
 Astro::Animator::Animator(){
     m_AreaShift = 0.0f;
-    startTimer(17);
+    startTimer(50);
 }
 
 Astro::Animator::~Animator(){
@@ -168,10 +168,10 @@ float Astro::Animator::getShiftedDiameter(float area){
 // Callback methods.
 
 void Astro::Animator::timerCallback(){
-    if((float)m_AreaShift.getValue() >= 500.0f){
+    if((float)m_AreaShift.getValue() >= 200.0f){
         m_AreaShiftDirection = false;
     }
-    else if((float)m_AreaShift.getValue() <= -500.0f){
+    else if((float)m_AreaShift.getValue() <= -200.0f){
         m_AreaShiftDirection = true;
     }
 

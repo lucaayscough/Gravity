@@ -38,7 +38,7 @@ const float Variables::DEFAULT_PLANET_AREA = 1200.0f;
 const float Variables::MAX_PLANET_AREA = 3000.0f;
 const float Variables::MIN_PLANET_AREA = 500.0f;
 const float Variables::AREA_MODIFIER = 100.0f;
-const int Variables::CLIP_BOUNDARY = 100.0f;
+const int Variables::CLIP_BOUNDARY = 100;
 
 // Planet methods.
 int Variables::getDefaultPlanetDiameter(){return (int)(round((sqrt(DEFAULT_PLANET_AREA / 3.1415f) * 2.0f) / 2.0f) * 2.0f);}
