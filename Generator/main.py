@@ -27,7 +27,7 @@ config_dict = {
     'learning_rate': 0.002,
 
     # Model
-    'scale_factor': 4,
+    'scale_factor': 4.0,
     'depth': 6,
     'num_filters': 512,
     'start_size': 32,

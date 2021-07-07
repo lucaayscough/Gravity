@@ -8,6 +8,8 @@ import math
 import time
 
 
+# ------------------------------------------------------------
+# Scripted functions.
 
 @torch.jit.script
 def pixel_norm(x: Tensor, epsilon: float = 1e-8) -> Tensor:
@@ -30,6 +32,24 @@ def demodulate(x: Tensor, dcoefs: Tensor) -> Tensor:
 def blur(x: Tensor, kernel: Tensor) -> Tensor:
     return F.conv1d(x, kernel, stride = 1, padding = 2, groups = x.size(1))
 
+@torch.jit.script
+def blur_down(x: Tensor, kernel: Tensor, scale_factor: float) -> Tensor:
+    x = F.conv1d(x, kernel, stride = 1, padding = 2, groups = x.size(1))
+    return F.interpolate(input = x, scale_factor = scale_factor, mode = "linear")
+
+@torch.jit.script
+def blur_up(x: Tensor, kernel: Tensor, scale_factor: float) -> Tensor:
+    x = F.interpolate(input = x, scale_factor = scale_factor, mode = "linear")
+    return F.conv1d(x, kernel, stride = 1, padding = 2, groups = x.size(1))
+
+@torch.jit.script
+def mini_batch_std_dev(x: Tensor, group_size: int, channels: int, samples: int, alpha: float = 1e-8) -> Tensor:
+    y = torch.reshape(x, [group_size, -1, channels, samples])
+    y = y - y.mean(dim=0, keepdim=True)
+    y = torch.sqrt(y.square().mean(dim=0, keepdim=False) + alpha)
+    y = y.mean(dim=[1, 2], keepdim=True)
+    y = y.repeat(group_size, 1, samples)
+    return torch.cat([x, y], 1)
 
 # ------------------------------------------------------------
 # Low level network components.
@@ -40,13 +60,13 @@ def blur(x: Tensor, kernel: Tensor) -> Tensor:
 class EqualizedConv1d(nn.Module):
     def __init__(
         self,
-        in_channels,
-        out_channels,
-        kernel_size,
-        stride,
-        padding,
-        dilation = 1,
-        bias = True
+        in_channels: int,
+        out_channels: int,
+        kernel_size: int,
+        stride: int,
+        padding: int,
+        dilation: int = 1,
+        bias: bool = True
     ):
         super().__init__()
 
@@ -67,7 +87,7 @@ class EqualizedConv1d(nn.Module):
         fan_in = np.prod(kernel_size) * in_channels
         self.scale = np.sqrt(2) / np.sqrt(fan_in)
     
-    def forward(self, x):
+    def forward(self, x: Tensor) -> Tensor:
         return self.conv(x * self.scale)
 
 # ------------------------------------------------------------
@@ -76,12 +96,12 @@ class EqualizedConv1d(nn.Module):
 class EqualizedLinear(nn.Module):
     def __init__(
         self,
-        in_channels,
-        out_channels,
-        gain = 2 ** 0.5,
-        use_wscale = True,
-        lrmul = 1, 
-        bias = True
+        in_channels: int,
+        out_channels: int,
+        gain: float = 2 ** 0.5,
+        use_wscale: bool = True,
+        lrmul: float = 1, 
+        bias: bool = True
     ):
         super().__init__()
 
@@ -100,7 +120,7 @@ class EqualizedLinear(nn.Module):
         else:
             self.bias = None
 
-    def forward(self, x):
+    def forward(self, x: Tensor) -> Tensor:
         bias = self.bias
         if bias is not None:
             bias = bias * self.b_mul
@@ -110,15 +130,14 @@ class EqualizedLinear(nn.Module):
 # Gaussian noise concatenation layer.
 
 class ApplyNoise(nn.Module):
-    def __init__(self, channels):
+    def __init__(self, channels: int):
         super().__init__()
         self.weight = nn.Parameter(torch.zeros(channels))
 
-    def forward(self, x, noise = None):
-        if noise == None:
+    def forward(self, x: Tensor, noise = torch.tensor(0)) -> Tensor:
+        if noise == 0:
             noise = torch.randn(x.size(0), 1, x.size(2), device = x.device, dtype = x.dtype)
-        x = x + self.weight.view(1, -1, 1) * noise
-        return x
+        return x + self.weight.view(1, -1, 1) * noise
 
 # ------------------------------------------------------------
 # Style modulation layer.
@@ -138,7 +157,7 @@ class ApplyStyle(nn.Module):
 # Resample layers.
 
 class Resample(nn.Module):
-    def __init__(self, direction):
+    def __init__(self, direction: str):
         super().__init__()
         self.direction = direction
         kernel = [1, 2, 4, 2, 1]
@@ -147,18 +166,13 @@ class Resample(nn.Module):
         kernel = kernel / kernel.sum()
         self.register_buffer("kernel", kernel)
 
-    def _blur(self, x):
+    def forward(self, x: Tensor, scale_factor: float) -> Tensor:
         kernel = self.kernel.expand(x.size(1), -1, -1)
-        return blur(x, kernel)
 
-    def forward(self, x, scale_factor):
         if self.direction == "up":
-            x = F.interpolate(input = x, scale_factor = scale_factor, mode = "linear")
-            x = self._blur(x)
+            return blur_up(x, kernel, scale_factor)
         else:
-            x = self._blur(x)
-            x = F.interpolate(input = x, scale_factor = scale_factor, mode = "linear")
-        return x
+            return blur_down(x, kernel, scale_factor)
 
 # ------------------------------------------------------------
 # Minibatch standard deviation layer for discriminator. Used to increase diversity in generator.
@@ -171,7 +185,7 @@ class MiniBatchStdDev(nn.Module):
     def extra_repr(self) -> str:
         return f"group_size={self.group_size}"
 
-    def forward(self, x, alpha: float = 1e-8):
+    def forward(self, x: Tensor) -> Tensor:
         batch_size, channels, samples = x.shape
         if batch_size > self.group_size:
             assert batch_size % self.group_size == 0, (
@@ -182,13 +196,7 @@ class MiniBatchStdDev(nn.Module):
         else:
             group_size = batch_size
 
-        y = torch.reshape(x, [group_size, -1, channels, samples])
-        y = y - y.mean(dim=0, keepdim=True)
-        y = torch.sqrt(y.square().mean(dim=0, keepdim=False) + alpha)
-        y = y.mean(dim=[1, 2], keepdim=True)
-        y = y.repeat(group_size, 1, samples)
-        y = torch.cat([x, y], 1)
-        return y
+        return mini_batch_std_dev(x, group_size, channels, samples)
 
 # ------------------------------------------------------------
 # Blocks composed of low level network components.
@@ -199,14 +207,14 @@ class MiniBatchStdDev(nn.Module):
 class GenGeneralConvBlock(nn.Module):
     def __init__(
         self,
-        in_channels,
-        out_channels,
-        kernel_size,
-        stride,
-        padding,
-        dilation,
-        scale_factor,
-        resample,
+        in_channels: int,
+        out_channels: int,
+        kernel_size: int,
+        stride: int,
+        padding: int,
+        dilation: int,
+        scale_factor: float,
+        resample: Resample,
         bias = True,
     ):
         super().__init__()
@@ -225,7 +233,7 @@ class GenGeneralConvBlock(nn.Module):
         self.apply_noise_1 = ApplyNoise(in_channels)
         self.apply_noise_2 = ApplyNoise(in_channels)
     
-    def forward(self, x, latent_w, noise = None):
+    def forward(self, x: Tensor, latent_w: Tensor, noise: Tensor = torch.tensor(0)) -> Tensor:
         x = self.resample(x, scale_factor = self.scale_factor)
 
         x = self.apply_style_1(x, latent_w[:, 0], weight = self.weight)
@@ -251,7 +259,7 @@ class DisGeneralConvBlock(nn.Module):
         stride,
         padding,
         dilation,
-        scale_factor,
+        scale_factor: float,
         resample,
         bias = True
     ):
@@ -262,16 +270,14 @@ class DisGeneralConvBlock(nn.Module):
         self.conv_block_1 = EqualizedConv1d(in_channels = in_channels, out_channels = in_channels, kernel_size = kernel_size, stride = stride, padding = padding, dilation = dilation, bias = bias)
         self.conv_block_2 = EqualizedConv1d(in_channels = in_channels, out_channels = out_channels, kernel_size = kernel_size, stride = stride, padding = padding, dilation = dilation, bias = bias)
     
-    def forward(self, x):
+    def forward(self, x: Tensor) -> Tensor:
         x = self.conv_block_1(x)
         x = F.leaky_relu(x, 0.2)
 
         x = self.conv_block_2(x)
         x = F.leaky_relu(x, 0.2)
 
-        x = self.resample(x, scale_factor = self.scale_factor)
-
-        return x
+        return self.resample(x, scale_factor = self.scale_factor)
 
 # ------------------------------------------------------------
 # Final discriminator block.
@@ -286,7 +292,7 @@ class DisFinalConvBlock(nn.Module):
         stride,
         padding,
         dilation,
-        scale_factor,
+        scale_factor: float,
         resample,
         bias = True
     ):
@@ -328,7 +334,7 @@ class DisFinalConvBlock(nn.Module):
             bias = bias
         )
     
-    def forward(self, x):
+    def forward(self, x: Tensor) -> Tensor:
         x = self.mini_batch(x)
 
         x = F.leaky_relu(x, 0.2)
@@ -347,13 +353,13 @@ class DisFinalConvBlock(nn.Module):
 # Constant input.
 
 class ConstantInput(nn.Module):
-    def __init__(self, nf, start_size):
+    def __init__(self, nf: int, start_size: int):
         super().__init__()
 
         self.constant_input = nn.Parameter(torch.randn(1, nf, start_size))
         self.bias = nn.Parameter(torch.zeros(nf))
     
-    def forward(self, batch_size):
+    def forward(self, batch_size: int) -> Tensor:
         x = self.constant_input.expand(batch_size, -1, -1)
         x = x + self.bias.view(1, -1, 1)
         return x
@@ -416,16 +422,16 @@ class MappingNetwork(nn.Module):
 class Generator(nn.Module):
     def __init__(
         self,
-        z_dim,
-        nf,
-        kernel_size,
-        stride,
-        padding,
-        dilation,
-        depth,
-        num_channels,
-        scale_factor,
-        start_size
+        z_dim: int,
+        nf: int,
+        kernel_size: int,
+        stride: int,
+        padding: int,
+        dilation: int,
+        depth: int,
+        num_channels: int,
+        scale_factor: float,
+        start_size: int
     ):
         super().__init__()
         
@@ -445,7 +451,7 @@ class Generator(nn.Module):
         n = self.nf
         for l in range(self.depth):
             if l == 0:
-                self.scale_factor = 1
+                self.scale_factor = 1.0
             else:
                 self.scale_factor = scale_factor
 
@@ -479,12 +485,12 @@ class Generator(nn.Module):
 
     def forward(
         self,
-        latent_z,
-        step = None,
-        is_training = True,
-        latent_w = None,
-        noise = None,
-        return_w = False
+        latent_z: Tensor,
+        step: int = None,
+        is_training: bool = True,
+        latent_w: Tensor = torch.tensor(0),
+        noise: Tensor = torch.tensor(0),
+        return_w: bool = False
     ):  
         if is_training:
             x = self._train(latent_z, step, return_w)
@@ -558,7 +564,7 @@ class Discriminator(nn.Module):
         dilation,
         depth,
         num_channels,
-        scale_factor,
+        scale_factor: float,
         start_size,
     ):
         super().__init__()
