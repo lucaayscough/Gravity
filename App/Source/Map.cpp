@@ -52,7 +52,7 @@ void Map::paint(Graphics& g){
     g.fillRect(0, 0, getWidth(), getHeight() / 2);
     g.fillRoundedRectangle(0, getHeight() / 2 - rect_overlap, getWidth(), getHeight() / 2 + rect_overlap, 5.0f);
 
-    paintOrbits(g);
+    //paintOrbits(g);
     paintForceVectors(g);
 }
 

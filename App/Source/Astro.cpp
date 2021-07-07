@@ -43,14 +43,24 @@ void Astro::paint(Graphics& g){
         g.setColour(m_ColourGradient.getColourAtPosition(pos));
     }
 
-    float shift = m_Animator.getShiftedDiameter(getArea()) - getDiameter();
+    if(m_Animator.m_IsCreated){
+        float shift = m_Animator.getDiameterShift(getArea());
 
-    g.fillEllipse(
-        (float)getClipBoundary() / 2.0f - shift / 2.0f,
-        (float)getClipBoundary() / 2.0f - shift / 2.0f,
-        (float)getDiameter() + shift,
-        (float)getDiameter() + shift
-    );
+        g.fillEllipse(
+            (getClipBoundary() - shift) / 2.0f,
+            (getClipBoundary() - shift) / 2.0f,
+            (float)getDiameter() + shift,
+            (float)getDiameter() + shift
+        );
+    }
+    else{
+        g.fillEllipse(
+            getRadiusWithClipBoundary() - m_Animator.getCreationRadius(),
+            getRadiusWithClipBoundary() - m_Animator.getCreationRadius(),
+            m_Animator.getCreationDiameter(),
+            m_Animator.getCreationDiameter()
+        );
+    }
 }
 
 void Astro::draw(){setBounds(getPosX(), getPosY(), getDiameterWithClipBoundary(), getDiameterWithClipBoundary());}
@@ -161,25 +171,40 @@ Astro::Animator::~Animator(){
 
 float Astro::Animator::applyAreaShift(float area){return area + (float)m_AreaShift.getValue();}
 
-float Astro::Animator::getShiftedDiameter(float area){
-    return sqrt(applyAreaShift(area) / 3.1415f) * 2.0f;
+float Astro::Animator::getDiameterShift(float area){
+    float diameter = sqrt(area / 3.1415f) * 2.0f;
+    float new_diameter = sqrt(applyAreaShift(area) / 3.1415f) * 2.0f;
+    return new_diameter - diameter;
+}
+
+float Astro::Animator::getCreationDiameter(){
+    return sqrt(m_AnimateCreation / 3.1415f) * 2.0f;
+}
+
+float Astro::Animator::getCreationRadius(){
+    return getCreationDiameter() / 2.0f;
 }
 
 //--------------------------------------------------//
 // Callback methods.
 
 void Astro::Animator::timerCallback(){
-    if((float)m_AreaShift.getValue() >= 200.0f){
-        m_AreaShiftDirection = false;
-    }
-    else if((float)m_AreaShift.getValue() <= -200.0f){
-        m_AreaShiftDirection = true;
+    if(!m_IsCreated){
+        m_AnimateCreation += 20.0f;
+        if(m_AnimateCreation >= Variables::DEFAULT_PLANET_AREA)
+            m_IsCreated = true;
     }
 
-    if((float)m_AreaShiftDirection == true){
+    // Animate astro.
+    if((float)m_AreaShift.getValue() >= 200.0f)
+        m_AreaShiftDirection = false;
+
+    else if((float)m_AreaShift.getValue() <= -200.0f)
+        m_AreaShiftDirection = true;
+
+    if((float)m_AreaShiftDirection == true)
         m_AreaShift = (float)m_AreaShift.getValue() + 20.0f;
-    }
-    else{
+
+    else
         m_AreaShift = (float)m_AreaShift.getValue() - 20.0f;
-    }
 }

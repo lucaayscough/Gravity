@@ -73,7 +73,10 @@ public:
 
         // Interface methods.
         float applyAreaShift(float);
-        float getShiftedDiameter(float area);
+        float getDiameterShift(float);
+
+        float getCreationDiameter();
+        float getCreationRadius();
 
         // Callback methods.
         void timerCallback() override;
@@ -81,6 +84,9 @@ public:
         // Member variables.
         juce::Value m_AreaShift;
         bool m_AreaShiftDirection = true;
+
+        bool m_IsCreated = false;
+        float m_AnimateCreation = 0.0f;
     };
 
 protected:
