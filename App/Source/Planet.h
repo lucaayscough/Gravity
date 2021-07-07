@@ -8,12 +8,7 @@ public:
     ~Planet() override;
 
 public:
-    void setGradients();
-    void setListeners();
-   
-public:
     // View methods.
-    void paint(Graphics&) override;
     void resized() override;
     void resizePlanet(float);
     void checkCollision();
@@ -34,9 +29,6 @@ private:
     // Member variables.
     juce::ComponentDragger m_Dragger;
     juce::OwnedArray<Planet>& m_PlanetsRef;
-    juce::ColourGradient m_ColourGradient;
-
-    Animator m_Animator;
 
     JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR(Planet)
 };

@@ -9,7 +9,6 @@ public:
 
 public:
     // View methods.
-    void paint(Graphics& g) override;
     void resized() override;
     void draw() override;
 

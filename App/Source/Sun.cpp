@@ -12,17 +12,6 @@ Sun::~Sun(){}
 //------------------------------------------------------------//
 // View methods.
 
-void Sun::paint(Graphics& g){
-    g.setColour(juce::Colours::white);
-
-    g.fillEllipse(
-        getClipBoundary() / 2,
-        getClipBoundary() / 2,
-        getDiameter(),
-        getDiameter() 
-    );
-}
-
 void Sun::resized(){
     draw();
     setPosXY(getX(), getY());

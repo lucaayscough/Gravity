@@ -7,12 +7,51 @@
 Astro::Astro(juce::String& id, AudioContainer& audiocontainer, Parameters& parameters, ControlPanel& controlpanel)
     :   m_AudioContainerRef(audiocontainer), m_ParametersRef(parameters), m_ControlPanelRef(controlpanel){
     setComponentID(id);
+    setListeners();
+    setGradients();
 }
 
 Astro::~Astro(){}
 
 //--------------------------------------------------//
-// Interface methods.
+// Init methods.
+
+void Astro::setListeners(){
+    m_Animator.m_AreaShift.addListener(this);
+}
+
+void Astro::setGradients(){
+    m_ColourGradient.addColour((double)0.0, juce::Colour(255, 255, 255));
+    m_ColourGradient.addColour((double)0.2, juce::Colour(255, 237, 63));
+    m_ColourGradient.addColour((double)0.4, juce::Colour(255, 141, 0));
+    m_ColourGradient.addColour((double)0.6, juce::Colour(255, 81, 0));
+    m_ColourGradient.addColour((double)0.8, juce::Colour(241, 25, 25));
+    m_ColourGradient.addColour((double)1.0, juce::Colour(212, 28, 28));
+}
+
+//--------------------------------------------------//
+// View methods.
+
+void Astro::paint(Graphics& g){
+    if(getState().getProperty(Parameters::isActiveProp)){
+        g.setColour(juce::Colours::green);
+    }
+    else{
+        double max_distance = sqrt((double)(pow(getParentWidth() / 2, 2)) + (double)(pow(getParentHeight() / 2, 2)));
+        double pos = (getDistance(getCentreX(), getCentreY(), getParentWidth() / 2, getParentHeight() / 2)) / max_distance;
+        
+        g.setColour(m_ColourGradient.getColourAtPosition(pos));
+    }
+
+    float shift = m_Animator.getShiftedDiameter(getArea()) - getDiameter();
+
+    g.fillEllipse(
+        (float)getClipBoundary() / 2.0f - shift / 2.0f,
+        (float)getClipBoundary() / 2.0f - shift / 2.0f,
+        (float)getDiameter() + shift,
+        (float)getDiameter() + shift
+    );
+}
 
 void Astro::draw(){setBounds(getPosX(), getPosY(), getDiameterWithClipBoundary(), getDiameterWithClipBoundary());}
 void Astro::draw(const int diameter, const int x, const int y){setBounds(x, y, diameter + getClipBoundary(), diameter + getClipBoundary());}
@@ -110,7 +149,7 @@ void Astro::valueChanged(juce::Value& value){
 
 Astro::Animator::Animator(){
     m_AreaShift = 0.0f;
-    startTimer(17);
+    startTimer(50);
 }
 
 Astro::Animator::~Animator(){
@@ -130,10 +169,10 @@ float Astro::Animator::getShiftedDiameter(float area){
 // Callback methods.
 
 void Astro::Animator::timerCallback(){
-    if((float)m_AreaShift.getValue() >= 500.0f){
+    if((float)m_AreaShift.getValue() >= 200.0f){
         m_AreaShiftDirection = false;
     }
-    else if((float)m_AreaShift.getValue() <= -500.0f){
+    else if((float)m_AreaShift.getValue() <= -200.0f){
         m_AreaShiftDirection = true;
     }
 
