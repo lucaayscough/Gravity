@@ -237,8 +237,11 @@ class Train:
                 )
 
                 self._print_examples(idx, epoch, real)
+
+                if idx == 20:
+                    break
                     
-            print("Time elapsed: ", int(time.time() - start_time), " seconds.")
+            print("Time elapsed: ", time.time() - start_time, " seconds.")
 
     def _train_discriminator(self, real, idx):
         self._set_grad_flag(self.netD, True)
