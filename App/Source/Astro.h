@@ -78,12 +78,15 @@ public:
         float getCreationDiameter();
         float getCreationRadius();
 
+        void animateCreation();
+        void animate();
+
         // Callback methods.
         void timerCallback() override;
 
         // Member variables.
         juce::Value m_AreaShift;
-        bool m_AreaShiftDirection = true;
+        float m_Degrees = 0.0f;
 
         bool m_IsCreated = false;
         float m_AnimateCreation = 0.0f;

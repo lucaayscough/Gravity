@@ -185,26 +185,30 @@ float Astro::Animator::getCreationRadius(){
     return getCreationDiameter() / 2.0f;
 }
 
+void Astro::Animator::animateCreation(){
+    m_AnimateCreation += Variables::CREATION_AREA_SHIFT;
+    if(m_AnimateCreation >= Variables::DEFAULT_PLANET_AREA)
+        m_IsCreated = true;
+}
+
+void Astro::Animator::animate(){
+    m_AreaShift = sin(m_Degrees) * Variables::AREA_SHIFT_LIMIT;
+
+    if(m_Degrees >= 360.0f)
+        m_Degrees = 0.0f;
+    m_Degrees += 0.1f;
+    
+}
+
 //--------------------------------------------------//
 // Callback methods.
 
 void Astro::Animator::timerCallback(){
-    if(!m_IsCreated){
-        m_AnimateCreation += Variables::CREATION_AREA_SHIFT;
-        if(m_AnimateCreation >= Variables::DEFAULT_PLANET_AREA)
-            m_IsCreated = true;
-    }
+    // TODO:
+    // Fix the way this updates the component.
 
-    // Animate astro.
-    if((float)m_AreaShift.getValue() >= Variables::AREA_SHIFT_LIMIT)
-        m_AreaShiftDirection = false;
-
-    else if((float)m_AreaShift.getValue() <= -Variables::AREA_SHIFT_LIMIT)
-        m_AreaShiftDirection = true;
-
-    if((float)m_AreaShiftDirection == true)
-        m_AreaShift = (float)m_AreaShift.getValue() + Variables::AREA_SHIFT;
-
-    else
-        m_AreaShift = (float)m_AreaShift.getValue() - Variables::AREA_SHIFT;
+    if(!m_IsCreated)
+        animateCreation();
+    
+    animate();
 }
