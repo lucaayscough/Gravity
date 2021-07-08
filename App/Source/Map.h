@@ -41,6 +41,7 @@ private:
     void valueChanged(juce::Value&) override;
     void valueTreePropertyChanged(juce::ValueTree&, const juce::Identifier&) override;
     void valueTreeChildRemoved(juce::ValueTree&, juce::ValueTree&, int) override;
+    void updateImage();
 
 public:
     // Member variables.

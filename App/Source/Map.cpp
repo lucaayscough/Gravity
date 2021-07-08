@@ -54,6 +54,7 @@ void Map::paint(Graphics& g){
 
     //paintOrbits(g);
     paintForceVectors(g);
+    updateImage();
 }
 
 void Map::paintOrbits(Graphics& g){
@@ -225,11 +226,11 @@ void Map::valueChanged(juce::Value& value){
 
 void Map::valueTreePropertyChanged(juce::ValueTree& node, const juce::Identifier& id){
     juce::ignoreUnused(node);
+
     if(id == Parameters::isActiveProp){
         repaint();
     }
     if(id == Parameters::posXProp || id == Parameters::posYProp){
-        m_UpdateImage = true;
         repaint();
     }
 }
@@ -242,4 +243,8 @@ void Map::valueTreeChildRemoved(juce::ValueTree& parentNode, juce::ValueTree& re
         destroyPlanet(id);
         repaint();
     }
+}
+
+void Map::updateImage(){
+    m_UpdateImage = true;
 }
