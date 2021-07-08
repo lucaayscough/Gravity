@@ -54,3 +54,6 @@ int Variables::getDefaultPlanetRadiusWithClipBoundary(){return getDefaultPlanetD
 
 // Sun variables.
 const float Variables::SUN_AREA = 2000.0f;
+
+// Other.
+const float Variables::PI = 3.1415f;

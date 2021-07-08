@@ -84,7 +84,7 @@ void Astro::setCentrePosXY(const int x, const int y){
 
 juce::ValueTree Astro::getMapNode(){return m_ParametersRef.getMapNode(getState());}
 float Astro::getArea(){return getState().getProperty(Parameters::areaProp);}
-int Astro::getDiameter(){return (int)(round((sqrt(getArea() / 3.1415f) * 2.0f) / 2.0f) * 2.0f);}
+int Astro::getDiameter(){return (int)(round((sqrt(getArea() / Variables::PI) * 2.0f) / 2.0f) * 2.0f);}
 int Astro::getDiameterWithClipBoundary(){return getDiameter() + getClipBoundary();}
 int Astro::getRadius(){return getDiameter() / 2;}
 int Astro::getRadiusWithClipBoundary(){return (getDiameter() + getClipBoundary()) / 2;}
@@ -172,13 +172,13 @@ Astro::Animator::~Animator(){
 float Astro::Animator::applyAreaShift(float area){return area + (float)m_AreaShift.getValue();}
 
 float Astro::Animator::getDiameterShift(float area){
-    float diameter = sqrt(area / 3.1415f) * 2.0f;
-    float new_diameter = sqrt(applyAreaShift(area) / 3.1415f) * 2.0f;
+    float diameter = sqrt(area / Variables::PI) * 2.0f;
+    float new_diameter = sqrt(applyAreaShift(area) / Variables::PI) * 2.0f;
     return new_diameter - diameter;
 }
 
 float Astro::Animator::getCreationDiameter(){
-    return sqrt(m_AnimateCreation / 3.1415f) * 2.0f;
+    return sqrt(m_AnimateCreation / Variables::PI) * 2.0f;
 }
 
 float Astro::Animator::getCreationRadius(){

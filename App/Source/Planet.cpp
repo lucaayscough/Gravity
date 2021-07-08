@@ -19,7 +19,7 @@ void Planet::resized(){
 }
 
 void Planet::resizePlanet(float area){
-    int new_diameter = (int)(round(sqrt(area / 3.1415f)) * 2.0f);
+    int new_diameter = (int)(round(sqrt(area / Variables::PI)) * 2.0f);
     int old_diameter = getDiameter();
     int diff = old_diameter - new_diameter;
     
@@ -47,7 +47,7 @@ void Planet::checkCollision(){
         int centreXSun = getParentWidth() / 2;
         int centreYSun = getParentHeight() / 2;
         
-        int sunRadius = (int)sqrt(Variables::SUN_AREA / 3.1415f);
+        int sunRadius = (int)sqrt(Variables::SUN_AREA / Variables::PI);
 
         distance = getDistance(centrePosX, centrePosY, centreXSun, centreYSun);
         minDistance = sunRadius + getRadius();

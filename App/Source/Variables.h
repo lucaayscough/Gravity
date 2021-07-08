@@ -55,4 +55,7 @@ struct Variables{
 
     // Sun variables.
     static const float SUN_AREA;
+
+    // Other.
+    static const float PI;
 };
