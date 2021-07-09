@@ -29,8 +29,7 @@ struct Variables{
     // Map variables.
     static const int NUM_MAPS;
     static const int MAX_NUM_PLANETS;
-    static const juce::Colour MAP_BG_COLOUR_1;
-    static const juce::Colour MAP_BG_COLOUR_2;
+    static const juce::Colour MAP_BG_COLOUR;
     static const juce::Colour MAP_CIRCLE_COLOUR;
     static const float FORCE_VECTOR_SIZE;
 
@@ -39,6 +38,7 @@ struct Variables{
     static const float CREATION_AREA_SHIFT;
     static const float AREA_SHIFT_LIMIT;
     static const float AREA_SHIFT;
+    static const float DISTANCE_BOUNDARY;
     
     // Planet variables.
     static const float DEFAULT_PLANET_AREA;

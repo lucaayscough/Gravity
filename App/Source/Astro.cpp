@@ -33,9 +33,35 @@ void Astro::setGradients(){
 // View methods.
 
 void Astro::paint(Graphics& g){
+    if(m_Animator.m_IsCreated){
+        float shift = m_Animator.getDiameterShift(getArea());
+
+        paintCircle(
+            ((float)getClipBoundary() - shift) / 2.0f,
+            (float)getDiameter() + shift, g
+        );
+    }
+    else{
+        paintCircle(
+            (float)getRadiusWithClipBoundary() - m_Animator.getCreationRadius(),
+            m_Animator.getCreationDiameter(), g
+        );
+    }
+}
+
+void Astro::paintCircle(float boundary_shift, float diameter, Graphics& g){
+    g.setColour(Variables::MAP_BG_COLOUR);
+    g.fillEllipse(
+        boundary_shift - Variables::DISTANCE_BOUNDARY / 2.0f,
+        boundary_shift - Variables::DISTANCE_BOUNDARY / 2.0f,
+        diameter + Variables::DISTANCE_BOUNDARY,
+        diameter + Variables::DISTANCE_BOUNDARY
+    );
+
     if(getState().getProperty(Parameters::isActiveProp)){
         g.setColour(juce::Colours::green);
     }
+
     else{
         double max_distance = sqrt((double)(pow(getParentWidth() / 2, 2)) + (double)(pow(getParentHeight() / 2, 2)));
         double pos = (getDistance(getCentreX(), getCentreY(), getParentWidth() / 2, getParentHeight() / 2)) / max_distance;
@@ -43,24 +69,7 @@ void Astro::paint(Graphics& g){
         g.setColour(m_ColourGradient.getColourAtPosition(pos));
     }
 
-    if(m_Animator.m_IsCreated){
-        float shift = m_Animator.getDiameterShift(getArea());
-
-        g.fillEllipse(
-            ((float)getClipBoundary() - shift) / 2.0f,
-            ((float)getClipBoundary() - shift) / 2.0f,
-            (float)getDiameter() + shift,
-            (float)getDiameter() + shift
-        );
-    }
-    else{
-        g.fillEllipse(
-            (float)getRadiusWithClipBoundary() - m_Animator.getCreationRadius(),
-            (float)getRadiusWithClipBoundary() - m_Animator.getCreationRadius(),
-            m_Animator.getCreationDiameter(),
-            m_Animator.getCreationDiameter()
-        );
-    }
+    g.fillEllipse(boundary_shift, boundary_shift, diameter, diameter);
 }
 
 void Astro::draw(){setBounds(getPosX(), getPosY(), getDiameterWithClipBoundary(), getDiameterWithClipBoundary());}

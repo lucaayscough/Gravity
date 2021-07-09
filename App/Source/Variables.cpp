@@ -28,8 +28,7 @@ const juce::Colour Variables::MAP_BUTTON_BG_COLOUR_2 = juce::Colour(0, 0, 0);
 // Map variables.
 const int Variables::NUM_MAPS = 8;
 const int Variables::MAX_NUM_PLANETS = 20;
-const juce::Colour Variables::MAP_BG_COLOUR_1 = juce::Colour(37, 38, 43);
-const juce::Colour Variables::MAP_BG_COLOUR_2 = juce::Colour(33, 34, 38);
+const juce::Colour Variables::MAP_BG_COLOUR = juce::Colour(37, 38, 43);
 const juce::Colour Variables::MAP_CIRCLE_COLOUR = juce::Colour(86, 87, 90);
 const float Variables::FORCE_VECTOR_SIZE = 1.0f;
 
@@ -38,6 +37,7 @@ const int Variables::ANIMATION_INTERVAL = 30;
 const float Variables::CREATION_AREA_SHIFT = 100.0f;
 const float Variables::AREA_SHIFT_LIMIT = 150.0f;
 const float Variables::AREA_SHIFT = 10.0f;
+const float Variables::DISTANCE_BOUNDARY = 20.0f;
 
 // Planet variables.
 const float Variables::DEFAULT_PLANET_AREA = 1200.0f;

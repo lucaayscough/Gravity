@@ -15,6 +15,7 @@ public:
 public:
     // View methods.
     void paint(Graphics&) override;
+    virtual void paintCircle(float, float, Graphics&);
     virtual void draw();
     virtual void draw(const int, const int, const int);
 
