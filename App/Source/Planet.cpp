@@ -50,7 +50,7 @@ void Planet::checkCollision(){
         int sunRadius = (int)sqrt(Variables::SUN_AREA / Variables::PI);
 
         distance = getDistance(centrePosX, centrePosY, centreXSun, centreYSun);
-        minDistance = sunRadius + getRadius();
+        minDistance = sunRadius + getRadius() + (int)Variables::DISTANCE_BOUNDARY;
 
         if(distance <= minDistance){
             draw(getDiameter(), getPosX(), getPosY());
@@ -70,7 +70,7 @@ void Planet::checkCollision(){
             centrePosY2 = planet->getY() + planet->getRadiusWithClipBoundary();
 
             distance = getDistance(centrePosX, centrePosY, centrePosX2, centrePosY2);
-            minDistance = planet->getRadius() + getRadius();
+            minDistance = planet->getRadius() + getRadius() + (int)Variables::DISTANCE_BOUNDARY;
 
             if(distance <= minDistance){
                 draw(getDiameter(), getPosX(), getPosY());

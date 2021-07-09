@@ -61,11 +61,9 @@ void Astro::paintCircle(float boundary_shift, float diameter, Graphics& g){
     if(getState().getProperty(Parameters::isActiveProp)){
         g.setColour(juce::Colours::green);
     }
-
     else{
         double max_distance = sqrt((double)(pow(getParentWidth() / 2, 2)) + (double)(pow(getParentHeight() / 2, 2)));
         double pos = (getDistance(getCentreX(), getCentreY(), getParentWidth() / 2, getParentHeight() / 2)) / max_distance;
-        
         g.setColour(m_ColourGradient.getColourAtPosition(pos));
     }
 
