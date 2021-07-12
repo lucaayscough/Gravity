@@ -188,6 +188,8 @@ void AudioPluginAudioProcessor::playAudio(juce::AudioBuffer<float>& buffer, int 
             // Add samples to buffer if max length of samples is not exceeded.
             if(m_AudioContainer.sampleIndex[channel] < AudioContainer::NUM_SAMPLES){
                 channelData[sample] = m_AudioContainer.audio[m_AudioContainer.sampleIndex[channel]];
+                // TODO:
+                // Something goes wrong here.
                 m_AudioContainer.sampleIndex.set(channel, m_AudioContainer.sampleIndex[channel] + 1);
             }
             else{

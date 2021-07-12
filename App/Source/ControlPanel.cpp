@@ -16,17 +16,21 @@ ControlPanel::~ControlPanel(){}
 
 void ControlPanel::paint(Graphics& g){
     g.setColour(juce::Colours::blue);
-    g.fillRect(m_State.getProperty(Parameters::posXProp), (int)m_State.getProperty(Parameters::posYProp) - 100, m_Width, m_Height);
+    float x = (float)m_State.getProperty(Parameters::posXProp) + (m_Component->getWidth() - m_Width) / 2.0f;
+    float y = (float)m_State.getProperty(Parameters::posYProp) - 50.0f;
+    g.fillRect(x, y, m_Width, m_Height);
 }
 
 void ControlPanel::resized(){}
 
-void ControlPanel::show(juce::ValueTree node){
+void ControlPanel::show(juce::ValueTree node, juce::Component* component){
     setVisible(true);
     m_State = node;
+    m_Component = component;
 }
 
 void ControlPanel::unshow(){
+    m_Component = nullptr;
     setVisible(false);
 }
 

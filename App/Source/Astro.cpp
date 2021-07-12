@@ -141,7 +141,7 @@ void Astro::mouseEnter(const MouseEvent& e){
     juce::ignoreUnused(e);
 
     m_ShowForceVectors = true;
-    m_ControlPanelRef.show(getState());
+    m_ControlPanelRef.show(getState(), this);
 
     getParentComponent()->repaint();
 }
