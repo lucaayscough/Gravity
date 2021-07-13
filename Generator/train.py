@@ -109,7 +109,6 @@ class Train:
             kernel_size = self.kernel_size,
             stride = self.stride,
             padding = self.padding,
-            dilation = self.dilation,
             depth = self.depth,
             num_channels = self.num_channels,
             scale_factor = self.scale_factor,
@@ -121,7 +120,6 @@ class Train:
             kernel_size = self.kernel_size,
             stride = self.stride,
             padding = self.padding,
-            dilation = self.dilation,
             depth = self.depth,
             num_channels = self.num_channels,
             scale_factor = 1 / self.scale_factor,
@@ -237,9 +235,6 @@ class Train:
                 )
 
                 self._print_examples(idx, epoch, real)
-
-                if idx == 20:
-                    break
                     
             print("Time elapsed: ", time.time() - start_time, " seconds.")
 
@@ -261,7 +256,6 @@ class Train:
 
         self.loss_disc.backward(retain_graph = True)
         self.opt_dis.step()
-
 
     def _train_generator(self, idx):
         self._set_grad_flag(self.netD, False)

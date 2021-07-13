@@ -18,7 +18,7 @@ config_dict = {
     # Iterarion
     'iter_num': None,
     'epochs': 500,
-    'datadir': 'datasets/dataset_2/',
+    'datadir': 'datasets/dataset_3/',
 
     # Training
     'batch_size': 8,
@@ -28,9 +28,9 @@ config_dict = {
 
     # Model
     'scale_factor': 4.0,
-    'depth': 6,
+    'depth': 5,
     'num_filters': 512,
-    'start_size': 32,
+    'start_size': 64,
 
     # Setup
     'num_channels': 1,

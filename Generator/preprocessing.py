@@ -47,5 +47,5 @@ class Preprocessing:
     
 
 if __name__ == '__main__':
-    pp = Preprocessing('H:/dev/dataset_maker/dataset/', 'H:/dev/Gravity/Generator/datasets/dataset_5/')
-    pp.process(sample_rate = 44100, fade_out_len = 10000, max_len = 65536)
+    pp = Preprocessing('H:/dev/Gravity/Generator/datasets/dataset_2/', 'H:/dev/Gravity/Generator/datasets/dataset_3/')
+    pp.process(sample_rate = 44100, fade_out_len = 8000, max_len = 16384)
