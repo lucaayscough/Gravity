@@ -10,7 +10,7 @@ import torchaudio
 from torch.utils.data import DataLoader
 import torch.autograd.profiler as profiler
 
-from model import Generator, Discriminator, Resample
+from model import Generator, Discriminator
 from utils import AudioFolder, gradient_penalty
 
 
@@ -78,10 +78,11 @@ class Train:
         
         # Initialization
         torch.backends.cudnn.benchmark = True
+        torch.backends.cuda.matmul.allow_tf32 = allow_tf32
+        torch.backends.cudnn.allow_tf32 = allow_tf32 
         
         self._init_models()
         self._init_optim()
-        self.downsample = Resample(direction = "down").to(self.device)
 
         if self.restart == True:
             self._load_state()
@@ -310,7 +311,7 @@ class Train:
 # Helper functions.
 
     def _print_examples(self, idx, epoch, real): 
-        if idx % 200 == 0:
+        if idx % 1000 == 0:
             
             # TODO:
             # REMOVE THIS
@@ -364,18 +365,3 @@ class Train:
     def _fast_zero_grad(self, model):
         for param in model.parameters():
             param.grad = None
-
-# ------------------------------------------------------------
-# Downsample real data.
-
-    def _down_sampler(self, samples):
-        samples_list = []
-
-        for i in range(self.depth):
-            if(i == 0):
-                samples_list.append(samples)
-            else:
-                samples = self.downsample(samples, 1 / self.scale_factor)
-                samples_list.append(samples)
-
-        return samples_list

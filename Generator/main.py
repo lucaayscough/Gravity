@@ -16,7 +16,7 @@ import torchaudio
 
 config_dict = {
     # Iterarion
-    'iter_num': 12,
+    'iter_num': None,
     'epochs': 500,
     'datadir': 'datasets/dataset_3/',
 
