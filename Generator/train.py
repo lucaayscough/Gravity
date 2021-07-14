@@ -242,36 +242,49 @@ class Train:
         self._set_grad_flag(self.netD, True)
         self._set_grad_flag(self.netG, False)
         
-        self._fast_zero_grad(self.netD)
-        
+        self.netD.zero_grad()
+
+        real.requires_grad = True
+
         noise = torch.randn((self.batch_size, self.z_dim)).to(self.device)
         fake = self.netG(noise)
-                    
+
         disc_real = self.netD(real)
         disc_fake = self.netD(fake)
-        
-        gp = gradient_penalty(self.netD, real, fake, device = self.device)
 
-        self.loss_disc = -(torch.mean(disc_real) - torch.mean(disc_fake)) + 10 * gp
+        disc_real = F.softplus(-disc_real).mean()
+        disc_fake = F.softplus(disc_fake).mean()
 
+        self.loss_disc = disc_real + disc_fake
         self.loss_disc.backward(retain_graph = True)
+
+        # R1.
+        if idx % 16 == 0:
+            self.netD.zero_grad()
+
+            grad_real = torch.autograd.grad(outputs = disc_real.sum(), inputs = real, create_graph = True)[0]
+            grad_penalty_real = (grad_real.view(grad_real.size(0), -1).norm(2, dim=1) ** 2).mean()
+            grad_penalty_real = 10 / 2 * grad_penalty_real
+
+            grad_penalty_real.backward()
+        
         self.opt_dis.step()
 
+
     def _train_generator(self, idx):
+        self.netG.zero_grad()
+
         self._set_grad_flag(self.netD, False)
         self._set_grad_flag(self.netG, True)
-        
-        self._fast_zero_grad(self.netG)
-    
+
         noise = torch.randn((self.batch_size, self.z_dim)).to(self.device)
         fake = self.netG(noise)
         output = self.netD(fake)
-        
-        self.loss_gen = -torch.mean(output)
+        self.loss_gen = F.softplus(-output).mean()
         self.loss_gen.backward()
-        
-        if idx % 16 == 0:
-            self._fast_zero_grad(self.netG)
+
+        if idx % 8 == 0:
+            self.netG.zero_grad()
 
             path_batch_size = max(1, self.batch_size // 2)
             noise = torch.randn((self.batch_size, self.z_dim)).to(self.device)
@@ -288,8 +301,9 @@ class Train:
             weighted_path_loss = 2 * 8 * path_loss
             weighted_path_loss += 0 * fake[0, 0, 0]
             weighted_path_loss.backward()
-       
+
         self.opt_gen.step()
+
 
 
 # ------------------------------------------------------------

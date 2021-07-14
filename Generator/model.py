@@ -114,7 +114,6 @@ class Conv1d(nn.Module):
 
         if self.apply_noise:
             noise = torch.randn(x.size(0), 1, x.size(2), device = x.device, dtype = x.dtype)
-
             x = x + noise * self.noise_strength.view(1, -1, 1)
 
         x = x + bias * gain
@@ -155,52 +154,6 @@ class EqualizedLinear(nn.Module):
         if bias is not None:
             bias = bias * self.b_mul
         return F.linear(x, self.weight * self.w_mul, bias)
-
-# ------------------------------------------------------------
-# Gaussian noise concatenation layer.
-
-class ApplyNoise(nn.Module):
-    def __init__(self, channels: int):
-        super().__init__()
-        self.weight = nn.Parameter(torch.zeros(channels))
-
-    def forward(self, x: Tensor, noise: Tensor = torch.tensor(0)) -> Tensor:
-        if noise == 0:
-            noise = torch.randn(x.size(0), 1, x.size(2), device = x.device, dtype = x.dtype)
-        return x + self.weight.view(1, -1, 1) * noise
-
-# ------------------------------------------------------------
-# Style modulation layer.
-
-class ApplyStyle(nn.Module):
-    def __init__(
-        self,
-        conv,
-        channels,
-        latent_size = 512
-    ):
-        super(ApplyStyle, self).__init__()
-        self.conv = conv
-        self.lin = EqualizedLinear(latent_size, channels, gain = 1)
-
-        self.noise_strength = nn.Parameter(torch.zeros(channels))
-    
-    def forward(
-        self,
-        x: Tensor,
-        styles: Tensor,
-        weight: Tensor,
-        noise: Tensor = torch.tensor(0),
-        gain: float = 1.0
-    ) -> Tensor:
-        styles = self.lin(styles)
-        x, dcoefs = modulate(x, styles, weight)
-
-        if noise == 0:
-            noise = torch.randn(x.size(0), 1, x.size(2), device = x.device, dtype = x.dtype)
-        
-        noise = noise * self.noise_strength.view(1, -1, 1)
-        return demodulate(self.conv(x, noise), dcoefs)
 
 # ------------------------------------------------------------
 # Resample layers.
@@ -662,7 +615,5 @@ class Discriminator(nn.Module):
                     residual = self.res_converters[i](self.resample(x, scale_factor = 1 / self.start_size), gain = np.sqrt(0.5))
                 x = self.layers[i](x)
                 x = (x + residual) * (1 / np.sqrt(2))
-            
-        x = self.linear(x.squeeze(2))
 
-        return x
+        return self.linear(x.squeeze(2))

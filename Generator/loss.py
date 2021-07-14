@@ -31,7 +31,6 @@ def _train_discriminator_r1(self, real, idx):
     
     self.opt_dis.step()
 
-
 def _train_generator_ns(self, idx):
     self.netG.zero_grad()
 
@@ -65,23 +64,7 @@ def _train_generator_ns(self, idx):
 
     self.opt_gen.step()
 
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
+##############################
 
 def _train_discriminator_wgangp(self, real):
     noise = torch.randn((self.batch_size, self.z_dim)).to(self.device)
@@ -97,7 +80,6 @@ def _train_discriminator_wgangp(self, real):
     self.netD.zero_grad()
     self.loss_disc.backward(retain_graph = True)
     self.opt_dis.step()
-
 
 def _train_generator_wgangp(self): 
     noise = torch.randn((self.batch_size, self.z_dim)).to(self.device)
@@ -130,63 +112,64 @@ def _train_generator_wgangp(self):
 
 
 
-# ------------------------------------------------------------
-# Train discriminator.
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
     def _train_discriminator(self, real, idx):
         self._set_grad_flag(self.netD, True)
         self._set_grad_flag(self.netG, False)
+        
+        self._fast_zero_grad(self.netD)
+        
+        noise = torch.randn((self.batch_size, self.z_dim)).to(self.device)
+        fake = self.netG(noise)
+                    
+        disc_real = self.netD(real)
+        disc_fake = self.netD(fake)
+        
+        gp = gradient_penalty(self.netD, real, fake, device = self.device)
 
-        losses = []
-        samples_list = self._down_sampler(real)
+        self.loss_disc = -(torch.mean(disc_real) - torch.mean(disc_fake)) + 10 * gp
 
-        for step in range(1, self.depth + 1):
-            self._fast_zero_grad(self.netD)
-
-            noise = torch.randn((self.batch_size, self.z_dim)).to(self.device)
-            fake = self.netG(noise, step)
-
-            disc_real = self.netD(samples_list[self.depth - step], step)
-            disc_fake = self.netD(fake, step)
-            
-            if idx % 8 == 0:
-                gp = gradient_penalty(self.netD, samples_list[self.depth - step], fake, step, device = self.device)
-            else:
-                gp = 0
-            
-            loss = -(torch.mean(disc_real) - torch.mean(disc_fake)) + 10 * gp
-            loss.backward(retain_graph = True)
-
-            losses.append(loss)
-
-        self.loss_disc = sum(losses) / len(losses)
-
+        self.loss_disc.backward(retain_graph = True)
         self.opt_dis.step()
 
-        del real
-
-# ------------------------------------------------------------
-# Train generator.
-
-    def _train_generator(self, idx): 
+    def _train_generator(self, idx):
         self._set_grad_flag(self.netD, False)
         self._set_grad_flag(self.netG, True)
-
-        losses = []
         
-        for step in range(1, self.depth + 1):
-            self._fast_zero_grad(self.netG)
-
-            noise = torch.randn((self.batch_size, self.z_dim)).to(self.device)
-            fake = self.netG(noise, step)
-            output = self.netD(fake, step)
-            loss = -torch.mean(output)
-            loss.backward()
-            
-            losses.append(loss)
-
-        self.loss_gen = sum(losses) / len(losses)
-
+        self._fast_zero_grad(self.netG)
+    
+        noise = torch.randn((self.batch_size, self.z_dim)).to(self.device)
+        fake = self.netG(noise)
+        output = self.netD(fake)
+        
+        self.loss_gen = -torch.mean(output)
+        self.loss_gen.backward()
+        
         if idx % 16 == 0:
             self._fast_zero_grad(self.netG)
 
@@ -205,5 +188,5 @@ def _train_generator_wgangp(self):
             weighted_path_loss = 2 * 8 * path_loss
             weighted_path_loss += 0 * fake[0, 0, 0]
             weighted_path_loss.backward()
-
+       
         self.opt_gen.step()
