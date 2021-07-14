@@ -124,8 +124,8 @@ void Astro::generateSample(){getState().setProperty(Parameters::generateSampleSi
 
 void Astro::playSample(){
     m_ParametersRef.setActivePlanet(getState());
-    m_AudioContainerRef.sampleIndex.clear();
-    m_AudioContainerRef.playAudio = true;
+    m_AudioContainerRef.m_SampleIndex.clear();
+    m_AudioContainerRef.m_PlayAudio = true;
 }
 
 //--------------------------------------------------//
