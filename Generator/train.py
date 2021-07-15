@@ -78,8 +78,6 @@ class Train:
         
         # Initialization
         torch.backends.cudnn.benchmark = True
-        torch.backends.cuda.matmul.allow_tf32 = allow_tf32
-        torch.backends.cudnn.allow_tf32 = allow_tf32 
         
         self._init_models()
         self._init_optim()

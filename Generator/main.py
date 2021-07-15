@@ -12,6 +12,7 @@ import torchaudio
 # TODO:
 # Add logger.
 # Add profiler.
+# try clamping
 
 
 config_dict = {
@@ -21,7 +22,7 @@ config_dict = {
     'datadir': 'datasets/dataset_3/',
 
     # Training
-    'batch_size': 8,
+    'batch_size': 12,
     
     # Learning
     'learning_rate': 0.002,

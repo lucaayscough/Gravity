@@ -53,13 +53,22 @@ def resample(x: Tensor, scale_factor: float) -> Tensor:
         return blur_up(x, kernel, scale_factor)
 
 @torch.jit.script
-def mini_batch_std_dev(x: Tensor, group_size: int, channels: int, samples: int, alpha: float=1e-8) -> Tensor:
-    y = torch.reshape(x, [group_size, -1, channels, samples])
-    y = y - y.mean(dim=0, keepdim=True)
-    y = torch.sqrt(y.square().mean(dim=0, keepdim=False) + alpha)
-    y = y.mean(dim=[1, 2], keepdim=True)
-    y = y.repeat(group_size, 1, samples)
-    return torch.cat([x, y], 1)
+def mini_batch_std_dev(x: Tensor, group_size: int=4, num_channels: int=1, alpha: float=1e-8) -> Tensor:    
+    N, C, S = x.shape
+    G = torch.min(torch.as_tensor(group_size), torch.as_tensor(N))
+    F = num_channels
+    c = C // F
+
+    y = x.reshape(G, -1, F, c, S)       # [GnFcS]   Split minibatch N into n groups of size G, and channels C into F groups of size c.
+    y = y - y.mean(dim=0)               # [GnFcS]   Subtract mean over group.
+    y = y.square().mean(dim=0)          # [nFcS]    Calc variance over group.
+    y = (y + 1e-8).sqrt()               # [nFcS]    Calc stddev over group.
+    y = y.mean(dim=[2, 3])              # [nF]      Take average over channels and pixels.
+    y = y.reshape(-1, F, 1)             # [nF1]     Add missing dimensions.
+    y = y.repeat(G, 1, S)               # [NFS]     Replicate over group and pixels.
+    return torch.cat([x, y], dim=1)     # [NCS]     Append to input as new channels.
+    
+     
 
 # ------------------------------------------------------------
 # Low level network components.
@@ -79,7 +88,7 @@ class Conv1dLayer(torch.nn.Module):
         apply_style: bool   = False,
         apply_noise: bool   = False,
         scale_factor: float = 1
-    ):
+    ) -> None:
         super().__init__()
 
         self.in_channels = in_channels
@@ -107,12 +116,15 @@ class Conv1dLayer(torch.nn.Module):
     def forward(
         self,
         x: Tensor,
-        style: Tensor = None,
-        gain: float = 1.0
+        style: Tensor       = None,
+        gain: float         = 1.0,
+        alpha: float        = 0.2
     ) -> Tensor:
         weight = self.weight * self.weight_gain
-        bias = self.bias.to(x.dtype) if self.bias is not None else None
-        bias = bias.reshape(1, -1, 1)
+        bias = self.bias
+
+        if bias is not None:
+            bias = bias.to(x.dtype).reshape(1, -1, 1)
 
         # Modulate weights.
         if self.apply_style:
@@ -135,8 +147,15 @@ class Conv1dLayer(torch.nn.Module):
             x = x + noise * self.noise_strength.view(1, -1, 1)
 
         # Add bias and activation function.
-        x = x + bias * gain
-        return torch.nn.functional.leaky_relu(x, 0.2 * gain)
+        if bias is not None:
+            x = x + bias
+
+        x = torch.nn.functional.leaky_relu(x, alpha)
+        
+        if gain != 1:
+            x = x * gain
+        
+        return x
 
 # ------------------------------------------------------------
 # Fully-connected layer with equalized learning.
@@ -156,7 +175,7 @@ class FullyConnectedLayer(torch.nn.Module):
         self.weight = torch.nn.Parameter(torch.randn([out_channels, in_channels]) / lr_multiplier)
         self.bias = torch.nn.Parameter(torch.full([out_channels], np.float32(bias_init))) if bias else None
         self.weight_gain = lr_multiplier / np.sqrt(in_channels)
-        self.bias_gain = lr_multiplier
+        self.lr_multiplier = lr_multiplier
 
     def forward(self, x: Tensor, alpha: float=0.2) -> Tensor:
         weight = self.weight.to(x.dtype) * self.weight_gain
@@ -164,8 +183,8 @@ class FullyConnectedLayer(torch.nn.Module):
 
         if bias is not None:
             bias = bias.to(x.dtype)
-            if self.bias_gain != 1:
-                bias = (bias * self.bias_gain).unsqueeze(0)
+            if self.lr_multiplier != 1:
+                bias = (bias * self.lr_multiplier).unsqueeze(0)
         
         if self.activation == "linear" and bias is not None:
             return torch.addmm(bias, x, weight.t())
@@ -181,36 +200,12 @@ class FullyConnectedLayer(torch.nn.Module):
         return x
 
 # ------------------------------------------------------------
-# Minibatch standard deviation layer for discriminator. Used to increase diversity in generator.
-
-class MiniBatchStdDev(torch.nn.Module):
-    def __init__(self, group_size = 4) -> None:
-        super(MiniBatchStdDev, self).__init__()
-        self.group_size = group_size
-
-    def extra_repr(self) -> str:
-        return f"group_size={self.group_size}"
-
-    def forward(self, x: Tensor) -> Tensor:
-        batch_size, channels, samples = x.shape
-        if batch_size > self.group_size:
-            assert batch_size % self.group_size == 0, (
-                f"batch_size {batch_size} should be "
-                f"perfectly divisible by group_size {self.group_size}"
-            )
-            group_size = self.group_size
-        else:
-            group_size = batch_size
-
-        return mini_batch_std_dev(x, group_size, channels, samples)
-
-# ------------------------------------------------------------
 # Blocks composed of low level network components.
 
 # ------------------------------------------------------------
 # General generator block.
 
-class GenGeneralConvBlock(torch.nn.Module):
+class StyleBlock(torch.nn.Module):
     def __init__(
         self,
         in_channels: int,
@@ -224,20 +219,16 @@ class GenGeneralConvBlock(torch.nn.Module):
         super().__init__()
         
         self.conv_block_1 = Conv1dLayer(in_channels=in_channels, out_channels=in_channels, kernel_size=kernel_size, stride=stride, padding=padding, apply_style=True, apply_noise=True, bias=bias, scale_factor=scale_factor)
-        self.conv_block_2 = Conv1dLayer(in_channels=in_channels, out_channels=in_channels, kernel_size=kernel_size, stride=stride, padding=padding, apply_style=True, apply_noise=True, bias=bias)
-        self.conv_block_3 = Conv1dLayer(in_channels=in_channels, out_channels=out_channels, kernel_size=kernel_size, stride=stride, padding=padding, bias=bias)
+        self.conv_block_2 = Conv1dLayer(in_channels=in_channels, out_channels=out_channels, kernel_size=kernel_size, stride=stride, padding=padding, apply_style=True, apply_noise=True, bias=bias)
 
     def forward(self, x: Tensor, latent_w: Tensor) -> Tensor:
         x = self.conv_block_1(x, latent_w[:, 0])
-        x = self.conv_block_2(x, latent_w[:, 1], gain = np.sqrt(0.5))
-        x = self.conv_block_3(x)
-
-        return x
+        return self.conv_block_2(x, latent_w[:, 1], gain=np.sqrt(0.5))
 
 # ------------------------------------------------------------
 # General discriminator block.
 
-class DisGeneralConvBlock(torch.nn.Module):
+class DicriminatorBlock(torch.nn.Module):
     def __init__(
         self,
         in_channels,
@@ -260,7 +251,7 @@ class DisGeneralConvBlock(torch.nn.Module):
 # ------------------------------------------------------------
 # Final discriminator block.
 
-class DisFinalConvBlock(torch.nn.Module):
+class DiscriminatorEpilogue(torch.nn.Module):
     def __init__(
         self,
         in_channels,
@@ -277,19 +268,15 @@ class DisFinalConvBlock(torch.nn.Module):
         in_channels += 1
         out_channels += 1
 
-        self.mini_batch = MiniBatchStdDev()
-
         self.conv_block_1 = Conv1dLayer(in_channels=in_channels, out_channels=in_channels, kernel_size=kernel_size, stride=stride, padding=padding, bias=bias, scale_factor=scale_factor)
         self.conv_block_2 = Conv1dLayer(in_channels=in_channels, out_channels=in_channels, kernel_size=kernel_size, stride=stride, padding=padding, bias=bias)
         self.conv_block_3 = Conv1dLayer(in_channels=in_channels, out_channels=out_channels, kernel_size=1, stride=1, padding=0, bias=bias)
     
-    def forward(self, x: Tensor) -> Tensor:
-        x = self.mini_batch(x)
-    
+    def forward(self, x: Tensor, group_size: int=4) -> Tensor:
+        x = mini_batch_std_dev(x, group_size)
         x = self.conv_block_1(x)
-        x = self.conv_block_2(x, gain = np.sqrt(0.5))
-        x = self.conv_block_3(x)
-        return x
+        x = self.conv_block_2(x, gain=np.sqrt(0.5))
+        return self.conv_block_3(x)
 
 # ------------------------------------------------------------
 # Constant input.
@@ -389,7 +376,7 @@ class Generator(torch.nn.Module):
             else:
                 self.scale_factor = scale_factor
 
-            self.layers.append(GenGeneralConvBlock(in_channels=n, out_channels=n//2, kernel_size=kernel_size, stride=stride, padding=padding, scale_factor=self.scale_factor))
+            self.layers.append(StyleBlock(in_channels=n, out_channels=n//2, kernel_size=kernel_size, stride=stride, padding=padding, scale_factor=self.scale_factor))
             n = n // 2
 
         # Network converter layers.
@@ -397,7 +384,7 @@ class Generator(torch.nn.Module):
         
         n = self.nf // 2
         for i in range(depth):
-            self.converters.append(Conv1dLayer(inc_channels=n, out_channels, num_channels, kernel_size=1, stride=1, padding=0))
+            self.converters.append(Conv1dLayer(in_channels=n, out_channels=num_channels, kernel_size=1, stride=1, padding=0))
             n = n // 2
 
         # Mapping network.
@@ -419,7 +406,7 @@ class Generator(torch.nn.Module):
         i = 0
         for layer_block in self.layers[: self.depth]: 
             x = layer_block(x, latent_w[:, 2 * i : 2 * i + 2])
-            skip = self.converters[i](x, gain = np.sqrt(0.5))
+            skip = self.converters[i](x, gain=np.sqrt(0.5))
 
             if i == 0:
                 out = skip
@@ -477,21 +464,11 @@ class Discriminator(torch.nn.Module):
         
         n = self.nf
         for l in range(depth - 1):
-            self.layers.append(DisGeneralConvBlock(in_channels=n, out_channels=n*2, kernel_size=self.kernel_size, stride=self.stride, padding=self.padding, scale_factor=self.scale_factor))
+            self.layers.append(DicriminatorBlock(in_channels=n, out_channels=n*2, kernel_size=self.kernel_size, stride=self.stride, padding=self.padding, scale_factor=self.scale_factor))
             n = n * 2
         
         # Final discriminator convolution block.
-        self.layers.append(
-            DisFinalConvBlock(
-                in_channels = n,
-                out_channels = n * 2,
-                num_channels = self.num_channels,
-                kernel_size = self.kernel_size,
-                stride = self.stride,
-                padding = self.padding,
-                scale_factor = 1 / self.start_size
-            )
-        )
+        self.layers.append(DiscriminatorEpilogue(in_channels=n, out_channels=n*2, num_channels=self.num_channels, kernel_size=self.kernel_size, stride=self.stride, padding=self.padding, scale_factor=1/self.start_size))
         
         # List of converters that broadcast channels from "num_channels" to "n".
         self.converters = torch.nn.ModuleList([])
