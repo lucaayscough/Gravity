@@ -243,10 +243,14 @@ class DicriminatorBlock(torch.nn.Module):
 
         self.conv_block_1 = Conv1dLayer(in_channels=in_channels, out_channels=in_channels, kernel_size=kernel_size, stride=stride, padding=padding, bias=bias, scale_factor=scale_factor)
         self.conv_block_2 = Conv1dLayer(in_channels=in_channels, out_channels=out_channels, kernel_size=kernel_size, stride=stride, padding=padding, bias=bias)
-    
+        self.residual = Conv1dLayer(in_channels=in_channels, out_channels=out_channels, kernel_size=1, stride=1, padding=0, bias=False, scale_factor=scale_factor)
+
     def forward(self, x: Tensor) -> Tensor:
+        y = self.residual(x, gain=np.sqrt(0.5))
+
         x = self.conv_block_1(x)
-        return self.conv_block_2(x, gain=np.sqrt(0.5))
+        x = self.conv_block_2(x, gain=np.sqrt(0.5))
+        return x + y
 
 # ------------------------------------------------------------
 # Final discriminator block.
@@ -266,17 +270,22 @@ class DiscriminatorEpilogue(torch.nn.Module):
         super().__init__()
 
         in_channels += 1
-        out_channels += 1
 
         self.conv_block_1 = Conv1dLayer(in_channels=in_channels, out_channels=in_channels, kernel_size=kernel_size, stride=stride, padding=padding, bias=bias, scale_factor=scale_factor)
         self.conv_block_2 = Conv1dLayer(in_channels=in_channels, out_channels=in_channels, kernel_size=kernel_size, stride=stride, padding=padding, bias=bias)
-        self.conv_block_3 = Conv1dLayer(in_channels=in_channels, out_channels=out_channels, kernel_size=1, stride=1, padding=0, bias=bias)
+        
+        self.fc = FullyConnectedLayer(in_channels=in_channels, out_channels=out_channels, activation="lrelu")
+        self.out_fc = FullyConnectedLayer(in_channels=out_channels, out_channels=num_channels, activation="lrelu")
     
     def forward(self, x: Tensor, group_size: int=4) -> Tensor:
         x = mini_batch_std_dev(x, group_size)
+        
         x = self.conv_block_1(x)
-        x = self.conv_block_2(x, gain=np.sqrt(0.5))
-        return self.conv_block_3(x)
+        x = self.conv_block_2(x)
+        
+        x = self.fc(x.flatten(1))
+        x = self.out_fc(x)
+        return x
 
 # ------------------------------------------------------------
 # Constant input.
@@ -384,7 +393,7 @@ class Generator(torch.nn.Module):
         
         n = self.nf // 2
         for i in range(depth):
-            self.converters.append(Conv1dLayer(in_channels=n, out_channels=num_channels, kernel_size=1, stride=1, padding=0))
+            self.converters.append(Conv1dLayer(in_channels=n, out_channels=num_channels, kernel_size=1, stride=1, padding=0, bias=False))
             n = n // 2
 
         # Mapping network.
@@ -395,17 +404,14 @@ class Generator(torch.nn.Module):
         latent_w: Tensor    = None,
         return_w: bool      = False
     ):  
-        batch_size = latent_z.size(0)
-
-        x = self.constant_input(batch_size)
-        latent_w = self.mapping_network(latent_z, truncation_psi=0.7, truncation_cutoff=8)
+        x = self.constant_input(batch_size=latent_z.size(0))
+        latent_w = self.mapping_network(latent_z, truncation_psi=1, truncation_cutoff=None)
         
         # Style mixing.
-        latent_w = self._mixing_regularization(latent_z, latent_w, self.depth)
+        #latent_w = self._mixing_regularization(latent_z, latent_w, self.depth)
         
-        i = 0
-        for layer_block in self.layers[: self.depth]: 
-            x = layer_block(x, latent_w[:, 2 * i : 2 * i + 2])
+        for i in range(self.depth): 
+            x = self.layers[i](x, latent_w[:, 2 * i : 2 * i + 2])
             skip = self.converters[i](x, gain=np.sqrt(0.5))
 
             if i == 0:
@@ -413,8 +419,7 @@ class Generator(torch.nn.Module):
             else:
                 out = resample(out, scale_factor=self.scale_factor)
                 out = out + skip
-            i += 1
-        
+
         if return_w:
             return out, latent_w
         else:
@@ -449,40 +454,22 @@ class Discriminator(torch.nn.Module):
         start_size,
     ):
         super().__init__()
-        
-        self.nf = nf
-        self.kernel_size = kernel_size
-        self.stride = stride
-        self.padding = padding
+    
         self.depth = depth
-        self.num_channels = num_channels
-        self.scale_factor = scale_factor
-        self.start_size = start_size
 
-        # Main discriminator convolution blocks.
+        # Main discriminator blocks.
         self.layers = torch.nn.ModuleList([])
         
-        n = self.nf
+        n = nf
         for l in range(depth - 1):
-            self.layers.append(DicriminatorBlock(in_channels=n, out_channels=n*2, kernel_size=self.kernel_size, stride=self.stride, padding=self.padding, scale_factor=self.scale_factor))
+            self.layers.append(DicriminatorBlock(in_channels=n, out_channels=n*2, kernel_size=kernel_size, stride=stride, padding=padding, scale_factor=scale_factor))
             n = n * 2
         
-        # Final discriminator convolution block.
-        self.layers.append(DiscriminatorEpilogue(in_channels=n, out_channels=n*2, num_channels=self.num_channels, kernel_size=self.kernel_size, stride=self.stride, padding=self.padding, scale_factor=1/self.start_size))
+        # Final discriminator block.
+        self.layers.append(DiscriminatorEpilogue(in_channels=n, out_channels=n*2, num_channels=num_channels, kernel_size=kernel_size, stride=stride, padding=padding, scale_factor=1/start_size))
         
-        # List of converters that broadcast channels from "num_channels" to "n".
-        self.converters = torch.nn.ModuleList([])
-        self.res_converters = torch.nn.ModuleList([])
-        n = self.nf
-
-        self.converter = Conv1dLayer(num_channels, n, 1, 1, 0)
-
-        for l in range(self.depth):
-            if l == self.depth - 1: 
-                self.res_converters.append(Conv1dLayer(n, n * 2 + 1, 1, 1, 0))
-            else:
-                self.res_converters.append(Conv1dLayer(n, n * 2, 1, 1, 0))
-            n = n * 2
+        # Layer used to convert sound into tensor for the network.
+        self.converter = Conv1dLayer(in_channels=num_channels, out_channels=nf, kernel_size=1, stride=1, padding=0, bias=False)
 
         self.linear = FullyConnectedLayer(n + 1, num_channels)
 
@@ -490,11 +477,6 @@ class Discriminator(torch.nn.Module):
         x = self.converter(x)
 
         for i in range(self.depth):
-            if i < self.depth - 1:
-                residual = self.res_converters[i](resample(x, scale_factor=self.scale_factor), gain=np.sqrt(0.5))
-            else:
-                residual = self.res_converters[i](resample(x, scale_factor=1/self.start_size), gain=np.sqrt(0.5))
             x = self.layers[i](x)
-            x = (x + residual) * (1 / np.sqrt(2))
 
-        return self.linear(x.squeeze(2))
+        return x

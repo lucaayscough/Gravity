@@ -223,6 +223,7 @@ class Train:
                 real = data[0].to(self.device)
 
                 self._train_discriminator(real, idx)
+                del real
                 self._train_generator(idx)
                 
                 self._update_average(beta = self.ema_beta)
@@ -233,7 +234,7 @@ class Train:
                     Loss D: {self.loss_disc:.4f}, loss G: {self.loss_gen:.4f}'
                 )
 
-                self._print_examples(idx, epoch, real)
+                self._print_examples(idx, epoch)
                     
             print("Time elapsed: ", time.time() - start_time, " seconds.")
 
@@ -308,7 +309,7 @@ class Train:
 # ------------------------------------------------------------
 # Helper functions.
 
-    def _print_examples(self, idx, epoch, real): 
+    def _print_examples(self, idx, epoch): 
         if idx % 1000 == 0:
             
             # TODO:
@@ -327,14 +328,7 @@ class Train:
                         src = fake_sample[s].cpu(),
                         sample_rate = self.sample_rate
                     )
-
-                """# Print Real Examples
-                torchaudio.save(
-                    filepath = 'runs/iter_' + str(self.iter_num) + '/output/real/' + '_' + str(epoch).zfill(3) + '_' + str(s).zfill(3) + '.wav',
-                    src = real[s].cpu(),
-                    sample_rate = self.sample_rate
-                )"""
-
+  
 # ------------------------------------------------------------
 # Update exponential moving average of generator.
 
