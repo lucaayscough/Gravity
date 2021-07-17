@@ -4,7 +4,7 @@ import numpy as np
 import random
 
 
-resample_kernel = [1, 2, 4, 2, 1]
+resample_kernel = [1, 3, 9, 3, 1]
 resample_kernel = torch.tensor(resample_kernel, dtype=torch.float)
 resample_kernel = resample_kernel.expand(1, 1, -1)
 resample_kernel = resample_kernel / resample_kernel.sum()

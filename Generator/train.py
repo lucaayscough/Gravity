@@ -61,6 +61,7 @@ class Train:
         self.pl_weight = 2
 
         # Discriminator
+        self.disc_loss_fn = "r1"
         self.r1_gamma = 10
 
         # Model
@@ -227,10 +228,18 @@ class Train:
             for idx, data in enumerate(dataloader):
                 real = data[0].to(self.device)
 
-                self._train_discriminator(real, idx)
-                del real
+                self.opt_gen.zero_grad(set_to_none=True)
+                self.opt_dis.zero_grad(set_to_none=True)
+
                 self._train_generator(idx)
-                
+                if self.disc_loss_fn == "r1":
+                    self._train_discriminator_r1(real, idx)
+                else:
+                    self._train_discriminator_wgangp(real)
+
+                self.opt_gen.step()
+                self.opt_dis.step()
+
                 self._update_average(beta = self.ema_beta)
                 
                 print(
@@ -243,43 +252,9 @@ class Train:
                     
             print("Time elapsed: ", time.time() - start_time, " seconds.")
 
-    def _train_discriminator(self, real, idx):
-        self._set_grad_flag(self.netD, True)
-        self._set_grad_flag(self.netG, False)
-        
-        # Train on generated.
-        self.netD.zero_grad()
-        noise = torch.randn((self.batch_size, self.z_dim)).to(self.device)
-        gen_sounds = self.netG(noise)
-        logits_fake = self.netD(gen_sounds)
-        loss_fake = torch.nn.functional.softplus(logits_fake).mean()
-        loss_fake.backward(retain_graph = True)
-
-        # Train on real.
-        self.netD.zero_grad()
-        real.requires_grad = True
-        real_logits = self.netD(real)
-        loss_real = torch.nn.functional.softplus(-real_logits).mean()
-        #disc_real.backward()
-
-        # R1.
-        if idx % self.D_reg == 0:
-            #self.netD.zero_grad()
-            r1_grads = torch.autograd.grad(outputs=loss_real.sum(), inputs=real, create_graph=True, only_inputs=True)[0]
-            r1_penalty = r1_grads.square().sum([1,2])
-            loss_r1 = r1_penalty * (self.r1_gamma / 2)
-            (real_logits * 0 + loss_real + loss_r1).mean().mul(self.D_reg).backward()
-        else:
-            (real_logits * 0 + loss_real).mean().backward()
-        
-        self.opt_dis.step()
-        self.loss_disc = loss_real + loss_fake
-
     def _train_generator(self, idx):
-        self.netG.zero_grad()
-
-        self._set_grad_flag(self.netD, False)
-        self._set_grad_flag(self.netG, True)
+        self.netG.requires_grad_(True)
+        self.netD.requires_grad_(False)
 
         noise = torch.randn((self.batch_size, self.z_dim)).to(self.device)
         fake = self.netG(noise)
@@ -288,8 +263,6 @@ class Train:
         self.loss_gen.backward()
 
         if idx % self.G_reg == 0:
-            self.netG.zero_grad()
-
             batch_size = noise.shape[0] // self.pl_batch_shrink
             sounds, w_latents = self.netG(noise[:batch_size], return_w=True)
 
@@ -304,7 +277,48 @@ class Train:
             loss_Gpl = pl_penalty * self.pl_weight
             (sounds[:, 0, 0] * 0 + loss_Gpl).mean().mul(self.G_reg).backward()
 
-        self.opt_gen.step()
+    def _train_discriminator_r1(self, real, idx):
+        self.netG.requires_grad_(False)
+        self.netD.requires_grad_(True)
+        
+        # Train on generated.
+        noise = torch.randn((self.batch_size, self.z_dim)).to(self.device)
+        gen_sounds = self.netG(noise)
+        logits_fake = self.netD(gen_sounds)
+        loss_fake = torch.nn.functional.softplus(logits_fake).mean()
+        loss_fake.backward(retain_graph=True)
+
+        # Train on real.
+        real.requires_grad = True
+        logits_real = self.netD(real)
+        loss_real = torch.nn.functional.softplus(-logits_real).mean()
+
+        # R1.
+        if idx % self.D_reg == 0:
+            r1_grads = torch.autograd.grad(outputs=loss_real.sum(), inputs=real, create_graph=True, only_inputs=True)[0]
+            r1_penalty = r1_grads.square().sum([1,2])
+            loss_r1 = r1_penalty * (self.r1_gamma / 2)
+            (logits_real * 0 + loss_real + loss_r1).mean().mul(self.D_reg).backward()
+        else:
+            (logits_real * 0 + loss_real).mean().backward()
+
+        self.loss_disc = loss_real + loss_fake
+    
+    def _train_discriminator_wgangp(self, real):
+        self.netG.requires_grad_(False)
+        self.netD.requires_grad_(True)
+    
+        noise = torch.randn((self.batch_size, self.z_dim)).to(self.device)
+        fake = self.netG(noise)
+                    
+        disc_real = self.netD(real)
+        disc_fake = self.netD(fake)
+
+        gp = gradient_penalty(self.netD, real, fake, device=self.device)
+
+        self.loss_disc = -(torch.mean(disc_real) - torch.mean(disc_fake)) + 10 * gp
+
+        self.loss_disc.backward(retain_graph=True)
 
 # ------------------------------------------------------------
 # Helper functions.
