@@ -2,10 +2,9 @@ import os
 import time
 import copy
 import math
+import numpy as np
 
 import torch
-import torch.optim as optim
-import torch.nn.functional as F
 import torchaudio
 from torch.utils.data import DataLoader
 import torch.autograd.profiler as profiler
@@ -57,8 +56,16 @@ class Train:
 
         # Generator
         self.ema_beta = 0.999
+        self.pl_batch_shrink = 2
+        self.pl_decay = 0.01
+        self.pl_weight = 2
+
+        # Discriminator
+        self.r1_gamma = 10
 
         # Model
+        self.G_reg = 8
+        self.D_reg = 16
         self.z_dim = 512
         self.scale_factor = scale_factor
         self.depth = depth
@@ -66,7 +73,6 @@ class Train:
         self.kernel_size = 9
         self.stride = 1
         self.padding = 4
-        self.dilation = 1
         self.start_size = start_size
 
         # Setup
@@ -86,7 +92,7 @@ class Train:
             self._load_state()
         else:
             self.start_epoch = 1
-            self.mean_path_length = 0
+            self.pl_mean = torch.tensor(0, dtype=torch.float, device=self.device)
         
         # Creates a shadow copy of the generator.
         self.netG_shadow = copy.deepcopy(self.netG)
@@ -125,9 +131,8 @@ class Train:
             start_size = self.start_size,
         ).to(self.device)
 
-
     def _init_optim(self): 
-        self.opt_gen = optim.Adam(
+        self.opt_gen = torch.optim.Adam(
             [
                 {'params': self.netG.parameters()}
             ],
@@ -136,7 +141,7 @@ class Train:
             eps = 1e-8
         )
         
-        self.opt_dis = optim.Adam(
+        self.opt_dis = torch.optim.Adam(
             params = self.netD.parameters(),
             lr = self.learning_rate, 
             betas = (0.0, 0.99),
@@ -167,11 +172,11 @@ class Train:
         self.netG.load_state_dict(checkpointG['state_dict'])
         self.netD.load_state_dict(checkpointD['state_dict'])
 
-        self.mean_path_length = checkpointG['mean_pl']
+        self.pl_mean = checkpointG['mean_pl']
 
     def _save_state(self, epoch): 
         checkpointD = {'state_dict': self.netD.state_dict(), 'optimizer': self.opt_dis.state_dict()}
-        checkpointG = {'state_dict': self.netG.state_dict(), 'optimizer': self.opt_gen.state_dict(), "mean_pl": self.mean_path_length}    
+        checkpointG = {'state_dict': self.netG.state_dict(), 'optimizer': self.opt_gen.state_dict(), "mean_pl": self.pl_mean}    
         
         torch.save(checkpointD,
             'runs/iter_{iter_num}/model/checkpoint_{epoch}_D.pth.tar'.format(
@@ -242,34 +247,33 @@ class Train:
         self._set_grad_flag(self.netD, True)
         self._set_grad_flag(self.netG, False)
         
+        # Train on generated.
         self.netD.zero_grad()
-
-        real.requires_grad = True
-
         noise = torch.randn((self.batch_size, self.z_dim)).to(self.device)
-        fake = self.netG(noise)
+        gen_sounds = self.netG(noise)
+        logits_fake = self.netD(gen_sounds)
+        loss_fake = torch.nn.functional.softplus(logits_fake).mean()
+        loss_fake.backward(retain_graph = True)
 
-        disc_real = self.netD(real)
-        disc_fake = self.netD(fake)
-
-        disc_real = F.softplus(-disc_real).mean()
-        disc_fake = F.softplus(disc_fake).mean()
-
-        self.loss_disc = disc_real + disc_fake
-        self.loss_disc.backward(retain_graph = True)
+        # Train on real.
+        self.netD.zero_grad()
+        real.requires_grad = True
+        real_logits = self.netD(real)
+        loss_real = torch.nn.functional.softplus(-real_logits).mean()
+        #disc_real.backward()
 
         # R1.
-        if idx % 16 == 0:
-            self.netD.zero_grad()
-
-            grad_real = torch.autograd.grad(outputs = disc_real.sum(), inputs = real, create_graph = True)[0]
-            grad_penalty_real = (grad_real.view(grad_real.size(0), -1).norm(2, dim=1) ** 2).mean()
-            grad_penalty_real = 10 / 2 * grad_penalty_real
-
-            grad_penalty_real.backward()
+        if idx % self.D_reg == 0:
+            #self.netD.zero_grad()
+            r1_grads = torch.autograd.grad(outputs=loss_real.sum(), inputs=real, create_graph=True, only_inputs=True)[0]
+            r1_penalty = r1_grads.square().sum([1,2])
+            loss_r1 = r1_penalty * (self.r1_gamma / 2)
+            (real_logits * 0 + loss_real + loss_r1).mean().mul(self.D_reg).backward()
+        else:
+            (real_logits * 0 + loss_real).mean().backward()
         
         self.opt_dis.step()
-
+        self.loss_disc = loss_real + loss_fake
 
     def _train_generator(self, idx):
         self.netG.zero_grad()
@@ -280,31 +284,27 @@ class Train:
         noise = torch.randn((self.batch_size, self.z_dim)).to(self.device)
         fake = self.netG(noise)
         output = self.netD(fake)
-        self.loss_gen = F.softplus(-output).mean()
+        self.loss_gen = torch.nn.functional.softplus(-output).mean()
         self.loss_gen.backward()
 
-        if idx % 8 == 0:
+        if idx % self.G_reg == 0:
             self.netG.zero_grad()
 
-            path_batch_size = max(1, self.batch_size // 2)
-            noise = torch.randn((self.batch_size, self.z_dim)).to(self.device)
-            fake, latents = self.netG(noise, return_w = True)
+            batch_size = noise.shape[0] // self.pl_batch_shrink
+            sounds, w_latents = self.netG(noise[:batch_size], return_w=True)
 
-            noise = torch.randn_like(fake) / math.sqrt(fake.shape[2])
-            grad, = torch.autograd.grad(outputs = (fake * noise).sum(), inputs = latents, create_graph = True)
+            pl_noise = torch.randn_like(sounds) / np.sqrt(sounds.shape[2])
+            pl_grads = torch.autograd.grad(outputs=[(sounds*pl_noise).sum()], inputs=[w_latents], create_graph=True, only_inputs=True)[0]
+            pl_lengths = pl_grads.square().sum(2).mean(1).sqrt()
 
-            path_lengths = torch.sqrt(grad.pow(2).sum(2).mean(1))
-            path_mean = self.mean_path_length + 0.01 * (path_lengths.mean() - self.mean_path_length)
-            path_loss = (path_lengths - path_mean).pow(2).mean()
-            self.mean_path_length = path_mean.detach()
+            pl_mean = self.pl_mean.lerp(pl_lengths.mean(), self.pl_decay)
+            self.pl_mean.copy_(pl_mean.detach())
 
-            weighted_path_loss = 2 * 8 * path_loss
-            weighted_path_loss += 0 * fake[0, 0, 0]
-            weighted_path_loss.backward()
+            pl_penalty = (pl_lengths - pl_mean).square()
+            loss_Gpl = pl_penalty * self.pl_weight
+            (sounds[:, 0, 0] * 0 + loss_Gpl).mean().mul(self.G_reg).backward()
 
         self.opt_gen.step()
-
-
 
 # ------------------------------------------------------------
 # Helper functions.
@@ -324,7 +324,7 @@ class Train:
                 for s in range(8):
                     # Print Fake Examples
                     torchaudio.save(
-                        filepath = 'runs/iter_' + str(self.iter_num) + '/output/fake/' + '_' + str(epoch).zfill(3) + '_' + str(s).zfill(3) + '.wav',
+                        filepath = 'runs/iter_' + str(self.iter_num) + '/output/' + '_' + str(epoch).zfill(3) + '_' + str(s).zfill(3) + '.wav',
                         src = fake_sample[s].cpu(),
                         sample_rate = self.sample_rate
                     )

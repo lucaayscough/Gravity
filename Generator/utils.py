@@ -74,12 +74,7 @@ def build_folder_structure(iter_num):
         pass
 
     try:
-        os.mkdir('runs/iter_{}/output/real/'.format(iter_num))
-    except FileExistsError:
-        pass
-
-    try:
-        os.mkdir('runs/iter_{}/output/fake/'.format(iter_num))
+        os.mkdir('runs/iter_{}/output/'.format(iter_num))
     except FileExistsError:
         pass
 
