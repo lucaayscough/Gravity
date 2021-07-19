@@ -1,5 +1,6 @@
 import torch
 from torch import Tensor
+import torchaudio
 import numpy as np
 import random
 
@@ -8,7 +9,7 @@ import random
 
 @torch.jit.script
 def normalize(x: Tensor, epsilon: float=1e-8) -> Tensor:
-    return x / (x.pow(2.0).mean(dim=1, keepdim=True).add(epsilon).sqrt())
+    return x * (x.square().mean(dim=1, keepdim=True) + epsilon).rsqrt()
 
 @torch.jit.script
 def modulate(x: Tensor, styles: Tensor, weight: Tensor):
@@ -42,17 +43,16 @@ def mini_batch_std_dev(x: Tensor, group_size: int=4, num_channels: int=1, alpha:
     y = y.repeat(G, 1, S)               # [NFS]     Replicate over group and pixels.
     return torch.cat([x, y], dim=1)     # [NCS]     Append to input as new channels.
 
-def setup_filter(f, device=torch.device('cpu'), normalize=True, gain=1):
-    f = torch.as_tensor(f, dtype=torch.float32)
+def setup_filter(f, device=torch.device('cuda'), normalize=True, gain=1):
+    f = torch.as_tensor(f, dtype=torch.float32).to(device=device)
     if normalize:
         f /= f.sum()
-    f.to(device=device)
     return f
 
 @torch.jit.script
-def resample(x: Tensor, f: Tensor, up: int=1, down: int=1, padding: int=1, gain: int=1) -> Tensor:
+def conv_resample(x: Tensor, f: Tensor, up: int=1, down: int=1, padding: int=4, gain: int=1) -> Tensor:
     batch_size, num_channels, in_samples = x.shape
-
+    """
     # Upsample by inserting zeros.
     if up != 1:
         x = x.reshape([batch_size, num_channels, in_samples, 1])
@@ -63,22 +63,30 @@ def resample(x: Tensor, f: Tensor, up: int=1, down: int=1, padding: int=1, gain:
     if padding != 0:
         x = torch.nn.functional.pad(x, [max(padding, 0), max(padding, 0)])
         x = x[:, :, max(-padding, 0) : x.shape[2] - max(-padding, 0)]
+    """
 
+    if up != 1:
+        x = torch.nn.functional.interpolate(x, scale_factor=float(up), mode="linear")
+    
+    """
     # Setup filter.
     f = f * (gain ** (f.ndim / 2))
     f = f.to(x.dtype)
-
+    """
+    """
     # Convolve with the filter.
     f = f[np.newaxis, np.newaxis].repeat([num_channels, 1] + [1] * f.ndim)
-    x = torch.nn.functional.conv1d(input=x, weight=f, groups=num_channels)
+    x = torch.nn.functional.conv1d(input=x, weight=f, padding=padding, groups=num_channels)
+    """
+    if down != 1:
+        x = torch.nn.functional.interpolate(x, scale_factor=float(1/down), mode="linear")
 
+    """
     # Downsample by throwing away pixels.
     if down != 1:
         x = x[:, :, ::down]
+    """
     return x
-
-# ------------------------------------------------------------
-# Low level network components.
 
 # ------------------------------------------------------------
 # Convolution layer with equalized learning.
@@ -88,15 +96,15 @@ class Conv1dLayer(torch.nn.Module):
         self,
         in_channels: int,
         out_channels: int,
-        kernel_size: int,
-        stride: int,
-        padding: int,
+        kernel_size: int        = 1,
+        stride: int             = 1,
+        padding: int            = 0,
+        resample_filter: Tensor = None,
         bias: bool              = True,
         apply_style: bool       = False,
         apply_noise: bool       = False,
         up: int                 = 1,
-        down: int               = 1,
-        resample_filter: list   = [1,3,1]
+        down: int               = 1
     ) -> None:
         super().__init__()
 
@@ -106,25 +114,21 @@ class Conv1dLayer(torch.nn.Module):
         self.padding = padding
         self.up = up
         self.down = down
+        self.resample_filter = resample_filter
 
         self.apply_style = apply_style
         self.apply_noise = apply_noise
 
         if apply_style:
-            self.style_affine = FullyConnectedLayer(512, in_channels, activation="lrelu")
+            self.style_affine = FullyConnectedLayer(512, in_channels, activation="lrelu", bias_init=1)
 
         if apply_noise:
             self.noise_strength = torch.nn.Parameter(torch.zeros([out_channels]))
 
-        if up > 1 or down > 1:
-            self.register_buffer("resample_filter", setup_filter(resample_filter))
-
-        weight = torch.randn([out_channels, in_channels, kernel_size])
         self.weight = torch.nn.Parameter(torch.randn([out_channels, in_channels, kernel_size]))
         self.weight_gain = 1 / np.sqrt(in_channels * (kernel_size ** 2))
 
-        bias = torch.zeros([out_channels]) if bias else None
-        self.bias = torch.nn.Parameter(bias) if bias is not None else None
+        self.bias = torch.nn.Parameter(torch.zeros([out_channels])) if bias is not None else None
     
     def forward(
         self,
@@ -144,14 +148,19 @@ class Conv1dLayer(torch.nn.Module):
             style = self.style_affine(style)
             x, dcoefs = modulate(x, style, weight)
 
-        # Resample input.
-        if self.up > 1:
-            x = resample(x, f=self.resample_filter, up=self.up)
-
-        x = torch.nn.functional.conv1d(x, weight, stride=self.stride, padding=self.padding)
-
-        if self.down > 1:
-            x = resample(x, f=self.resample_filter, down=self.down)
+        # Blur input and upsample with transposed convolution.
+        if self.resample_filter is not None and self.up > 1:
+            #x = conv_resample(x, f=self.resample_filter, up=1, down=1)
+            x = torch.nn.functional.conv_transpose1d(x, weight, stride=self.stride, padding=self.padding, output_padding=1)
+        
+        #Convolve over input if no up/down sampling is needed.
+        if self.resample_filter is None:
+            x = torch.nn.functional.conv1d(x, weight, stride=self.stride, padding=self.padding)
+        
+        # Downsample with convolution and blur output.
+        if self.resample_filter is not None and self.down > 1:
+            x = torch.nn.functional.conv1d(x, weight, stride=self.stride, padding=self.padding)
+            #x = conv_resample(x, f=self.resample_filter, up=1, down=1)
 
         # Demodulate weights.
         if self.apply_style:
@@ -216,9 +225,6 @@ class FullyConnectedLayer(torch.nn.Module):
         return x
 
 # ------------------------------------------------------------
-# Blocks composed of low level network components.
-
-# ------------------------------------------------------------
 # General generator block.
 
 class StyleBlock(torch.nn.Module):
@@ -226,82 +232,19 @@ class StyleBlock(torch.nn.Module):
         self,
         in_channels: int,
         out_channels: int,
-        kernel_size: int,
-        stride: int,
-        padding: int,
         scale_factor: int,
-        bias = True,
+        resample_filter: Tensor = None
     ):
         super().__init__()
         
-        self.conv_block_1 = Conv1dLayer(in_channels=in_channels, out_channels=in_channels, kernel_size=kernel_size, stride=stride, padding=padding, apply_style=True, apply_noise=True, bias=bias, up=scale_factor)
-        self.conv_block_2 = Conv1dLayer(in_channels=in_channels, out_channels=out_channels, kernel_size=kernel_size, stride=stride, padding=padding, apply_style=True, apply_noise=True, bias=bias)
+        self.resample_filter = resample_filter
+        
+        self.conv_block_1 = Conv1dLayer(in_channels=in_channels, out_channels=in_channels, kernel_size=9, stride=scale_factor, padding=3, apply_style=True, apply_noise=True, up=scale_factor, resample_filter=resample_filter)
+        self.conv_block_2 = Conv1dLayer(in_channels=in_channels, out_channels=out_channels, kernel_size=9, padding=4, apply_style=True, apply_noise=True)
 
     def forward(self, x: Tensor, latent_w: Tensor) -> Tensor:
         x = self.conv_block_1(x, latent_w[:, 0])
         return self.conv_block_2(x, latent_w[:, 1], gain=np.sqrt(0.5))
-
-# ------------------------------------------------------------
-# General discriminator block.
-
-class DicriminatorBlock(torch.nn.Module):
-    def __init__(
-        self,
-        in_channels,
-        out_channels,
-        kernel_size,
-        stride,
-        padding,
-        scale_factor: float,
-        bias = True
-    ):
-        super().__init__()
-
-        self.conv_block_1 = Conv1dLayer(in_channels=in_channels, out_channels=in_channels, kernel_size=kernel_size, stride=stride, padding=padding, bias=bias, down=scale_factor)
-        self.conv_block_2 = Conv1dLayer(in_channels=in_channels, out_channels=out_channels, kernel_size=kernel_size, stride=stride, padding=padding, bias=bias)
-        self.residual = Conv1dLayer(in_channels=in_channels, out_channels=out_channels, kernel_size=1, stride=1, padding=0, bias=False, down=scale_factor)
-
-    def forward(self, x: Tensor) -> Tensor:
-        y = self.residual(x, gain=np.sqrt(0.5))
-
-        x = self.conv_block_1(x)
-        x = self.conv_block_2(x, gain=np.sqrt(0.5))
-        return x + y
-
-# ------------------------------------------------------------
-# Final discriminator block.
-
-class DiscriminatorEpilogue(torch.nn.Module):
-    def __init__(
-        self,
-        in_channels,
-        out_channels,
-        num_channels,
-        kernel_size,
-        stride,
-        padding,
-        scale_factor: int,
-        bias = True
-    ):
-        super().__init__()
-
-        in_channels += 1
-
-        self.conv_block_1 = Conv1dLayer(in_channels=in_channels, out_channels=in_channels, kernel_size=kernel_size, stride=stride, padding=padding, bias=bias, down=scale_factor)
-        self.conv_block_2 = Conv1dLayer(in_channels=in_channels, out_channels=in_channels, kernel_size=kernel_size, stride=stride, padding=padding, bias=bias)
-        
-        self.fc = FullyConnectedLayer(in_channels=in_channels, out_channels=out_channels, activation="lrelu")
-        self.out_fc = FullyConnectedLayer(in_channels=out_channels, out_channels=num_channels, activation="lrelu")
-    
-    def forward(self, x: Tensor, group_size: int=4) -> Tensor:
-        x = mini_batch_std_dev(x, group_size)
-        
-        x = self.conv_block_1(x)
-        x = self.conv_block_2(x)
-        
-        x = self.fc(x.flatten(1))
-        x = self.out_fc(x)
-        return x
 
 # ------------------------------------------------------------
 # Constant input.
@@ -366,33 +309,28 @@ class MappingNetwork(torch.nn.Module):
         return x
 
 # ------------------------------------------------------------
-# Generator network.
-
-class Generator(torch.nn.Module):
+# Synthesis network.
+    
+class SynthesisNetwork(torch.nn.Module):
     def __init__(
         self,
-        z_dim: int,
         nf: int,
-        kernel_size: int,
-        stride: int,
-        padding: int,
         depth: int,
         num_channels: int,
         scale_factor: int,
         start_size: int,
-        resample_filter: list = [1,3,1]
+        resample_kernel: list = [1,2,4,8,16,8,6,4,1]
     ):
         super().__init__()
         
-        self.z_dim = z_dim
         self.nf = nf
         self.depth = depth
         self.num_channels = num_channels
         self.scale_factor = scale_factor
         
-        self.constant_input = ConstantInput(nf, start_size)
+        self.register_buffer("resample_filter", setup_filter(resample_kernel))
         
-        # Base network layers
+        # Main network layers.
         self.layers = torch.nn.ModuleList([])
         
         n = self.nf
@@ -402,7 +340,7 @@ class Generator(torch.nn.Module):
             else:
                 self.scale_factor = scale_factor
 
-            self.layers.append(StyleBlock(in_channels=n, out_channels=n//2, kernel_size=kernel_size, stride=stride, padding=padding, scale_factor=self.scale_factor))
+            self.layers.append(StyleBlock(in_channels=n, out_channels=n//2, scale_factor=self.scale_factor, resample_filter=self.resample_filter))
             n = n // 2
 
         # Network converter layers.
@@ -410,39 +348,62 @@ class Generator(torch.nn.Module):
         
         n = self.nf // 2
         for i in range(depth):
-            self.converters.append(Conv1dLayer(in_channels=n, out_channels=num_channels, kernel_size=1, stride=1, padding=0, bias=False))
+            self.converters.append(Conv1dLayer(in_channels=n, out_channels=num_channels, bias=False))
             n = n // 2
 
-        # Mapping network.
-        self.mapping_network = MappingNetwork(depth*2)
-
-        self.register_buffer("resample_filter", setup_filter(resample_filter))
-
-    def forward(self,
-        latent_z: Tensor,
-        latent_w: Tensor    = None,
-        return_w: bool      = False
-    ):  
-        x = self.constant_input(batch_size=latent_z.size(0))
-        latent_w = self.mapping_network(latent_z, truncation_psi=1, truncation_cutoff=None)
-        
-        # Style mixing.
-        #latent_w = self._mixing_regularization(latent_z, latent_w, self.depth)
-        
+    def forward(self, x: Tensor, latent_w: Tensor):
         for i in range(self.depth): 
             x = self.layers[i](x, latent_w[:, 2 * i : 2 * i + 2])
             skip = self.converters[i](x, gain=np.sqrt(0.5))
 
             if i == 0:
                 out = skip
+                copy = out
             else:
-                out = resample(out, f=self.resample_filter, up=self.scale_factor)
+                out = conv_resample(out, f=self.resample_filter, up=self.scale_factor)
                 out = out + skip
+                copy = out
+            #torchaudio.save(filepath = 'runs/an/' + '_analyses' + str(i) + '.wav', src=copy[0].detach().cpu(), sample_rate=44100)
+        return out
 
+# ------------------------------------------------------------
+# Generator network.
+
+class Generator(torch.nn.Module):
+    def __init__(
+        self,
+        nf: int,
+        depth: int,
+        num_channels: int,
+        scale_factor: int,
+        start_size: int,
+    ):
+        super().__init__()
+        
+        self.depth = depth
+        
+        self.constant_input = ConstantInput(nf, start_size)
+        self.mapping_network = MappingNetwork(depth*2)
+        self.synthesis_network = SynthesisNetwork(nf, depth, num_channels, scale_factor, start_size)
+
+    def forward(self,
+        latent_z: Tensor,
+        latent_w: Tensor    = None,
+        return_w: bool      = False
+    ):
+        x = self.constant_input(batch_size=latent_z.size(0))
+        latent_w = self.mapping_network(latent_z, truncation_psi=1, truncation_cutoff=None)
+
+        # TODO:
+        # Style mixing.
+        #latent_w = self._mixing_regularization(latent_z, latent_w, self.depth)
+
+        sound = self.synthesis_network(x, latent_w)
+    
         if return_w:
-            return out, latent_w
+            return sound, latent_w
         else:
-            return out
+            return sound
 
 # ------------------------------------------------------------
 # Regularize latent mixture.
@@ -458,37 +419,92 @@ class Generator(torch.nn.Module):
         latent_w = torch.where(layer_idx < mixing_cutoff, latent_w, latent_w_2)
         return latent_w
 
+
+# ------------------------------------------------------------
+# General discriminator block.
+
+class DicriminatorBlock(torch.nn.Module):
+    def __init__(
+        self,
+        in_channels,
+        out_channels,
+        scale_factor: int,
+        resample_filter: Tensor = None
+    ):
+        super().__init__()
+
+        self.conv_block_1 = Conv1dLayer(in_channels=in_channels, out_channels=in_channels, kernel_size=9, stride=scale_factor, padding=4, down=scale_factor, resample_filter=resample_filter)
+        self.conv_block_2 = Conv1dLayer(in_channels=in_channels, out_channels=out_channels, kernel_size=9, padding=4)
+        self.residual = Conv1dLayer(in_channels=in_channels, out_channels=out_channels, stride=scale_factor, bias=False, down=scale_factor, resample_filter=resample_filter)
+
+    def forward(self, x: Tensor) -> Tensor:
+        y = self.residual(x, gain=np.sqrt(0.5))
+
+        x = self.conv_block_1(x)
+        x = self.conv_block_2(x, gain=np.sqrt(0.5))
+        x = x.add_(y)
+        return x
+
+# ------------------------------------------------------------
+# Final discriminator block.
+
+class DiscriminatorEpilogue(torch.nn.Module):
+    def __init__(
+        self,
+        in_channels,
+        out_channels,
+        num_channels,
+        scale_factor: int,
+        start_size: int,
+        resample_filter: Tensor = None,
+    ):
+        super().__init__()
+        
+        in_channels += 1
+
+        self.conv_block = Conv1dLayer(in_channels=in_channels, out_channels=in_channels, kernel_size=9, stride=scale_factor, padding=4, down=scale_factor, resample_filter=resample_filter)
+        
+        self.fc = FullyConnectedLayer(in_channels=in_channels*start_size//scale_factor, out_channels=out_channels, activation="lrelu")
+        self.out_fc = FullyConnectedLayer(in_channels=out_channels, out_channels=num_channels, activation="lrelu")
+    
+    def forward(self, x: Tensor, group_size: int=4) -> Tensor:
+        x = mini_batch_std_dev(x, group_size)
+        x = self.conv_block(x)
+        x = self.fc(x.flatten(1))
+        x = self.out_fc(x)
+        return x
+
+
 # ------------------------------------------------------------
 # Discriminator network.
 
 class Discriminator(torch.nn.Module):
     def __init__(self,
         nf,
-        kernel_size,
-        stride,
-        padding,
         depth,
         num_channels,
         scale_factor: int,
         start_size,
+        resample_kernel: list = [1,2,4,8,16,8,6,4,1]
     ):
         super().__init__()
     
         self.depth = depth
+        self.register_buffer("resample_filter", setup_filter(resample_kernel))
 
         # Main discriminator blocks.
         self.layers = torch.nn.ModuleList([])
         
         n = nf
         for l in range(depth - 1):
-            self.layers.append(DicriminatorBlock(in_channels=n, out_channels=n*2, kernel_size=kernel_size, stride=stride, padding=padding, scale_factor=scale_factor))
+            self.layers.append(DicriminatorBlock(in_channels=n, out_channels=n*2, scale_factor=scale_factor, resample_filter=self.resample_filter))
             n = n * 2
         
         # Final discriminator block.
-        self.layers.append(DiscriminatorEpilogue(in_channels=n, out_channels=n*2, num_channels=num_channels, kernel_size=kernel_size, stride=stride, padding=padding, scale_factor=start_size))
+        self.layers.append(DiscriminatorEpilogue(in_channels=n, out_channels=n*2, num_channels=num_channels, scale_factor=scale_factor, start_size=start_size, resample_filter=self.resample_filter))
         
         # Layer used to convert sound into tensor for the network.
-        self.converter = Conv1dLayer(in_channels=num_channels, out_channels=nf, kernel_size=1, stride=1, padding=0, bias=False)
+        self.converter = Conv1dLayer(in_channels=num_channels, out_channels=nf, bias=False)
 
         self.linear = FullyConnectedLayer(n + 1, num_channels)
 

@@ -71,9 +71,6 @@ class Train:
         self.scale_factor = scale_factor
         self.depth = depth
         self.num_filters = num_filters
-        self.kernel_size = 9
-        self.stride = 1
-        self.padding = 4
         self.start_size = start_size
 
         # Setup
@@ -110,11 +107,7 @@ class Train:
 
     def _init_models(self):
         self.netG = Generator(
-            z_dim = self.z_dim,
             nf = self.num_filters,
-            kernel_size = self.kernel_size,
-            stride = self.stride,
-            padding = self.padding,
             depth = self.depth,
             num_channels = self.num_channels,
             scale_factor = self.scale_factor,
@@ -123,9 +116,6 @@ class Train:
         
         self.netD = Discriminator(
             nf = self.num_filters // (2 ** self.depth),
-            kernel_size = self.kernel_size,
-            stride = self.stride,
-            padding = self.padding,
             depth = self.depth,
             num_channels = self.num_channels,
             scale_factor = self.scale_factor,
@@ -324,7 +314,7 @@ class Train:
 # Helper functions.
 
     def _print_examples(self, idx, epoch): 
-        if idx % 1000 == 0:
+        if idx % 100 == 0:
             
             # TODO:
             # REMOVE THIS

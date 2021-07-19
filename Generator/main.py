@@ -22,7 +22,7 @@ config_dict = {
     'datadir': 'datasets/dataset_3/',
 
     # Training
-    'batch_size': 12,
+    'batch_size': 20,
     
     # Learning
     'learning_rate': 0.002,
