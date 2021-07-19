@@ -49,7 +49,7 @@ def setup_filter(f, device=torch.device('cuda'), normalize=True, gain=1):
         f /= f.sum()
     return f
 
-#@torch.jit.script
+@torch.jit.script
 def conv_resample(x: Tensor, f: Tensor, up: int=1, down: int=1, padding: int=4, gain: int=1) -> Tensor:
     batch_size, num_channels, in_samples = x.shape
     """
@@ -89,100 +89,7 @@ def conv_resample(x: Tensor, f: Tensor, up: int=1, down: int=1, padding: int=4, 
     return x
 
 # ------------------------------------------------------------
-# Convolution layer with equalized learning.
-
-class Conv1dLayer(torch.nn.Module):
-    def __init__(
-        self,
-        in_channels: int,
-        out_channels: int,
-        kernel_size: int        = 1,
-        stride: int             = 1,
-        padding: int            = 0,
-        resample_filter: Tensor = None,
-        bias: bool              = True,
-        apply_style: bool       = False,
-        apply_noise: bool       = False,
-        up: int                 = 1,
-        down: int               = 1
-    ) -> None:
-        super().__init__()
-
-        self.in_channels = in_channels
-        self.out_channels = out_channels
-        self.stride = stride
-        self.padding = padding
-        self.resample_filter = resample_filter
-        self.up = up
-        self.down = down
-
-        self.apply_style = apply_style
-        self.apply_noise = apply_noise
-
-        if apply_style:
-            self.style_affine = FullyConnectedLayer(512, in_channels, activation="lrelu", bias_init=1)
-
-        if apply_noise:
-            self.noise_strength = torch.nn.Parameter(torch.zeros([out_channels]))
-
-        self.weight = torch.nn.Parameter(torch.randn([out_channels, in_channels, kernel_size]))
-        self.weight_gain = 1 / np.sqrt(in_channels * (kernel_size ** 2))
-
-        self.bias = torch.nn.Parameter(torch.zeros([out_channels])) if bias is not None else None
-    
-    def forward(
-        self,
-        x: Tensor,
-        style: Tensor       = None,
-        gain: float         = 1.0,
-        alpha: float        = 0.2
-    ) -> Tensor:
-        weight = self.weight * self.weight_gain
-        bias = self.bias
-
-        if bias is not None:
-            bias = bias.to(x.dtype).reshape(1, -1, 1)
-
-        # Modulate weights.
-        if self.apply_style:
-            style = self.style_affine(style)
-            x, dcoefs = modulate(x, style, weight)
-
-        if self.up != 1:
-            weight = weight.flip([2])
-
-        # Blur input and upsample with transposed convolution.
-        if self.up > 1:
-            x = conv_resample(x, f=self.resample_filter, up=self.up)
-
-        x = torch.nn.functional.conv1d(x, weight, stride=self.stride, padding=self.padding)
-        
-        # Downsample with convolution and blur output.
-        if self.down > 1:
-            x = conv_resample(x, f=self.resample_filter, down=self.down)
-
-        # Demodulate weights.
-        if self.apply_style:
-            x = demodulate(x, dcoefs)
-
-        # Add noise.
-        if self.apply_noise:
-            noise = torch.randn(x.size(0), 1, x.size(2), device=x.device, dtype=x.dtype)
-            x = x + noise * self.noise_strength.view(1, -1, 1)
-
-        # Add bias and activation function.
-        if bias is not None:
-            x = x + bias
-
-        x = torch.nn.functional.leaky_relu(x, alpha)
-        
-        if gain != 1:
-            x = x * gain
-        
-        return x
-
-# ------------------------------------------------------------
-# Fully-connected layer with equalized learning.
+# Fully-connected layer.
 
 class FullyConnectedLayer(torch.nn.Module):
     def __init__(self,
@@ -221,6 +128,108 @@ class FullyConnectedLayer(torch.nn.Module):
         if self.activation == "lrelu":
             x = torch.nn.functional.leaky_relu(x, alpha)
     
+        return x
+
+
+# ------------------------------------------------------------
+# Convolution layer.
+
+class Conv1dLayer(torch.nn.Module):
+    def __init__(
+        self,
+        in_channels: int,
+        out_channels: int,
+        kernel_size: int        = 1,
+        stride: int             = 1,
+        padding: int            = 0,
+        resample_filter: Tensor = None,
+        bias: bool              = True,
+        apply_style: bool       = False,
+        apply_noise: bool       = False,
+        up: int                 = 1,
+        down: int               = 1,
+        w_dim: int              = 512,
+        to_sound: bool          = False
+    ) -> None:
+        super().__init__()
+
+        self.in_channels = in_channels
+        self.out_channels = out_channels
+        self.stride = stride
+        self.padding = padding
+        self.resample_filter = resample_filter
+        self.up = up
+        self.down = down
+        self.apply_style = apply_style
+        self.apply_noise = apply_noise
+        self.to_sound = to_sound
+
+        if apply_style:
+            self.style_affine = FullyConnectedLayer(w_dim, in_channels, activation="lrelu", bias_init=1)
+
+        if apply_noise:
+            self.noise_strength = torch.nn.Parameter(torch.zeros([out_channels]))
+
+        self.weight = torch.nn.Parameter(torch.randn([out_channels, in_channels, kernel_size]))
+        self.weight_gain = 1 / np.sqrt(in_channels * (kernel_size ** 2))
+        self.bias = torch.nn.Parameter(torch.zeros([out_channels])) if bias is not None else None
+
+    def forward(
+        self,
+        x: Tensor,
+        style: Tensor       = None,
+        gain: float         = 1.0,
+        alpha: float        = 0.2
+    ) -> Tensor:
+        # Setup bias.
+        bias = self.bias 
+        if bias is not None:
+            bias = bias.to(x.dtype).reshape(1, -1, 1)
+
+        # Setup weights.
+        weight = self.weight
+        if self.apply_style:
+            style = self.style_affine(style)
+            x, dcoefs = modulate(x, style, weight)
+        elif self.apply_style and self.to_sound:
+            style = self.style_affine(style) * self.weight_gain
+            x, dcoefs = modulate(x, style, weight)
+        else:
+            weight = weight * self.weight_gain
+
+        # Flip weights if upsampling.
+        if self.up != 1:
+            weight = weight.flip([2])
+
+        # Blur input and upsample with transposed convolution.
+        if self.up > 1:
+            x = conv_resample(x, f=self.resample_filter, up=self.up)
+
+        # Do convolution.
+        x = torch.nn.functional.conv1d(x, weight, stride=self.stride, padding=self.padding)
+        
+        # Downsample with convolution and blur output.
+        if self.down > 1:
+            x = conv_resample(x, f=self.resample_filter, down=self.down)
+
+        # Demodulate weights.
+        if self.apply_style:
+            x = demodulate(x, dcoefs)
+
+        # Add noise.
+        if self.apply_noise:
+            noise = torch.randn(x.size(0), 1, x.size(2), device=x.device, dtype=x.dtype)
+            x = x + noise * self.noise_strength.view(1, -1, 1)
+
+        # Add bias and activation function.
+        if bias is not None:
+            x = x + bias
+
+        x = torch.nn.functional.leaky_relu(x, alpha)
+        
+        if gain != 1:
+            x = x * gain
+        
         return x
 
 # ------------------------------------------------------------
@@ -306,12 +315,12 @@ class SynthesisBlock(torch.nn.Module):
         self.block_1 = Conv1dLayer(in_channels=in_channels, out_channels=out_channels, kernel_size=9, padding=4, apply_style=True, apply_noise=True, up=scale_factor, resample_filter=self.resample_filter)
         self.block_2 = Conv1dLayer(in_channels=out_channels, out_channels=out_channels, kernel_size=9, padding=4, apply_style=True, apply_noise=True, resample_filter=self.resample_filter)
 
-        self.converter = Conv1dLayer(in_channels=out_channels, out_channels=num_channels, bias=False)
+        self.converter = Conv1dLayer(in_channels=out_channels, out_channels=num_channels, bias=True, apply_style=True, to_sound=True)
 
     def forward(self, x: Tensor, latent_w: Tensor, sound: Tensor=None):
         x = self.block_1(x, latent_w[:, 0])
         x = self.block_2(x, latent_w[:, 1])
-        y = self.converter(x)
+        y = self.converter(x, latent_w[:, 2])
         
         if sound is not None:
             sound = conv_resample(sound, f=self.resample_filter, up=self.scale_factor)
@@ -339,15 +348,15 @@ class SynthesisNetwork(torch.nn.Module):
         
         self.blocks = torch.nn.ModuleList([])
         for i in range(depth):
-            self.blocks.append(SynthesisBlock(in_channels=nf, out_channels=nf//2, num_channels=num_channels, scale_factor=1 if i==0 else scale_factor))
+            self.blocks.append(SynthesisBlock(in_channels=nf, out_channels=nf//2, num_channels=num_channels, scale_factor=scale_factor))
             nf = nf // 2
 
     def forward(self, x: Tensor, latent_w: Tensor):
         for i in range(self.depth): 
             if i == 0:
-                x, sound = self.blocks[i](x=x, latent_w=latent_w[:, 2 * i : 2 * i + 2])
+                x, sound = self.blocks[i](x=x, latent_w=latent_w[:, 3 * i : 3 * i + 3])
             else:
-                x, sound = self.blocks[i](x=x, latent_w=latent_w[:, 2 * i : 2 * i + 2], sound=sound)
+                x, sound = self.blocks[i](x=x, latent_w=latent_w[:, 3 * i : 3 * i + 3], sound=sound)
         return sound
 
 # ------------------------------------------------------------
@@ -367,7 +376,7 @@ class Generator(torch.nn.Module):
         self.depth = depth
         
         self.constant_input = ConstantInput(nf, start_size)
-        self.mapping_network = MappingNetwork(depth*2)
+        self.mapping_network = MappingNetwork(depth * 3)
         self.synthesis_network = SynthesisNetwork(nf, depth, num_channels, scale_factor)
 
     def forward(self,
@@ -393,7 +402,7 @@ class Generator(torch.nn.Module):
         latent_z_2 = torch.randn(latent_z.shape).to(latent_z.device)
         latent_w_2 = self.mapping_network(latent_z_2)
 
-        layer_idx = torch.from_numpy(np.arange(self.depth * 2)[np.newaxis, :, np.newaxis]).to(latent_z.device)
+        layer_idx = torch.from_numpy(np.arange(self.depth * 3)[np.newaxis, :, np.newaxis]).to(latent_z.device)
         cur_layers = 2 * (depth + 1)
 
         mixing_cutoff = random.randint(1, depth + 1) if random.random() < 0.9 else cur_layers
@@ -445,7 +454,7 @@ class DiscriminatorEpilogue(torch.nn.Module):
 
         self.conv_block = Conv1dLayer(in_channels=in_channels, out_channels=in_channels, kernel_size=9, padding=4, down=scale_factor, resample_filter=resample_filter)
         
-        self.fc = FullyConnectedLayer(in_channels=in_channels*start_size//scale_factor, out_channels=out_channels, activation="lrelu")
+        self.fc = FullyConnectedLayer(in_channels=in_channels*start_size, out_channels=out_channels, activation="lrelu")
         self.out_fc = FullyConnectedLayer(in_channels=out_channels, out_channels=num_channels, activation="lrelu")
     
     def forward(self, x: Tensor, group_size: int=4) -> Tensor:

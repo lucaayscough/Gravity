@@ -29,7 +29,7 @@ config_dict = {
 
     # Model
     'scale_factor': 4,
-    'depth': 5,
+    'depth': 4,
     'num_filters': 512,
     'start_size': 64,
 
