@@ -112,9 +112,9 @@ class Conv1dLayer(torch.nn.Module):
         self.out_channels = out_channels
         self.stride = stride
         self.padding = padding
+        self.resample_filter = resample_filter
         self.up = up
         self.down = down
-        self.resample_filter = resample_filter
 
         self.apply_style = apply_style
         self.apply_noise = apply_noise
@@ -148,19 +148,22 @@ class Conv1dLayer(torch.nn.Module):
             style = self.style_affine(style)
             x, dcoefs = modulate(x, style, weight)
 
+        if self.up != 1:
+            weight = weight.flip([2])
+
         # Blur input and upsample with transposed convolution.
         if self.resample_filter is not None and self.up > 1:
-            #x = conv_resample(x, f=self.resample_filter, up=1, down=1)
-            x = torch.nn.functional.conv_transpose1d(x, weight, stride=self.stride, padding=self.padding, output_padding=1)
+            x = conv_resample(x, f=self.resample_filter, up=self.up)
+            x = torch.nn.functional.conv1d(x, weight, stride=1, padding=self.padding)
         
         #Convolve over input if no up/down sampling is needed.
         if self.resample_filter is None:
-            x = torch.nn.functional.conv1d(x, weight, stride=self.stride, padding=self.padding)
+            x = torch.nn.functional.conv1d(x, weight, stride=1, padding=self.padding)
         
         # Downsample with convolution and blur output.
         if self.resample_filter is not None and self.down > 1:
-            x = torch.nn.functional.conv1d(x, weight, stride=self.stride, padding=self.padding)
-            #x = conv_resample(x, f=self.resample_filter, up=1, down=1)
+            x = torch.nn.functional.conv1d(x, weight, stride=1, padding=self.padding)
+            x = conv_resample(x, f=self.resample_filter, down=self.down)
 
         # Demodulate weights.
         if self.apply_style:
@@ -239,12 +242,12 @@ class StyleBlock(torch.nn.Module):
         
         self.resample_filter = resample_filter
         
-        self.conv_block_1 = Conv1dLayer(in_channels=in_channels, out_channels=in_channels, kernel_size=9, stride=scale_factor, padding=3, apply_style=True, apply_noise=True, up=scale_factor, resample_filter=resample_filter)
+        self.conv_block_1 = Conv1dLayer(in_channels=in_channels, out_channels=in_channels, kernel_size=9, stride=scale_factor, padding=4, apply_style=True, apply_noise=True, up=scale_factor, resample_filter=resample_filter)
         self.conv_block_2 = Conv1dLayer(in_channels=in_channels, out_channels=out_channels, kernel_size=9, padding=4, apply_style=True, apply_noise=True)
 
     def forward(self, x: Tensor, latent_w: Tensor) -> Tensor:
         x = self.conv_block_1(x, latent_w[:, 0])
-        return self.conv_block_2(x, latent_w[:, 1], gain=np.sqrt(0.5))
+        return self.conv_block_2(x, latent_w[:, 1])
 
 # ------------------------------------------------------------
 # Constant input.
