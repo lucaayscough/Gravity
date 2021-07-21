@@ -275,7 +275,8 @@ class Train:
         self.netD.requires_grad_(True)
 
         self.opt_dis.zero_grad(set_to_none=True)
-        
+        real.requires_grad = True
+
         # Train on generated.
         noise = torch.randn((self.batch_size, self.z_dim)).to(self.device)
         gen_sounds = self.netG(noise)
@@ -293,7 +294,6 @@ class Train:
 
         # R1.
         if idx % self.D_reg == 0:
-            real.requires_grad = True
             r1_grads = torch.autograd.grad(outputs=loss_real.sum(), inputs=real, create_graph=True, only_inputs=True)[0]
             r1_penalty = r1_grads.square().sum([1,2])
             loss_r1 = r1_penalty * (self.r1_gamma / 2)

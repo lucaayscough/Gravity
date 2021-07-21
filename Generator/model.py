@@ -40,11 +40,16 @@ def mini_batch_std_dev(x: Tensor, group_size: int=4, num_channels: int=1, alpha:
     y = y.repeat(G, 1, S)               # [NFS]     Replicate over group and pixels.
     return torch.cat([x, y], dim=1)     # [NCS]     Append to input as new channels.
 
-def setup_filter(f, device=torch.device('cuda'), normalize=True, gain=1):
-    f = torch.as_tensor(f, dtype=torch.float32).to(device=device)
-    if normalize:
-        f /= f.sum()
-    return f
+def setup_filter():
+    kernel = [1, 2, 4, 2, 1]
+    kernel = torch.tensor(kernel, dtype = torch.float)
+    kernel = kernel.expand(1, 1, -1)
+    kernel = kernel / kernel.sum()
+
+    # TODO:
+    # Fix this...
+
+    return kernel.to("cuda")
 
 @torch.jit.script
 def conv_resample(x: Tensor, f: Tensor, up: int=1, down: int=1, padding: int=2, gain: int=1) -> Tensor:
@@ -64,15 +69,13 @@ def conv_resample(x: Tensor, f: Tensor, up: int=1, down: int=1, padding: int=2, 
         x = torch.nn.functional.interpolate(x, scale_factor=float(up), mode="nearest")
 
     # Setup filter.
-    f = f * (gain ** (f.ndim / 2))
-    f = f.to(x.dtype)
+    f = f.expand(x.size(1), -1, -1).to(x.dtype)
 
     # Convolve with the filter.
-    f = f[np.newaxis, np.newaxis].repeat([num_channels, 1] + [1] * f.ndim)
     x = torch.nn.functional.conv1d(input=x, weight=f, padding=padding, groups=num_channels)
 
     if down != 1:
-        x = torch.nn.functional.avg_pool1d(x, kernel_size=down)
+        x = torch.nn.functional.interpolate(x, scale_factor=1/float(down), mode="nearest")
     
     # Downsample by throwing away pixels.
     """if down != 1:
@@ -304,14 +307,13 @@ class SynthesisBlock(torch.nn.Module):
         in_channels: int,
         out_channels: int,
         num_channels: int,
-        scale_factor: int,
-        resample_kernel: list = [1,2,4,2,1]
+        scale_factor: int
     ):
         super().__init__()
         
         self.scale_factor = scale_factor
         
-        self.register_buffer("resample_filter", setup_filter(resample_kernel))
+        self.register_buffer("resample_filter", setup_filter())
 
         self.block_1 = Conv1dLayer(in_channels=in_channels, out_channels=in_channels, kernel_size=9, padding=4, apply_style=True, apply_noise=True, up=scale_factor, resample_filter=self.resample_filter)
         self.block_2 = Conv1dLayer(in_channels=in_channels, out_channels=out_channels, kernel_size=9, padding=4, apply_style=True, apply_noise=True, resample_filter=self.resample_filter)
@@ -481,13 +483,12 @@ class Discriminator(torch.nn.Module):
         depth,
         num_channels,
         scale_factor: int,
-        start_size,
-        resample_kernel: list = [1,2,4,2,1]
+        start_size
     ):
         super().__init__()
     
         self.depth = depth
-        self.register_buffer("resample_filter", setup_filter(resample_kernel))
+        self.register_buffer("resample_filter", setup_filter())
 
         # Main discriminator blocks.
         self.layers = torch.nn.ModuleList([])
