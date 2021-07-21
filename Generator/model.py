@@ -7,11 +7,9 @@ import random
 # ------------------------------------------------------------
 # Scripted functions.
 
-@torch.jit.script
 def normalize(x: Tensor, epsilon: float=1e-8) -> Tensor:
     return x * (x.square().mean(dim=1, keepdim=True) + epsilon).rsqrt()
 
-#@torch.jit.script
 def modulate(x: Tensor, style: Tensor, weight: Tensor, demodulate: bool=True):
     batch_size = x.size(0)
     out_channels, in_channels, ks = weight.shape
@@ -24,7 +22,6 @@ def modulate(x: Tensor, style: Tensor, weight: Tensor, demodulate: bool=True):
     weight = weight.reshape(-1, in_channels, ks)
     return x, weight
 
-@torch.jit.script
 def mini_batch_std_dev(x: Tensor, group_size: int=4, num_channels: int=1, alpha: float=1e-8) -> Tensor:    
     N, C, S = x.shape
     G = torch.min(torch.as_tensor(group_size), torch.as_tensor(N))
@@ -39,49 +36,6 @@ def mini_batch_std_dev(x: Tensor, group_size: int=4, num_channels: int=1, alpha:
     y = y.reshape(-1, F, 1)             # [nF1]     Add missing dimensions.
     y = y.repeat(G, 1, S)               # [NFS]     Replicate over group and pixels.
     return torch.cat([x, y], dim=1)     # [NCS]     Append to input as new channels.
-
-def setup_filter():
-    kernel = [1, 2, 4, 2, 1]
-    kernel = torch.tensor(kernel, dtype = torch.float)
-    kernel = kernel.expand(1, 1, -1)
-    kernel = kernel / kernel.sum()
-
-    # TODO:
-    # Fix this...
-
-    return kernel.to("cuda")
-
-@torch.jit.script
-def conv_resample(x: Tensor, f: Tensor, up: int=1, down: int=1, padding: int=2, gain: int=1) -> Tensor:
-    batch_size, num_channels, in_samples = x.shape
-    # Upsample by inserting zeros.
-    """if up != 1:
-        x = x.reshape([batch_size, num_channels, in_samples, 1])
-        x = torch.nn.functional.pad(x, [0, up - 1])
-        x = x.reshape([batch_size, num_channels, in_samples * up])"""
-
-    # Pad or crop.
-    """if padding != 0:
-        x = torch.nn.functional.pad(x, [max(padding, 0), max(padding, 0)])
-        x = x[:, :, max(-padding, 0) : x.shape[2] - max(-padding, 0)]"""
-
-    if up != 1:
-        x = torch.nn.functional.interpolate(x, scale_factor=float(up), mode="nearest")
-
-    # Setup filter.
-    f = f.expand(x.size(1), -1, -1).to(x.dtype)
-
-    # Convolve with the filter.
-    x = torch.nn.functional.conv1d(input=x, weight=f, padding=padding, groups=num_channels)
-
-    if down != 1:
-        x = torch.nn.functional.interpolate(x, scale_factor=1/float(down), mode="nearest")
-    
-    # Downsample by throwing away pixels.
-    """if down != 1:
-        x = x[:, :, ::down]
-    """
-    return x
 
 # ------------------------------------------------------------
 # Fully-connected layer.
@@ -207,14 +161,14 @@ class Conv1dLayer(torch.nn.Module):
 
         # Blur input and upsample with transposed convolution.
         if self.up > 1:
-            x = conv_resample(x, f=self.resample_filter, up=self.up)
+            x = self.resample_filter(x)
 
         # Do convolution.
         x = torch.nn.functional.conv1d(x, weight, stride=self.stride, padding=self.padding, groups=groups)
         
         # Downsample with convolution and blur output.
         if self.down > 1:
-            x = conv_resample(x, f=self.resample_filter, down=self.down)
+            x = self.resample_filter(x)
 
         # Demodulate weights.
         if self.apply_style:
@@ -313,7 +267,7 @@ class SynthesisBlock(torch.nn.Module):
         
         self.scale_factor = scale_factor
         
-        self.register_buffer("resample_filter", setup_filter())
+        self.resample_filter = torchaudio.transforms.Resample(orig_freq=1, new_freq=scale_factor, rolloff=0.9, dtype=torch.float32)
 
         self.block_1 = Conv1dLayer(in_channels=in_channels, out_channels=in_channels, kernel_size=9, padding=4, apply_style=True, apply_noise=True, up=scale_factor, resample_filter=self.resample_filter)
         self.block_2 = Conv1dLayer(in_channels=in_channels, out_channels=out_channels, kernel_size=9, padding=4, apply_style=True, apply_noise=True, resample_filter=self.resample_filter)
@@ -326,7 +280,7 @@ class SynthesisBlock(torch.nn.Module):
         y = self.converter(x, latent_w[:, 2])
         
         if sound is not None:
-            sound = conv_resample(sound, f=self.resample_filter, up=self.scale_factor)
+            sound = self.resample_filter(sound)
             sound = sound.add_(y)
         else:
             sound = y
@@ -459,8 +413,6 @@ class DiscriminatorEpilogue(torch.nn.Module):
         
         in_channels += 1
 
-        # this here was changed from in to out
-        
         self.conv_block = Conv1dLayer(in_channels=in_channels, out_channels=out_channels, kernel_size=9, padding=4, down=scale_factor, resample_filter=resample_filter)
         
         self.fc = FullyConnectedLayer(in_channels=out_channels*start_size, out_channels=out_channels, activation="lrelu")
@@ -488,22 +440,17 @@ class Discriminator(torch.nn.Module):
         super().__init__()
     
         self.depth = depth
-        self.register_buffer("resample_filter", setup_filter())
+        self.resample_filter = torchaudio.transforms.Resample(orig_freq=scale_factor, new_freq=1, rolloff=0.9, dtype=torch.float32)
 
-        # Main discriminator blocks.
         self.layers = torch.nn.ModuleList([])
-
-        # TODO:
-        # Clean this up.        
+     
         n = nf
         for l in range(depth - 1):
             self.layers.append(DicriminatorBlock(in_channels=n, out_channels=n*2, scale_factor=scale_factor, resample_filter=self.resample_filter))
             n = n*2
-        
-        # Final discriminator block.
+
         self.layers.append(DiscriminatorEpilogue(in_channels=n, out_channels=n*2, num_channels=num_channels, scale_factor=scale_factor, start_size=start_size, resample_filter=self.resample_filter))
         
-        # Layer used to convert sound into tensor for the network.
         self.converter = Conv1dLayer(in_channels=num_channels, out_channels=nf, bias=False)
 
     def forward(self, x):
