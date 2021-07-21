@@ -12,8 +12,6 @@ import torchaudio
 # TODO:
 # Add logger.
 # Add profiler.
-# try clamping
-
 
 config_dict = {
     # Iterarion
@@ -22,14 +20,14 @@ config_dict = {
     'datadir': 'datasets/dataset_3/',
 
     # Training
-    'batch_size': 20,
+    'batch_size': 32,
     
     # Learning
     'learning_rate': 0.002,
 
     # Model
-    'scale_factor': 4,
-    'depth': 4,
+    'scale_factor': 2,
+    'depth': 8,
     'num_filters': 512,
     'start_size': 64,
 

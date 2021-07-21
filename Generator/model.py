@@ -11,21 +11,18 @@ import random
 def normalize(x: Tensor, epsilon: float=1e-8) -> Tensor:
     return x * (x.square().mean(dim=1, keepdim=True) + epsilon).rsqrt()
 
-@torch.jit.script
-def modulate(x: Tensor, styles: Tensor, weight: Tensor):
-    w = weight.unsqueeze(0)
-    w = w * styles.reshape(x.size(0), 1, -1, 1)
-    dcoefs = (w.square().sum(dim=[2,3]) + 1e-8).rsqrt()
-    x = x * styles.to(x.dtype).reshape(x.size(0), -1, 1)
-    return x, dcoefs
-
-@torch.jit.script
-def demodulate(x: Tensor, dcoefs: Tensor) -> Tensor:
-    return x * dcoefs.reshape(x.size(0), -1, 1)
-
-@torch.jit.script
-def blur(x: Tensor, kernel: Tensor) -> Tensor:
-    return torch.nn.functional.conv1d(x, kernel, stride=1, padding=2, groups=x.size(1))
+#@torch.jit.script
+def modulate(x: Tensor, style: Tensor, weight: Tensor, demodulate: bool=True):
+    batch_size = x.size(0)
+    out_channels, in_channels, ks = weight.shape
+    weight = weight.unsqueeze(0)
+    weight = weight * style.reshape(batch_size, 1, -1, 1)
+    if demodulate:
+        dcoefs = (weight.square().sum(dim=[2,3]) + 1e-8).rsqrt()
+        weight = weight * dcoefs.reshape(batch_size, -1, 1, 1)
+    x = x.reshape(1, -1, *x.shape[2:])
+    weight = weight.reshape(-1, in_channels, ks)
+    return x, weight
 
 @torch.jit.script
 def mini_batch_std_dev(x: Tensor, group_size: int=4, num_channels: int=1, alpha: float=1e-8) -> Tensor:    
@@ -50,40 +47,35 @@ def setup_filter(f, device=torch.device('cuda'), normalize=True, gain=1):
     return f
 
 @torch.jit.script
-def conv_resample(x: Tensor, f: Tensor, up: int=1, down: int=1, padding: int=4, gain: int=1) -> Tensor:
+def conv_resample(x: Tensor, f: Tensor, up: int=1, down: int=1, padding: int=2, gain: int=1) -> Tensor:
     batch_size, num_channels, in_samples = x.shape
-    """
     # Upsample by inserting zeros.
-    if up != 1:
+    """if up != 1:
         x = x.reshape([batch_size, num_channels, in_samples, 1])
         x = torch.nn.functional.pad(x, [0, up - 1])
-        x = x.reshape([batch_size, num_channels, in_samples * up])
+        x = x.reshape([batch_size, num_channels, in_samples * up])"""
 
     # Pad or crop.
-    if padding != 0:
+    """if padding != 0:
         x = torch.nn.functional.pad(x, [max(padding, 0), max(padding, 0)])
-        x = x[:, :, max(-padding, 0) : x.shape[2] - max(-padding, 0)]
-    """
+        x = x[:, :, max(-padding, 0) : x.shape[2] - max(-padding, 0)]"""
 
     if up != 1:
-        x = torch.nn.functional.interpolate(x, scale_factor=float(up), mode="linear")
-    
-    """
+        x = torch.nn.functional.interpolate(x, scale_factor=float(up), mode="nearest")
+
     # Setup filter.
     f = f * (gain ** (f.ndim / 2))
     f = f.to(x.dtype)
-    """
-    """
+
     # Convolve with the filter.
     f = f[np.newaxis, np.newaxis].repeat([num_channels, 1] + [1] * f.ndim)
     x = torch.nn.functional.conv1d(input=x, weight=f, padding=padding, groups=num_channels)
-    """
-    if down != 1:
-        x = torch.nn.functional.interpolate(x, scale_factor=float(1/down), mode="linear")
 
-    """
-    # Downsample by throwing away pixels.
     if down != 1:
+        x = torch.nn.functional.avg_pool1d(x, kernel_size=down)
+    
+    # Downsample by throwing away pixels.
+    """if down != 1:
         x = x[:, :, ::down]
     """
     return x
@@ -188,14 +180,22 @@ class Conv1dLayer(torch.nn.Module):
 
         # Setup weights.
         weight = self.weight
-        if self.apply_style:
+        batch_size = x.size(0)
+        out_channels, in_channels, ks = weight.shape
+
+        if self.apply_style and not self.to_sound:
             style = self.style_affine(style)
-            x, dcoefs = modulate(x, style, weight)
+            x, weight = modulate(x, style, weight)
+            groups = batch_size
+
         elif self.apply_style and self.to_sound:
             style = self.style_affine(style) * self.weight_gain
-            x, dcoefs = modulate(x, style, weight)
+            x, weight = modulate(x, style, weight, False)
+            groups = batch_size
+
         else:
             weight = weight * self.weight_gain
+            groups = 1
 
         # Flip weights if upsampling.
         if self.up != 1:
@@ -206,7 +206,7 @@ class Conv1dLayer(torch.nn.Module):
             x = conv_resample(x, f=self.resample_filter, up=self.up)
 
         # Do convolution.
-        x = torch.nn.functional.conv1d(x, weight, stride=self.stride, padding=self.padding)
+        x = torch.nn.functional.conv1d(x, weight, stride=self.stride, padding=self.padding, groups=groups)
         
         # Downsample with convolution and blur output.
         if self.down > 1:
@@ -214,11 +214,11 @@ class Conv1dLayer(torch.nn.Module):
 
         # Demodulate weights.
         if self.apply_style:
-            x = demodulate(x, dcoefs)
+            x = x.reshape(batch_size, -1, *x.shape[2:])
 
         # Add noise.
         if self.apply_noise:
-            noise = torch.randn(x.size(0), 1, x.size(2), device=x.device, dtype=x.dtype)
+            noise = torch.randn(batch_size, 1, x.size(2), device=x.device, dtype=x.dtype)
             x = x + noise * self.noise_strength.view(1, -1, 1)
 
         # Add bias and activation function.
@@ -304,7 +304,7 @@ class SynthesisBlock(torch.nn.Module):
         out_channels: int,
         num_channels: int,
         scale_factor: int,
-        resample_kernel: list = [1,2,4,8,16,8,6,4,1]
+        resample_kernel: list = [1,2,4,2,1]
     ):
         super().__init__()
         
@@ -475,7 +475,7 @@ class Discriminator(torch.nn.Module):
         num_channels,
         scale_factor: int,
         start_size,
-        resample_kernel: list = [1,2,4,8,16,8,6,4,1]
+        resample_kernel: list = [1,2,4,2,1]
     ):
         super().__init__()
     

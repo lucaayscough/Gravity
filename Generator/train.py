@@ -124,9 +124,7 @@ class Train:
 
     def _init_optim(self): 
         self.opt_gen = torch.optim.Adam(
-            [
-                {'params': self.netG.parameters()}
-            ],
+            params = self.netG.parameters(),
             lr = self.learning_rate,
             betas = (0.0, 0.99),
             eps = 1e-8
@@ -314,7 +312,7 @@ class Train:
 # Helper functions.
 
     def _print_examples(self, idx, epoch): 
-        if idx % 100 == 0:
+        if idx % 1000 == 0:
             
             # TODO:
             # REMOVE THIS
