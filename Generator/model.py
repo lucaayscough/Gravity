@@ -163,6 +163,7 @@ class Conv1dLayer(torch.nn.Module):
             self.noise_strength = torch.nn.Parameter(torch.zeros([out_channels]))
 
         self.weight = torch.nn.Parameter(torch.randn([out_channels, in_channels, kernel_size]))
+
         self.weight_gain = 1 / np.sqrt(in_channels * (kernel_size ** 2))
         self.bias = torch.nn.Parameter(torch.zeros([out_channels])) if bias is not None else None
 
@@ -312,8 +313,8 @@ class SynthesisBlock(torch.nn.Module):
         
         self.register_buffer("resample_filter", setup_filter(resample_kernel))
 
-        self.block_1 = Conv1dLayer(in_channels=in_channels, out_channels=out_channels, kernel_size=9, padding=4, apply_style=True, apply_noise=True, up=scale_factor, resample_filter=self.resample_filter)
-        self.block_2 = Conv1dLayer(in_channels=out_channels, out_channels=out_channels, kernel_size=9, padding=4, apply_style=True, apply_noise=True, resample_filter=self.resample_filter)
+        self.block_1 = Conv1dLayer(in_channels=in_channels, out_channels=in_channels, kernel_size=9, padding=4, apply_style=True, apply_noise=True, up=scale_factor, resample_filter=self.resample_filter)
+        self.block_2 = Conv1dLayer(in_channels=in_channels, out_channels=out_channels, kernel_size=9, padding=4, apply_style=True, apply_noise=True, resample_filter=self.resample_filter)
 
         self.converter = Conv1dLayer(in_channels=out_channels, out_channels=num_channels, bias=True, apply_style=True, to_sound=True)
 
@@ -345,7 +346,9 @@ class SynthesisNetwork(torch.nn.Module):
         super().__init__()
 
         self.depth = depth
-        
+
+        # TODO:
+        # Clean this up.
         self.blocks = torch.nn.ModuleList([])
         for i in range(depth):
             self.blocks.append(SynthesisBlock(in_channels=nf, out_channels=nf//2, num_channels=num_channels, scale_factor=scale_factor))
@@ -357,6 +360,8 @@ class SynthesisNetwork(torch.nn.Module):
                 x, sound = self.blocks[i](x=x, latent_w=latent_w[:, 3 * i : 3 * i + 3])
             else:
                 x, sound = self.blocks[i](x=x, latent_w=latent_w[:, 3 * i : 3 * i + 3], sound=sound)
+            copy = sound
+            #torchaudio.save(filepath = 'runs/an/' + '_analyses' + str(i) + '.wav', src=copy[0].detach().cpu(), sample_rate=44100)
         return sound
 
 # ------------------------------------------------------------
@@ -423,8 +428,8 @@ class DicriminatorBlock(torch.nn.Module):
     ):
         super().__init__()
 
-        self.conv_block_1 = Conv1dLayer(in_channels=in_channels, out_channels=in_channels, kernel_size=9, padding=4, down=scale_factor, resample_filter=resample_filter)
-        self.conv_block_2 = Conv1dLayer(in_channels=in_channels, out_channels=out_channels, kernel_size=9, padding=4)
+        self.conv_block_1 = Conv1dLayer(in_channels=in_channels, out_channels=out_channels, kernel_size=9, padding=4, down=scale_factor, resample_filter=resample_filter)
+        self.conv_block_2 = Conv1dLayer(in_channels=out_channels, out_channels=out_channels, kernel_size=9, padding=4)
         self.residual = Conv1dLayer(in_channels=in_channels, out_channels=out_channels, bias=False, down=scale_factor, resample_filter=resample_filter)
 
     def forward(self, x: Tensor) -> Tensor:
@@ -452,9 +457,11 @@ class DiscriminatorEpilogue(torch.nn.Module):
         
         in_channels += 1
 
-        self.conv_block = Conv1dLayer(in_channels=in_channels, out_channels=in_channels, kernel_size=9, padding=4, down=scale_factor, resample_filter=resample_filter)
+        # this here was changed from in to out
         
-        self.fc = FullyConnectedLayer(in_channels=in_channels*start_size, out_channels=out_channels, activation="lrelu")
+        self.conv_block = Conv1dLayer(in_channels=in_channels, out_channels=out_channels, kernel_size=9, padding=4, down=scale_factor, resample_filter=resample_filter)
+        
+        self.fc = FullyConnectedLayer(in_channels=out_channels*start_size, out_channels=out_channels, activation="lrelu")
         self.out_fc = FullyConnectedLayer(in_channels=out_channels, out_channels=num_channels, activation="lrelu")
     
     def forward(self, x: Tensor, group_size: int=4) -> Tensor:
@@ -484,11 +491,13 @@ class Discriminator(torch.nn.Module):
 
         # Main discriminator blocks.
         self.layers = torch.nn.ModuleList([])
-        
+
+        # TODO:
+        # Clean this up.        
         n = nf
         for l in range(depth - 1):
             self.layers.append(DicriminatorBlock(in_channels=n, out_channels=n*2, scale_factor=scale_factor, resample_filter=self.resample_filter))
-            n = n * 2
+            n = n*2
         
         # Final discriminator block.
         self.layers.append(DiscriminatorEpilogue(in_channels=n, out_channels=n*2, num_channels=num_channels, scale_factor=scale_factor, start_size=start_size, resample_filter=self.resample_filter))
@@ -501,5 +510,4 @@ class Discriminator(torch.nn.Module):
 
         for i in range(self.depth):
             x = self.layers[i](x)
-
         return x

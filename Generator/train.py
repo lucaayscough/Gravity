@@ -82,6 +82,7 @@ class Train:
         
         # Initialization
         torch.backends.cudnn.benchmark = True
+        torch.autograd.set_detect_anomaly(True)
         
         self._init_models()
         self._init_optim()
@@ -216,17 +217,11 @@ class Train:
             for idx, data in enumerate(dataloader):
                 real = data[0].to(self.device)
 
-                self.opt_gen.zero_grad(set_to_none=True)
-                self.opt_dis.zero_grad(set_to_none=True)
-
                 self._train_generator(idx)
                 if self.disc_loss_fn == "r1":
                     self._train_discriminator_r1(real, idx)
                 else:
                     self._train_discriminator_wgangp(real)
-
-                self.opt_gen.step()
-                self.opt_dis.step()
 
                 self._update_average(beta = self.ema_beta)
                 
@@ -244,13 +239,19 @@ class Train:
         self.netG.requires_grad_(True)
         self.netD.requires_grad_(False)
 
+        self.opt_gen.zero_grad(set_to_none=True)
+
         noise = torch.randn((self.batch_size, self.z_dim)).to(self.device)
         fake = self.netG(noise)
         output = self.netD(fake)
         self.loss_gen = torch.nn.functional.softplus(-output).mean()
+
         self.loss_gen.backward()
+        self.opt_gen.step()
 
         if idx % self.G_reg == 0:
+            self.opt_gen.zero_grad(set_to_none=True)
+
             batch_size = noise.shape[0] // self.pl_batch_shrink
             sounds, w_latents = self.netG(noise[:batch_size], return_w=True)
 
@@ -263,26 +264,36 @@ class Train:
 
             pl_penalty = (pl_lengths - pl_mean).square()
             loss_Gpl = pl_penalty * self.pl_weight
+
             (sounds[:, 0, 0] * 0 + loss_Gpl).mean().mul(self.G_reg).backward()
+            self.opt_gen.step()
+        
+        
 
     def _train_discriminator_r1(self, real, idx):
         self.netG.requires_grad_(False)
         self.netD.requires_grad_(True)
+
+        self.opt_dis.zero_grad(set_to_none=True)
         
         # Train on generated.
         noise = torch.randn((self.batch_size, self.z_dim)).to(self.device)
         gen_sounds = self.netG(noise)
         logits_fake = self.netD(gen_sounds)
         loss_fake = torch.nn.functional.softplus(logits_fake).mean()
-        loss_fake.backward(retain_graph=True)
+
+        loss_fake.backward()
+        self.opt_dis.step()
 
         # Train on real.
-        real.requires_grad = True
+        self.opt_dis.zero_grad(set_to_none=True)
+
         logits_real = self.netD(real)
         loss_real = torch.nn.functional.softplus(-logits_real).mean()
 
         # R1.
         if idx % self.D_reg == 0:
+            real.requires_grad = True
             r1_grads = torch.autograd.grad(outputs=loss_real.sum(), inputs=real, create_graph=True, only_inputs=True)[0]
             r1_penalty = r1_grads.square().sum([1,2])
             loss_r1 = r1_penalty * (self.r1_gamma / 2)
@@ -291,6 +302,7 @@ class Train:
             (logits_real * 0 + loss_real).mean().backward()
 
         self.loss_disc = loss_real + loss_fake
+        self.opt_dis.step()
     
     def _train_discriminator_wgangp(self, real):
         self.netG.requires_grad_(False)
