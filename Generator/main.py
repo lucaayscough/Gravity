@@ -4,7 +4,7 @@
 
 import warnings
 from train import Train
-from utils import build_folder_structure, get_iter
+from misc.utils import build_folder_structure, get_iter
 
 import torchaudio
 
@@ -14,7 +14,7 @@ import torchaudio
 # Add profiler.
 
 config_dict = {
-    'program_version': 0.4,
+    'program_version': 0.5,
 
     # Iterarion
     'iter_num': None,
@@ -22,14 +22,14 @@ config_dict = {
     'datadir': 'datasets/dataset_3/',
 
     # Training
-    'batch_size': 8,
+    'batch_size': 16,
     
     # Learning
     'learning_rate': 0.002,
 
     # Model
-    'scale_factor': 2,
-    'depth': 8,
+    'scale_factor': 4,
+    'depth': 4,
     'num_filters': 512,
     'start_size': 64,
 

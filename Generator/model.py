@@ -1,5 +1,6 @@
 import torch
 from torch import Tensor
+from misc import conv1d_gradfix
 import torchaudio
 import numpy as np
 import random
@@ -39,6 +40,33 @@ def mini_batch_std_dev(x: Tensor, group_size: int=4, num_channels: int=1, alpha:
     y = y.reshape(-1, F, 1)             # [nF1]     Add missing dimensions.
     y = y.repeat(G, 1, S)               # [NFS]     Replicate over group and pixels.
     return torch.cat([x, y], dim=1)     # [NCS]     Append to input as new channels.
+
+def setup_filter():
+    kernel = [1, 2, 4, 2, 1]
+    kernel = torch.tensor(kernel, dtype = torch.float)
+    kernel = kernel.expand(1, 1, -1)
+    kernel = kernel / kernel.sum()
+
+    # TODO:
+    # Fix this...
+
+    return kernel.to("cuda")
+
+@torch.jit.script
+def conv_resample(x: Tensor, f: Tensor, up: int=1, down: int=1, padding: int=2, gain: int=1) -> Tensor:
+    batch_size, num_channels, in_samples = x.shape
+    if up != 1:
+        x = torch.nn.functional.interpolate(x, scale_factor=float(up), mode="nearest")
+
+    # Setup filter.
+    f = f.expand(x.size(1), -1, -1).to(x.dtype)
+
+    # Convolve with the filter.
+    x = torch.nn.functional.conv1d(input=x, weight=f, padding=padding, groups=num_channels)
+
+    if down != 1:
+        x = torch.nn.functional.interpolate(x, scale_factor=1/float(down), mode="nearest")
+    return x
 
 # ------------------------------------------------------------
 # Fully-connected layer.
@@ -164,14 +192,17 @@ class Conv1dLayer(torch.nn.Module):
 
         # Blur input and upsample with transposed convolution.
         if self.up > 1:
-            x = self.resample_filter(x)
+            x = conv_resample(x, f=self.resample_filter)
+            x = conv1d_gradfix.conv_transpose1d(x, weight, stride=self.up, padding=self.padding, groups=groups, output_padding=1)
 
         # Do convolution.
-        x = torch.nn.functional.conv1d(x, weight, stride=self.stride, padding=self.padding, groups=groups)
+        if self.up == 1 and self.down == 1:
+            x = conv1d_gradfix.conv1d(x, weight, stride=self.stride, padding=self.padding, groups=groups)
         
         # Downsample with convolution and blur output.
         if self.down > 1:
-            x = self.resample_filter(x)
+            x = conv1d_gradfix.conv1d(x, weight, stride=self.down, padding=self.padding, groups=groups)
+            x = conv_resample(x, f=self.resample_filter)
 
         # Demodulate weights.
         if self.apply_style:
@@ -269,10 +300,10 @@ class SynthesisBlock(torch.nn.Module):
         super().__init__()
         
         self.scale_factor = scale_factor
-        
-        self.resample_filter = torchaudio.transforms.Resample(orig_freq=1, new_freq=scale_factor, rolloff=0.9, dtype=torch.float32)
 
-        self.block_1 = Conv1dLayer(in_channels=in_channels, out_channels=in_channels, kernel_size=9, padding=4, apply_style=True, apply_noise=True, up=scale_factor, resample_filter=self.resample_filter)
+        self.register_buffer("resample_filter", setup_filter())
+
+        self.block_1 = Conv1dLayer(in_channels=in_channels, out_channels=in_channels, kernel_size=9, padding=3, apply_style=True, apply_noise=True, up=scale_factor, resample_filter=self.resample_filter)
         self.block_2 = Conv1dLayer(in_channels=in_channels, out_channels=out_channels, kernel_size=9, padding=4, apply_style=True, apply_noise=True, resample_filter=self.resample_filter)
 
         self.converter = Conv1dLayer(in_channels=out_channels, out_channels=num_channels, bias=True, apply_style=True, to_sound=True)
@@ -283,7 +314,7 @@ class SynthesisBlock(torch.nn.Module):
         y = self.converter(x, latent_w[:, 2])
         
         if sound is not None:
-            sound = self.resample_filter(sound)
+            sound = conv_resample(sound, f=self.resample_filter, up=self.scale_factor)
             sound = sound.add_(y)
         else:
             sound = y
@@ -307,7 +338,7 @@ class SynthesisNetwork(torch.nn.Module):
         self.depth = depth
 
         self.blocks = torch.nn.ModuleList([])
-        c = 1 / np.sqrt(0.5)
+        c = 2
         for i in range(depth):
             self.blocks.append(SynthesisBlock(in_channels=int(nf), out_channels=int(nf/c), num_channels=num_channels, scale_factor=scale_factor))
             nf = nf / c
@@ -348,11 +379,10 @@ class Generator(torch.nn.Module):
         return_w: bool      = False
     ):
         x = self.constant_input(batch_size=latent_z.size(0))
-        latent_w = self.mapping_network(latent_z, truncation_psi=1, truncation_cutoff=None)
+        latent_w = self.mapping_network(latent_z, truncation_psi=0.7, truncation_cutoff=8)
 
-        # TODO:
         # Style mixing.
-        #latent_w = self._mixing_regularization(latent_z, latent_w, self.depth)
+        latent_w = self._mixing_regularization(latent_z, latent_w, self.depth)
 
         sound = self.synthesis_network(x, latent_w)
     
@@ -371,7 +401,6 @@ class Generator(torch.nn.Module):
         mixing_cutoff = random.randint(1, depth + 1) if random.random() < 0.9 else cur_layers
         latent_w = torch.where(layer_idx < mixing_cutoff, latent_w, latent_w_2)
         return latent_w
-
 
 # ------------------------------------------------------------
 # General discriminator block.
@@ -409,7 +438,7 @@ class DiscriminatorEpilogue(torch.nn.Module):
         num_channels,
         scale_factor: int,
         start_size: int,
-        resample_filter: Tensor = None,
+        resample_filter: Tensor = None
     ):
         super().__init__()
         
@@ -427,7 +456,6 @@ class DiscriminatorEpilogue(torch.nn.Module):
         x = self.out_fc(x)
         return x
 
-
 # ------------------------------------------------------------
 # Discriminator network.
 
@@ -442,12 +470,12 @@ class Discriminator(torch.nn.Module):
         super().__init__()
     
         self.depth = depth
-        self.resample_filter = torchaudio.transforms.Resample(orig_freq=scale_factor, new_freq=1, rolloff=0.9, dtype=torch.float32)
+        self.register_buffer("resample_filter", setup_filter())
 
         self.layers = torch.nn.ModuleList([])
      
         n = nf
-        c = 1 / np.sqrt(0.5)
+        c = 2
         for l in range(depth - 1):
             self.layers.append(DicriminatorBlock(in_channels=int(n), out_channels=int(n*c), scale_factor=scale_factor, resample_filter=self.resample_filter))
             n = n*c
