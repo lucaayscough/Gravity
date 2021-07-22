@@ -7,9 +7,11 @@ import random
 # ------------------------------------------------------------
 # Scripted functions.
 
+@torch.jit.script
 def normalize(x: Tensor, epsilon: float=1e-8) -> Tensor:
     return x * (x.square().mean(dim=1, keepdim=True) + epsilon).rsqrt()
 
+@torch.jit.script
 def modulate(x: Tensor, style: Tensor, weight: Tensor, demodulate: bool=True):
     batch_size = x.size(0)
     out_channels, in_channels, ks = weight.shape
@@ -18,10 +20,11 @@ def modulate(x: Tensor, style: Tensor, weight: Tensor, demodulate: bool=True):
     if demodulate:
         dcoefs = (weight.square().sum(dim=[2,3]) + 1e-8).rsqrt()
         weight = weight * dcoefs.reshape(batch_size, -1, 1, 1)
-    x = x.reshape(1, -1, *x.shape[2:])
+    x = x.reshape(1, -1, x.shape[2])
     weight = weight.reshape(-1, in_channels, ks)
     return x, weight
 
+@torch.jit.script
 def mini_batch_std_dev(x: Tensor, group_size: int=4, num_channels: int=1, alpha: float=1e-8) -> Tensor:    
     N, C, S = x.shape
     G = torch.min(torch.as_tensor(group_size), torch.as_tensor(N))
@@ -172,7 +175,7 @@ class Conv1dLayer(torch.nn.Module):
 
         # Demodulate weights.
         if self.apply_style:
-            x = x.reshape(batch_size, -1, *x.shape[2:])
+            x = x.reshape(batch_size, -1, x.shape[2])
 
         # Add noise.
         if self.apply_noise:
@@ -303,12 +306,11 @@ class SynthesisNetwork(torch.nn.Module):
 
         self.depth = depth
 
-        # TODO:
-        # Clean this up.
         self.blocks = torch.nn.ModuleList([])
+        c = 1 / np.sqrt(0.5)
         for i in range(depth):
-            self.blocks.append(SynthesisBlock(in_channels=nf, out_channels=nf//2, num_channels=num_channels, scale_factor=scale_factor))
-            nf = nf // 2
+            self.blocks.append(SynthesisBlock(in_channels=int(nf), out_channels=int(nf/c), num_channels=num_channels, scale_factor=scale_factor))
+            nf = nf / c
 
     def forward(self, x: Tensor, latent_w: Tensor):
         for i in range(self.depth): 
@@ -431,7 +433,7 @@ class DiscriminatorEpilogue(torch.nn.Module):
 
 class Discriminator(torch.nn.Module):
     def __init__(self,
-        nf,
+        nf: float,
         depth,
         num_channels,
         scale_factor: int,
@@ -445,13 +447,14 @@ class Discriminator(torch.nn.Module):
         self.layers = torch.nn.ModuleList([])
      
         n = nf
+        c = 1 / np.sqrt(0.5)
         for l in range(depth - 1):
-            self.layers.append(DicriminatorBlock(in_channels=n, out_channels=n*2, scale_factor=scale_factor, resample_filter=self.resample_filter))
-            n = n*2
+            self.layers.append(DicriminatorBlock(in_channels=int(n), out_channels=int(n*c), scale_factor=scale_factor, resample_filter=self.resample_filter))
+            n = n*c
 
-        self.layers.append(DiscriminatorEpilogue(in_channels=n, out_channels=n*2, num_channels=num_channels, scale_factor=scale_factor, start_size=start_size, resample_filter=self.resample_filter))
+        self.layers.append(DiscriminatorEpilogue(in_channels=int(n), out_channels=int(n*c), num_channels=num_channels, scale_factor=scale_factor, start_size=start_size, resample_filter=self.resample_filter))
         
-        self.converter = Conv1dLayer(in_channels=num_channels, out_channels=nf, bias=False)
+        self.converter = Conv1dLayer(in_channels=num_channels, out_channels=int(nf), bias=False)
 
     def forward(self, x):
         x = self.converter(x)

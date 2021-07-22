@@ -116,7 +116,7 @@ class Train:
         ).to(self.device)
         
         self.netD = Discriminator(
-            nf = self.num_filters // (2 ** self.depth),
+            nf = self.num_filters / (1/np.sqrt(0.5) ** self.depth),
             depth = self.depth,
             num_channels = self.num_channels,
             scale_factor = self.scale_factor,

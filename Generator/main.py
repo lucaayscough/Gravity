@@ -14,7 +14,7 @@ import torchaudio
 # Add profiler.
 
 config_dict = {
-    'program_version': 0.2,
+    'program_version': 0.4,
 
     # Iterarion
     'iter_num': None,
@@ -22,7 +22,7 @@ config_dict = {
     'datadir': 'datasets/dataset_3/',
 
     # Training
-    'batch_size': 16,
+    'batch_size': 8,
     
     # Learning
     'learning_rate': 0.002,
