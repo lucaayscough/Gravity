@@ -192,17 +192,14 @@ class Conv1dLayer(torch.nn.Module):
 
         # Blur input and upsample with transposed convolution.
         if self.up > 1:
-            x = conv_resample(x, f=self.resample_filter)
-            x = conv1d_gradfix.conv_transpose1d(x, weight, stride=self.up, padding=self.padding, groups=groups, output_padding=1)
+            x = conv_resample(x, f=self.resample_filter, up=self.up)
 
         # Do convolution.
-        if self.up == 1 and self.down == 1:
-            x = conv1d_gradfix.conv1d(x, weight, stride=self.stride, padding=self.padding, groups=groups)
+        x = conv1d_gradfix.conv1d(x, weight, stride=self.stride, padding=self.padding, groups=groups)
         
         # Downsample with convolution and blur output.
         if self.down > 1:
-            x = conv1d_gradfix.conv1d(x, weight, stride=self.down, padding=self.padding, groups=groups)
-            x = conv_resample(x, f=self.resample_filter)
+            x = conv_resample(x, f=self.resample_filter, down=self.down)
 
         # Demodulate weights.
         if self.apply_style:
@@ -303,7 +300,7 @@ class SynthesisBlock(torch.nn.Module):
 
         self.register_buffer("resample_filter", setup_filter())
 
-        self.block_1 = Conv1dLayer(in_channels=in_channels, out_channels=in_channels, kernel_size=9, padding=3, apply_style=True, apply_noise=True, up=scale_factor, resample_filter=self.resample_filter)
+        self.block_1 = Conv1dLayer(in_channels=in_channels, out_channels=in_channels, kernel_size=9, padding=4, apply_style=True, apply_noise=True, up=scale_factor, resample_filter=self.resample_filter)
         self.block_2 = Conv1dLayer(in_channels=in_channels, out_channels=out_channels, kernel_size=9, padding=4, apply_style=True, apply_noise=True, resample_filter=self.resample_filter)
 
         self.converter = Conv1dLayer(in_channels=out_channels, out_channels=num_channels, bias=True, apply_style=True, to_sound=True)
