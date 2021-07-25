@@ -91,7 +91,7 @@ class Train:
             self._load_state()
         else:
             self.start_epoch = 1
-            self.pl_mean = torch.tensor(0, dtype=torch.float, device=self.device, dtype=torch.float32)
+            self.pl_mean = torch.tensor(0, dtype=torch.float, device=self.device).to(dtype=torch.float32)
         
         # Creates a shadow copy of the generator.
         self.netG_shadow = copy.deepcopy(self.netG)
@@ -242,25 +242,27 @@ class Train:
             print("Time elapsed: ", time.time() - start_time, " seconds.")
 
     def _train_generator(self, idx):
+        # Non-Saturating loss.
         self.netG.requires_grad_(True)
 
-        self.opt_gen.zero_grad(set_to_none=True)
-
-        noise = torch.randn((self.batch_size, self.z_dim)).to(self.device)
+        noise = torch.randn((self.batch_size, self.z_dim), device=self.device)
         fake = self.netG(noise)
         output = self.netD(fake)
         self.loss_gen = torch.nn.functional.softplus(-output).mean()
 
         self.loss_gen.backward()
+        self.netG.requires_grad_(False)
         self.opt_gen.step()
-
+        self.opt_gen.zero_grad(set_to_none=True)
+        
+        # Path-length regularization.
         if idx % self.G_reg == 0:
-            self.opt_gen.zero_grad(set_to_none=True)
+            self.netG.requires_grad_(True)
 
             batch_size = noise.shape[0] // self.pl_batch_shrink
             sounds, w_latents = self.netG(noise[:batch_size], return_w=True)
 
-            pl_noise = torch.randn_like(sounds) / np.sqrt(sounds.shape[2])
+            pl_noise = torch.randn_like(sounds, device=self.device) / np.sqrt(sounds.shape[2])
             pl_grads = torch.autograd.grad(outputs=[(sounds*pl_noise).sum()], inputs=[w_latents], create_graph=True, only_inputs=True)[0]
             pl_lengths = pl_grads.square().sum(2).mean(1).sqrt()
 
@@ -271,28 +273,27 @@ class Train:
             loss_Gpl = pl_penalty * self.pl_weight
 
             (sounds[:, 0, 0] * 0 + loss_Gpl).mean().mul(self.G_reg).backward()
-        
-        self.opt_gen.step()
-        self.netG.requires_grad_(False)
+            self.netG.requires_grad_(False)
+            self.opt_gen.step()
+            self.opt_gen.zero_grad(set_to_none=True)
 
     def _train_discriminator_r1(self, real, idx):
+        # Train on generated.
         self.netD.requires_grad_(True)
 
-        self.opt_dis.zero_grad(set_to_none=True)
-        real.requires_grad = True
-
-        # Train on generated.
-        noise = torch.randn((self.batch_size, self.z_dim)).to(self.device)
+        noise = torch.randn((self.batch_size, self.z_dim), device=self.device)
         gen_sounds = self.netG(noise)
         logits_fake = self.netD(gen_sounds)
         loss_fake = torch.nn.functional.softplus(logits_fake).mean()
 
         loss_fake.backward()
+        self.netD.requires_grad_(False)
         self.opt_dis.step()
-
-        # Train on real.
         self.opt_dis.zero_grad(set_to_none=True)
 
+        # Train on real.
+        self.netD.requires_grad_(True)
+        real.requires_grad = True
         logits_real = self.netD(real)
         loss_real = torch.nn.functional.softplus(-logits_real).mean()
 
@@ -305,12 +306,14 @@ class Train:
         else:
             (logits_real * 0 + loss_real).mean().backward()
 
-        self.loss_disc = loss_real + loss_fake
-        self.opt_dis.step()
         self.netD.requires_grad_(False)
+        self.opt_dis.step()
+        self.opt_dis.zero_grad(set_to_none=True)
+        
+        self.loss_disc = loss_real + loss_fake
     
     def _train_discriminator_wgangp(self, real):
-        noise = torch.randn((self.batch_size, self.z_dim)).to(self.device)
+        noise = torch.randn((self.batch_size, self.z_dim), device=self.device)
         fake = self.netG(noise)
                     
         disc_real = self.netD(real)
@@ -334,7 +337,7 @@ class Train:
             
             with torch.no_grad():
                 fake_sample = self.netG(
-                    torch.randn((8, self.z_dim)).to(self.device),
+                    torch.randn((8, self.z_dim), device=self.device),
                     self.depth
                 )
                 for s in range(8):
