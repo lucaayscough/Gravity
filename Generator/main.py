@@ -14,7 +14,7 @@ import torchaudio
 # Add profiler.
 
 config_dict = {
-    'program_version': 0.6,
+    'program_version': 0.7,
 
     # Iterarion
     'iter_num': None,

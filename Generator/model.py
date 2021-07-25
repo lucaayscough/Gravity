@@ -1,6 +1,5 @@
 import torch
 from torch import Tensor
-from misc import conv1d_gradfix
 import torchaudio
 import numpy as np
 import random
@@ -195,7 +194,7 @@ class Conv1dLayer(torch.nn.Module):
             x = conv_resample(x, f=self.resample_filter, up=self.up)
 
         # Do convolution.
-        x = conv1d_gradfix.conv1d(x, weight, stride=self.stride, padding=self.padding, groups=groups)
+        x = torch.nn.functional.conv1d(x, weight, stride=self.stride, padding=self.padding, groups=groups)
         
         # Downsample with convolution and blur output.
         if self.down > 1:

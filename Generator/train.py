@@ -82,7 +82,7 @@ class Train:
         
         # Initialization
         torch.backends.cudnn.benchmark = True
-        torch.autograd.set_detect_anomaly(True)
+        #torch.autograd.set_detect_anomaly(True)
         
         self._init_models()
         self._init_optim()
@@ -124,17 +124,20 @@ class Train:
         ).to(self.device)
 
     def _init_optim(self): 
+        mb_ratio_g = self.G_reg / (self.G_reg + 1)
+        mb_ratio_d = self.D_reg / (self.D_reg + 1)
+
         self.opt_gen = torch.optim.Adam(
             params = self.netG.parameters(),
-            lr = self.learning_rate,
-            betas = (0.0, 0.99),
+            lr = self.learning_rate * mb_ratio_g,
+            betas = (0.0 ** mb_ratio_g, 0.99 ** mb_ratio_g),
             eps = 1e-8
         )
         
         self.opt_dis = torch.optim.Adam(
             params = self.netD.parameters(),
-            lr = self.learning_rate, 
-            betas = (0.0, 0.99),
+            lr = self.learning_rate * mb_ratio_d, 
+            betas = (0.0 ** mb_ratio_d, 0.99 ** mb_ratio_d),
             eps = 1e-8
         )
 
@@ -207,6 +210,9 @@ class Train:
             pin_memory = True
         )
 
+        self.netG.requires_grad_(False)
+        self.netD.requires_grad_(False)
+
         for epoch in range(self.start_epoch, self.epochs + 1):
             start_time = time.time()
 
@@ -237,7 +243,6 @@ class Train:
 
     def _train_generator(self, idx):
         self.netG.requires_grad_(True)
-        self.netD.requires_grad_(False)
 
         self.opt_gen.zero_grad(set_to_none=True)
 
@@ -266,12 +271,11 @@ class Train:
             loss_Gpl = pl_penalty * self.pl_weight
 
             (sounds[:, 0, 0] * 0 + loss_Gpl).mean().mul(self.G_reg).backward()
-            self.opt_gen.step()
         
-        
+        self.opt_gen.step()
+        self.netG.requires_grad_(False)
 
     def _train_discriminator_r1(self, real, idx):
-        self.netG.requires_grad_(False)
         self.netD.requires_grad_(True)
 
         self.opt_dis.zero_grad(set_to_none=True)
@@ -303,11 +307,9 @@ class Train:
 
         self.loss_disc = loss_real + loss_fake
         self.opt_dis.step()
+        self.netD.requires_grad_(False)
     
     def _train_discriminator_wgangp(self, real):
-        self.netG.requires_grad_(False)
-        self.netD.requires_grad_(True)
-    
         noise = torch.randn((self.batch_size, self.z_dim)).to(self.device)
         fake = self.netG(noise)
                     
@@ -324,7 +326,7 @@ class Train:
 # Helper functions.
 
     def _print_examples(self, idx, epoch): 
-        if idx % 1000 == 0:
+        if idx % 200 == 0:
             
             # TODO:
             # REMOVE THIS
