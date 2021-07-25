@@ -91,7 +91,7 @@ class Train:
             self._load_state()
         else:
             self.start_epoch = 1
-            self.pl_mean = torch.tensor(0, dtype=torch.float, device=self.device)
+            self.pl_mean = torch.tensor(0, dtype=torch.float, device=self.device, dtype=torch.float32)
         
         # Creates a shadow copy of the generator.
         self.netG_shadow = copy.deepcopy(self.netG)

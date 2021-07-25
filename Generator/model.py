@@ -41,10 +41,10 @@ def mini_batch_std_dev(x: Tensor, group_size: int=4, num_channels: int=1, alpha:
     return torch.cat([x, y], dim=1)     # [NCS]     Append to input as new channels.
 
 def setup_filter():
-    kernel = [1, 2, 4, 2, 1]
-    kernel = torch.tensor(kernel, dtype = torch.float)
-    kernel = kernel.expand(1, 1, -1)
-    kernel = kernel / kernel.sum()
+    kernel = [1, 3, 3, 3, 1]
+    kernel = torch.tensor(kernel, dtype=torch.float32)
+    kernel /= kernel.sum()
+    kernel = kernel.repeat(1, 1, -1)
 
     # TODO:
     # Fix this...
@@ -52,13 +52,16 @@ def setup_filter():
     return kernel.to("cuda")
 
 @torch.jit.script
-def conv_resample(x: Tensor, f: Tensor, up: int=1, down: int=1, padding: int=2, gain: int=1) -> Tensor:
+def conv_resample(x: Tensor, f: Tensor, up: int=1, down: int=1, padding: int=2) -> Tensor:
     batch_size, num_channels, in_samples = x.shape
     if up != 1:
         x = torch.nn.functional.interpolate(x, scale_factor=float(up), mode="nearest")
 
     # Setup filter.
-    f = f.expand(x.size(1), -1, -1).to(x.dtype)
+    gain = 1 if up==1 else up**2
+
+    f = f * (gain ** (f.ndim / 2))
+    f = f.repeat(x.size(1), -1, -1).to(x.dtype)
 
     # Convolve with the filter.
     x = torch.nn.functional.conv1d(input=x, weight=f, padding=padding, groups=num_channels)
@@ -231,7 +234,7 @@ class ConstantInput(torch.nn.Module):
         self.bias = torch.nn.Parameter(torch.zeros(nf))
     
     def forward(self, batch_size: int) -> Tensor:
-        x = self.constant_input.expand(batch_size, -1, -1)
+        x = self.constant_input.repeat(batch_size, -1, -1)
         x = x + self.bias.view(1, -1, 1)
         return x
 
