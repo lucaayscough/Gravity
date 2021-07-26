@@ -15,6 +15,7 @@ def normalize(x: Tensor, epsilon: float=1e-8) -> Tensor:
 def modulate(x: Tensor, style: Tensor, weight: Tensor, demodulate: bool=True):
     batch_size = x.size(0)
     out_channels, in_channels, ks = weight.shape
+
     weight = weight.unsqueeze(0)
     weight = weight * style.reshape(batch_size, 1, -1, 1)
     if demodulate:
@@ -40,33 +41,32 @@ def mini_batch_std_dev(x: Tensor, group_size: int=4, num_channels: int=1, alpha:
     y = y.repeat(G, 1, S)               # [NFS]     Replicate over group and pixels.
     return torch.cat([x, y], dim=1)     # [NCS]     Append to input as new channels.
 
-def setup_filter():
+def setup_filter(gain: int=1):
     f = [1, 1, 3, 3, 3, 9, 9, 9, 9, 9, 3, 3, 3, 1, 1]
     f = torch.tensor(f, dtype=torch.float32)
     f /= f.sum()
-    f = f.expand(1, 1, -1)
+    f = f * (gain ** (f.ndim / 2))
 
     # TODO:
     # Fix this...
 
     return f.to("cuda")
 
-@torch.jit.script
+#@torch.jit.script
 def conv_resample(x: Tensor, f: Tensor, up: int=1, down: int=1, padding: int=7) -> Tensor:
     batch_size, num_channels, in_samples = x.shape
-    if up != 1:
+    if up > 1:
         x = torch.nn.functional.interpolate(x, scale_factor=float(up), mode="nearest")
 
     # Setup filter.
     gain = 1.0 if up==1 else up**2.0
-
-    f = f * (gain**(f.dim/2))
-    f = f.expand(x.size(1), -1, -1)
+    f = f * (gain ** (f.ndim / 2))
+    f = f[np.newaxis, np.newaxis].repeat([num_channels, 1] + [1] * f.ndim)
 
     # Convolve with the filter.
     x = torch.nn.functional.conv1d(input=x, weight=f, padding=padding, groups=num_channels)
 
-    if down != 1:
+    if down > 1:
         x = torch.nn.functional.interpolate(x, scale_factor=1/float(down), mode="nearest")
     return x
 
@@ -187,10 +187,6 @@ class Conv1dLayer(torch.nn.Module):
         else:
             weight = weight * self.weight_gain
             groups = 1
-
-        # Flip weights if upsampling.
-        if self.up != 1:
-            weight = weight.flip([2])
 
         # Blur input and upsample with transposed convolution.
         if self.up > 1:

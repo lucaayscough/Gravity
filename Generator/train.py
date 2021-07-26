@@ -227,14 +227,14 @@ class Train:
                 if self.disc_loss_fn == "r1":
                     self._train_discriminator_r1(real, idx)
                 else:
-                    self._train_discriminator_wgangp(real)
+                    self._train_discriminator_wgangp(real, idx)
 
                 self._update_average(beta = self.ema_beta)
                 
                 print(
                     f'Epoch [{epoch}/{self.epochs}] \
                     Batch {idx} / {len(dataloader)} \
-                    Loss D: {self.loss_disc:.4f}, loss G: {self.loss_gen:.4f}'
+                    Loss D: {self.loss_disc}, loss G: {self.loss_gen}'
                 )
 
                 self._print_examples(idx, epoch)
@@ -312,7 +312,10 @@ class Train:
         
         self.loss_disc = loss_real + loss_fake
     
-    def _train_discriminator_wgangp(self, real):
+    def _train_discriminator_wgangp(self, real, idx):
+        # Train on generated.
+        self.netD.requires_grad_(True)
+
         noise = torch.randn((self.batch_size, self.z_dim), device=self.device)
         fake = self.netG(noise)
                     
@@ -323,7 +326,11 @@ class Train:
 
         self.loss_disc = -(torch.mean(disc_real) - torch.mean(disc_fake)) + 10 * gp
 
-        self.loss_disc.backward(retain_graph=True)
+        self.loss_disc.backward()
+
+        self.netD.requires_grad_(False)
+        self.opt_dis.step()
+        self.opt_dis.zero_grad(set_to_none=True)
 
 # ------------------------------------------------------------
 # Helper functions.
