@@ -6,8 +6,6 @@ import warnings
 from train import Train
 from misc.utils import build_folder_structure, get_iter
 
-import torchaudio
-
 
 # TODO:
 # Add logger.
@@ -23,9 +21,9 @@ config_dict = {
 
     # Training
     'batch_size': 16,
-    
-    # Learning
     'learning_rate': 0.002,
+    'g_loss': 'wgan',
+    'd_loss': 'wgangp',
 
     # Model
     'scale_factor': 4,
@@ -41,10 +39,8 @@ config_dict = {
     'device': 'cuda',
 }
 
-
 def suppress_warnings():
     warnings.filterwarnings("ignore", category = UserWarning)
-
 
 def prepare_config():
     if config_dict['iter_num'] == None:
@@ -62,7 +58,6 @@ def prepare_config():
 
     return restart
 
-
 if __name__ == '__main__':
     suppress_warnings()
     restart = prepare_config()
@@ -76,9 +71,9 @@ if __name__ == '__main__':
         
         # Training
         batch_size = config_dict['batch_size'], 
-        
-        # Learning
         learning_rate = config_dict['learning_rate'],
+        g_loss = config_dict['g_loss'],
+        d_loss = config_dict['d_loss'],
 
         # Model
         scale_factor = config_dict['scale_factor'],
