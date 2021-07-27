@@ -14,10 +14,10 @@ import torchaudio
 # Add profiler.
 
 config_dict = {
-    'program_version': 0.73,
+    'program_version': 0.74,
 
     # Iterarion
-    'iter_num': 28,
+    'iter_num': None,
     'epochs': 500,
     'datadir': 'datasets/dataset_3/',
 

@@ -124,6 +124,7 @@ class Conv1dLayer(torch.nn.Module):
         kernel_size: int        = 1,
         stride: int             = 1,
         padding: int            = 0,
+        dilation: int           = 1,
         resample_filter: Tensor = None,
         bias: bool              = True,
         apply_style: bool       = False,
@@ -139,6 +140,7 @@ class Conv1dLayer(torch.nn.Module):
         self.out_channels = out_channels
         self.stride = stride
         self.padding = padding
+        self.dilation = dilation
         self.resample_filter = resample_filter
         self.up = up
         self.down = down
@@ -193,7 +195,7 @@ class Conv1dLayer(torch.nn.Module):
             x = conv_resample(x, f=self.resample_filter, up=self.up)
 
         # Do convolution.
-        x = torch.nn.functional.conv1d(x, weight, stride=self.stride, padding=self.padding, groups=groups)
+        x = torch.nn.functional.conv1d(x, weight, stride=self.stride, padding=self.padding, dilation=self.dilation, groups=groups)
         
         # Downsample with convolution and blur output.
         if self.down > 1:
@@ -298,8 +300,8 @@ class SynthesisBlock(torch.nn.Module):
 
         self.register_buffer("resample_filter", setup_filter())
 
-        self.block_1 = Conv1dLayer(in_channels=in_channels, out_channels=in_channels, kernel_size=9, padding=4, apply_style=True, apply_noise=True, up=scale_factor, resample_filter=self.resample_filter)
-        self.block_2 = Conv1dLayer(in_channels=in_channels, out_channels=out_channels, kernel_size=9, padding=4, apply_style=True, apply_noise=True, resample_filter=self.resample_filter)
+        self.block_1 = Conv1dLayer(in_channels=in_channels, out_channels=in_channels, kernel_size=9, padding=8, dilation=2, apply_style=True, apply_noise=True, up=scale_factor, resample_filter=self.resample_filter)
+        self.block_2 = Conv1dLayer(in_channels=in_channels, out_channels=out_channels, kernel_size=9, padding=8, dilation=2 apply_style=True, apply_noise=True, resample_filter=self.resample_filter)
 
         self.converter = Conv1dLayer(in_channels=out_channels, out_channels=num_channels, bias=True, apply_style=True, to_sound=True)
 
@@ -410,8 +412,8 @@ class DicriminatorBlock(torch.nn.Module):
     ):
         super().__init__()
 
-        self.conv_block_1 = Conv1dLayer(in_channels=in_channels, out_channels=out_channels, kernel_size=9, padding=4, down=scale_factor, resample_filter=resample_filter)
-        self.conv_block_2 = Conv1dLayer(in_channels=out_channels, out_channels=out_channels, kernel_size=9, padding=4)
+        self.conv_block_1 = Conv1dLayer(in_channels=in_channels, out_channels=out_channels, kernel_size=9, padding=8, dilation=2, down=scale_factor, resample_filter=resample_filter)
+        self.conv_block_2 = Conv1dLayer(in_channels=out_channels, out_channels=out_channels, kernel_size=9, padding=8, dilation=2)
         self.residual = Conv1dLayer(in_channels=in_channels, out_channels=out_channels, bias=False, down=scale_factor, resample_filter=resample_filter)
 
     def forward(self, x: Tensor) -> Tensor:
@@ -439,7 +441,7 @@ class DiscriminatorEpilogue(torch.nn.Module):
         
         in_channels += 1
 
-        self.conv_block = Conv1dLayer(in_channels=in_channels, out_channels=out_channels, kernel_size=9, padding=4, down=scale_factor, resample_filter=resample_filter)
+        self.conv_block = Conv1dLayer(in_channels=in_channels, out_channels=out_channels, kernel_size=9, padding=8, dilation=2, down=scale_factor, resample_filter=resample_filter)
         
         self.fc = FullyConnectedLayer(in_channels=out_channels*start_size, out_channels=out_channels, activation="lrelu")
         self.out_fc = FullyConnectedLayer(in_channels=out_channels, out_channels=num_channels, activation="lrelu")
