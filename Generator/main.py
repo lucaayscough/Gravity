@@ -1,36 +1,31 @@
-###########################
-### StyleGAN 2 TRAINING ###
-###########################
-
 import warnings
 from train import Train
-from utils import build_folder_structure, get_iter
-
-import torchaudio
+from misc.utils import build_folder_structure, get_iter
 
 
 # TODO:
 # Add logger.
 # Add profiler.
 
-
 config_dict = {
+    'program_version': 0.75,
+
     # Iterarion
-    'iter_num': None,
+    'iter_num': 36,
     'epochs': 500,
-    'datadir': 'datasets/dataset_2/',
+    'datadir': 'datasets/dataset_3/',
 
     # Training
     'batch_size': 8,
-    
-    # Learning
     'learning_rate': 0.002,
+    'g_loss': 'wgan',
+    'd_loss': 'wgangp',
 
     # Model
     'scale_factor': 4,
-    'depth': 6,
+    'depth': 4,
     'num_filters': 512,
-    'start_size': 32,
+    'start_size': 64,
 
     # Setup
     'num_channels': 1,
@@ -40,10 +35,8 @@ config_dict = {
     'device': 'cuda',
 }
 
-
 def suppress_warnings():
     warnings.filterwarnings("ignore", category = UserWarning)
-
 
 def prepare_config():
     if config_dict['iter_num'] == None:
@@ -61,7 +54,6 @@ def prepare_config():
 
     return restart
 
-
 if __name__ == '__main__':
     suppress_warnings()
     restart = prepare_config()
@@ -75,9 +67,9 @@ if __name__ == '__main__':
         
         # Training
         batch_size = config_dict['batch_size'], 
-        
-        # Learning
         learning_rate = config_dict['learning_rate'],
+        g_loss = config_dict['g_loss'],
+        d_loss = config_dict['d_loss'],
 
         # Model
         scale_factor = config_dict['scale_factor'],
