@@ -79,6 +79,8 @@ class Train:
         self.save_every = save_every
         self.num_workers = num_workers
         self.device = device
+
+        self.window = torch.hann_window(window_length=1024, device=self.device)
         
         # Initialization
         torch.backends.cudnn.benchmark = True
@@ -224,6 +226,14 @@ class Train:
                 # Fetch real data.
                 real = data[0].to(self.device)
 
+                # Tranform data.
+                real = real.reshape(self.batch_size, -1)
+                real = torch.stft(real, n_fft=1024, hop_length=512, win_length=1024, window=self.window)
+                real = torch.view_as_complex(real)
+                mag = real.abs()
+                ph = real.angle()
+                real = torch.stack((mag, ph), dim=1)
+
                 # Train generator.
                 if self.g_loss == "ns":
                     self._train_generator_ns(idx)
@@ -292,7 +302,7 @@ class Train:
             batch_size = noise.shape[0] // self.pl_batch_shrink
             sounds, w_latents = self.netG(noise[:batch_size], return_w=True)
 
-            pl_noise = torch.randn_like(sounds, device=self.device) / np.sqrt(sounds.shape[2])
+            pl_noise = torch.randn_like(sounds, device=self.device) / np.sqrt(sounds.shape[2] * sounds.shape[3])
             pl_grads = torch.autograd.grad(outputs=[(sounds*pl_noise).sum()], inputs=[w_latents], create_graph=True, only_inputs=True)[0]
             pl_lengths = pl_grads.square().sum(2).mean(1).sqrt()
 
@@ -302,7 +312,8 @@ class Train:
             pl_penalty = (pl_lengths - pl_mean).square()
             loss_Gpl = pl_penalty * self.pl_weight
 
-            (sounds[:, 0, 0] * 0 + loss_Gpl).mean().mul(G_reg).backward()
+            (sounds[:, 0, 0, 0] * 0 + loss_Gpl).mean().mul(G_reg).backward()
+            
             self.netG.requires_grad_(False)
             self.opt_gen.step()
             self.opt_gen.zero_grad(set_to_none=True)
@@ -405,6 +416,14 @@ class Train:
                     torch.randn((8, self.z_dim), device=self.device),
                     self.depth
                 )
+
+                fake_sample = torch.swapaxes(fake_sample, 0, 1)
+                mag = fake_sample[0]
+                ph = fake_sample[1]
+                fake_sample = mag * torch.exp(1.j * ph)
+                fake_sample = torch.istft(fake_sample, n_fft=1024, hop_length=512, win_length=1024, window=self.window)
+                fake_sample = fake_sample.reshape(fake_sample.size(0), 1, -1)
+
                 for s in range(8):
                     # Print Fake Examples
                     torchaudio.save(
