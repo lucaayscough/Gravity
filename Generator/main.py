@@ -11,24 +11,24 @@ config_dict = {
     'program_version': 0.75,
 
     # Iterarion
-    'iter_num': 36,
+    'iter_num': None,
     'epochs': 500,
     'datadir': 'datasets/dataset_3/',
 
     # Training
     'batch_size': 8,
     'learning_rate': 0.002,
-    'g_loss': 'wgan',
-    'd_loss': 'wgangp',
+    'g_loss': 'ns',
+    'd_loss': 'r1',
 
     # Model
-    'scale_factor': 4,
-    'depth': 4,
+    'scale_factor': 2,
+    'depth': 5,
     'num_filters': 512,
-    'start_size': 64,
+    'start_size': 16,
 
     # Setup
-    'num_channels': 1,
+    'num_channels': 2,
     'sample_rate': 44100,
     'save_every': 1,
     'num_workers': 1,
