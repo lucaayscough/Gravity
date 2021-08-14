@@ -1,7 +1,3 @@
-###########################
-### StyleGAN 2 TRAINING ###
-###########################
-
 import warnings
 from train import Train
 from misc.utils import build_folder_structure, get_iter
@@ -12,15 +8,15 @@ from misc.utils import build_folder_structure, get_iter
 # Add profiler.
 
 config_dict = {
-    'program_version': 0.74,
+    'program_version': 0.75,
 
     # Iterarion
-    'iter_num': None,
+    'iter_num': 36,
     'epochs': 500,
     'datadir': 'datasets/dataset_3/',
 
     # Training
-    'batch_size': 16,
+    'batch_size': 8,
     'learning_rate': 0.002,
     'g_loss': 'wgan',
     'd_loss': 'wgangp',

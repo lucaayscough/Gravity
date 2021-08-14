@@ -257,7 +257,7 @@ class Train:
     def _train_generator_wgan(self):
         self.netG.requires_grad_(True)
 
-        noise = torch.randn((self.batch_size, self.z_dim)).to(self.device)
+        noise = torch.randn((self.batch_size, self.z_dim), device=self.device)
         fake = self.netG(noise)
         output = self.netD(fake).reshape(-1)
         
