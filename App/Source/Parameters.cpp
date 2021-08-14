@@ -224,10 +224,6 @@ float Parameters::getDistance(juce::ValueTree node_a, juce::ValueTree node_b){
 }
 
 float Parameters::getForceVector(juce::ValueTree node_a, juce::ValueTree node_b){
-    // TODO:
-    // Make this better.
-    // Need to fix algorithm to avoid number going over 1.0.
-
     float mass_a, mass_b;
 
     if(node_a.getType() == sunType){
@@ -247,11 +243,16 @@ float Parameters::getForceVector(juce::ValueTree node_a, juce::ValueTree node_b)
     float m = mass_a * mass_b;
     float r = getDistance(node_a, node_b);
 
-    float min_distance = sqrt(Variables::MAX_PLANET_AREA / 3.1415f) + sqrt(Variables::SUN_AREA / 3.1415f);
+    float min_distance = sqrt(Variables::MAX_PLANET_AREA / Variables::PI) + sqrt(Variables::SUN_AREA / Variables::PI);
     float max_mass = Variables::SUN_AREA * Variables::MAX_PLANET_AREA;
     float max_value = max_mass / pow(min_distance, 2.0f);
-    
-    return (m / pow(r, 2.0f)) / max_value;
+
+    float result = (m / pow(r, 2.0f)) / max_value;
+
+    if(result > 1.0f)
+        result = 1.0f;
+
+    return sqrt(sin(((result * 90.0f) * Variables::PI) / 180.0f));
 }
 
 void Parameters::setActivePlanet(juce::ValueTree node){

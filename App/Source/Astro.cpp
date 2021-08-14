@@ -33,24 +33,41 @@ void Astro::setGradients(){
 // View methods.
 
 void Astro::paint(Graphics& g){
+    if(m_Animator.m_IsCreated){
+        float shift = m_Animator.getDiameterShift(getArea());
+
+        paintCircle(
+            ((float)getClipBoundary() - shift) / 2.0f,
+            (float)getDiameter() + shift, g
+        );
+    }
+    else{
+        paintCircle(
+            (float)getRadiusWithClipBoundary() - m_Animator.getCreationRadius(),
+            m_Animator.getCreationDiameter(), g
+        );
+    }
+}
+
+void Astro::paintCircle(float boundary_shift, float diameter, Graphics& g){
+    g.setColour(Variables::MAP_BG_COLOUR);
+    g.fillEllipse(
+        boundary_shift - Variables::DISTANCE_BOUNDARY / 2.0f,
+        boundary_shift - Variables::DISTANCE_BOUNDARY / 2.0f,
+        diameter + Variables::DISTANCE_BOUNDARY,
+        diameter + Variables::DISTANCE_BOUNDARY
+    );
+
     if(getState().getProperty(Parameters::isActiveProp)){
         g.setColour(juce::Colours::green);
     }
     else{
         double max_distance = sqrt((double)(pow(getParentWidth() / 2, 2)) + (double)(pow(getParentHeight() / 2, 2)));
         double pos = (getDistance(getCentreX(), getCentreY(), getParentWidth() / 2, getParentHeight() / 2)) / max_distance;
-        
         g.setColour(m_ColourGradient.getColourAtPosition(pos));
     }
 
-    float shift = m_Animator.getShiftedDiameter(getArea()) - getDiameter();
-
-    g.fillEllipse(
-        (float)getClipBoundary() / 2.0f - shift / 2.0f,
-        (float)getClipBoundary() / 2.0f - shift / 2.0f,
-        (float)getDiameter() + shift,
-        (float)getDiameter() + shift
-    );
+    g.fillEllipse(boundary_shift, boundary_shift, diameter, diameter);
 }
 
 void Astro::draw(){setBounds(getPosX(), getPosY(), getDiameterWithClipBoundary(), getDiameterWithClipBoundary());}
@@ -74,7 +91,7 @@ void Astro::setCentrePosXY(const int x, const int y){
 
 juce::ValueTree Astro::getMapNode(){return m_ParametersRef.getMapNode(getState());}
 float Astro::getArea(){return getState().getProperty(Parameters::areaProp);}
-int Astro::getDiameter(){return (int)(round((sqrt(getArea() / 3.1415f) * 2.0f) / 2.0f) * 2.0f);}
+int Astro::getDiameter(){return (int)(round((sqrt(getArea() / Variables::PI) * 2.0f) / 2.0f) * 2.0f);}
 int Astro::getDiameterWithClipBoundary(){return getDiameter() + getClipBoundary();}
 int Astro::getRadius(){return getDiameter() / 2;}
 int Astro::getRadiusWithClipBoundary(){return (getDiameter() + getClipBoundary()) / 2;}
@@ -124,7 +141,7 @@ void Astro::mouseEnter(const MouseEvent& e){
     juce::ignoreUnused(e);
 
     m_ShowForceVectors = true;
-    m_ControlPanelRef.show(getState());
+    m_ControlPanelRef.show(getState(), this);
 
     getParentComponent()->repaint();
 }
@@ -149,7 +166,7 @@ void Astro::valueChanged(juce::Value& value){
 
 Astro::Animator::Animator(){
     m_AreaShift = 0.0f;
-    startTimer(50);
+    startTimer(Variables::ANIMATION_INTERVAL);
 }
 
 Astro::Animator::~Animator(){
@@ -161,25 +178,44 @@ Astro::Animator::~Animator(){
 
 float Astro::Animator::applyAreaShift(float area){return area + (float)m_AreaShift.getValue();}
 
-float Astro::Animator::getShiftedDiameter(float area){
-    return sqrt(applyAreaShift(area) / 3.1415f) * 2.0f;
+float Astro::Animator::getDiameterShift(float area){
+    float diameter = sqrt(area / Variables::PI) * 2.0f;
+    float new_diameter = sqrt(applyAreaShift(area) / Variables::PI) * 2.0f;
+    return new_diameter - diameter;
+}
+
+float Astro::Animator::getCreationDiameter(){
+    return sqrt(m_AnimateCreation / Variables::PI) * 2.0f;
+}
+
+float Astro::Animator::getCreationRadius(){
+    return getCreationDiameter() / 2.0f;
+}
+
+void Astro::Animator::animateCreation(){
+    m_AnimateCreation += Variables::CREATION_AREA_SHIFT;
+    if(m_AnimateCreation >= Variables::DEFAULT_PLANET_AREA)
+        m_IsCreated = true;
+}
+
+void Astro::Animator::animate(){
+    m_AreaShift = sin(m_Degrees) * Variables::AREA_SHIFT_LIMIT;
+
+    if(m_Degrees >= 360.0f)
+        m_Degrees = 0.0f;
+    m_Degrees += 0.1f;
+    
 }
 
 //--------------------------------------------------//
 // Callback methods.
 
 void Astro::Animator::timerCallback(){
-    if((float)m_AreaShift.getValue() >= 200.0f){
-        m_AreaShiftDirection = false;
-    }
-    else if((float)m_AreaShift.getValue() <= -200.0f){
-        m_AreaShiftDirection = true;
-    }
+    // TODO:
+    // Fix the way this updates the component.
 
-    if((float)m_AreaShiftDirection == true){
-        m_AreaShift = (float)m_AreaShift.getValue() + 20.0f;
-    }
-    else{
-        m_AreaShift = (float)m_AreaShift.getValue() - 20.0f;
-    }
+    if(!m_IsCreated)
+        animateCreation();
+    
+    animate();
 }

@@ -48,12 +48,13 @@ void Map::removeListeners(){
 void Map::paint(Graphics& g){
     int rect_overlap = 25;
 
-    g.setGradientFill(m_BackgroundGradient);
+    g.setColour(Variables::MAP_BG_COLOUR);
     g.fillRect(0, 0, getWidth(), getHeight() / 2);
     g.fillRoundedRectangle(0, getHeight() / 2 - rect_overlap, getWidth(), getHeight() / 2 + rect_overlap, 5.0f);
 
-    paintOrbits(g);
+    //paintOrbits(g);
     paintForceVectors(g);
+    updateImage();
 }
 
 void Map::paintOrbits(Graphics& g){
@@ -116,7 +117,6 @@ void Map::resized(){
         rebuildPlanets();
 
     m_ControlPanel.setBounds(getLocalBounds());
-    m_BackgroundGradient = juce::ColourGradient(Variables::MAP_BG_COLOUR_1, getWidth() / 2, getHeight() / 2, Variables::MAP_BG_COLOUR_2, getWidth() / 4, getHeight() / 4, true);
 }
 
 void Map::drawSun(){
@@ -225,11 +225,11 @@ void Map::valueChanged(juce::Value& value){
 
 void Map::valueTreePropertyChanged(juce::ValueTree& node, const juce::Identifier& id){
     juce::ignoreUnused(node);
+
     if(id == Parameters::isActiveProp){
         repaint();
     }
     if(id == Parameters::posXProp || id == Parameters::posYProp){
-        m_UpdateImage = true;
         repaint();
     }
 }
@@ -242,4 +242,8 @@ void Map::valueTreeChildRemoved(juce::ValueTree& parentNode, juce::ValueTree& re
         destroyPlanet(id);
         repaint();
     }
+}
+
+void Map::updateImage(){
+    m_UpdateImage = true;
 }

@@ -15,6 +15,7 @@ public:
 public:
     // View methods.
     void paint(Graphics&) override;
+    virtual void paintCircle(float, float, Graphics&);
     virtual void draw();
     virtual void draw(const int, const int, const int);
 
@@ -73,14 +74,23 @@ public:
 
         // Interface methods.
         float applyAreaShift(float);
-        float getShiftedDiameter(float area);
+        float getDiameterShift(float);
+
+        float getCreationDiameter();
+        float getCreationRadius();
+
+        void animateCreation();
+        void animate();
 
         // Callback methods.
         void timerCallback() override;
 
         // Member variables.
         juce::Value m_AreaShift;
-        bool m_AreaShiftDirection = true;
+        float m_Degrees = 0.0f;
+
+        bool m_IsCreated = false;
+        float m_AnimateCreation = 0.0f;
     };
 
 protected:
