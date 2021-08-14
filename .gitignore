@@ -14,3 +14,4 @@ Generator/scripted_modules/mapper_module.pt
 .DS_Store
 Generator/test.ipynb
 Generator/scripted_modules/checkpoint_118_G.pth.tar
+Generator/misc/__pycache__/utils.cpython-38.pyc
