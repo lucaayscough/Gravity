@@ -8,7 +8,7 @@ from misc.utils import build_folder_structure, get_iter
 # Add profiler.
 
 config_dict = {
-    'program_version': 0.75,
+    'program_version': 0.8,
 
     # Iterarion
     'iter_num': None,
@@ -18,8 +18,8 @@ config_dict = {
     # Training
     'batch_size': 8,
     'learning_rate': 0.002,
-    'g_loss': 'ns',
-    'd_loss': 'r1',
+    'g_loss': 'wgan',                       # Generator loss function: wgan, ns.
+    'd_loss': 'wgangp',                     # Discriminator loss function: wgangp, r1.
 
     # Model
     'scale_factor': 2,

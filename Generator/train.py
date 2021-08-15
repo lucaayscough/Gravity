@@ -368,12 +368,12 @@ class Train:
         noise = torch.randn((self.batch_size, self.z_dim), device=self.device)
         fake = self.netG(noise)
                     
-        disc_real = self.netD(real).reshape(-1)
-        disc_fake = self.netD(fake).reshape(-1)
+        disc_real = self.netD(real)
+        disc_fake = self.netD(fake)
 
         # Calculate gradient penalty.
-        batch_size, channels, samples = real.shape
-        epsilon = torch.rand((batch_size, 1,  1), device=self.device).repeat(1, channels, samples)
+        batch_size, channels, kf, kt = real.shape
+        epsilon = torch.rand((batch_size, 1, 1, 1), device=self.device).repeat(1, channels, kf, kt)
         epsilon = (epsilon - 0.5) * 2
 
         real.requires_grad = True
@@ -390,7 +390,7 @@ class Train:
         )[0]
 
         gradient = gradient.view(gradient.shape[0], -1)
-        gradient_norm = gradient.norm(2, dim = 1)
+        gradient_norm = gradient.norm(2, dim=1)
         gradient_penalty = torch.mean((gradient_norm - 1) ** 2)
 
         # Backpropagate and optimize.
