@@ -55,8 +55,8 @@ void AudioPluginAudioProcessor::processBlock(juce::AudioBuffer<float>& buffer, j
     int totalNumOutputChannels = getTotalNumOutputChannels();
     int numSamples = buffer.getNumSamples();
 
-    while(m_AudioContainer.sampleIndex.size() <= totalNumOutputChannels){
-        m_AudioContainer.sampleIndex.add(0);
+    while(m_AudioContainer.m_SampleIndex.size() <= totalNumOutputChannels){
+        m_AudioContainer.m_SampleIndex.add(0);
     }
     
     // Clear extra channel buffers.
@@ -67,14 +67,14 @@ void AudioPluginAudioProcessor::processBlock(juce::AudioBuffer<float>& buffer, j
     for(const MidiMessageMetadata metadata : midiMessages){
         Logger::writeToLog(metadata.getMessage().getDescription());
         if(metadata.getMessage().isNoteOn())
-            m_AudioContainer.playAudio = true;
+            m_AudioContainer.m_PlayAudio = true;
         else if(metadata.getMessage().isNoteOff()){
             stopAudio();
         }
     }
 
     // Check for generic play request.
-    if(m_AudioContainer.playAudio){
+    if(m_AudioContainer.m_PlayAudio){
         playAudio(buffer, totalNumOutputChannels, numSamples);
     }
 }
@@ -186,11 +186,11 @@ void AudioPluginAudioProcessor::playAudio(juce::AudioBuffer<float>& buffer, int 
         
         for(int sample = 0; sample < numSamples; ++sample){
             // Add samples to buffer if max length of samples is not exceeded.
-            if(m_AudioContainer.sampleIndex[channel] < AudioContainer::NUM_SAMPLES){
-                channelData[sample] = m_AudioContainer.audio[m_AudioContainer.sampleIndex[channel]];
+            if(m_AudioContainer.m_SampleIndex[channel] < AudioContainer::M_NUM_SAMPLES){
+                channelData[sample] = m_AudioContainer.m_Audio[m_AudioContainer.m_SampleIndex[channel]];
                 // TODO:
                 // Something goes wrong here.
-                m_AudioContainer.sampleIndex.set(channel, m_AudioContainer.sampleIndex[channel] + 1);
+                m_AudioContainer.m_SampleIndex.set(channel, m_AudioContainer.m_SampleIndex[channel] + 1);
             }
             else{
                 stopAudio();
@@ -200,26 +200,26 @@ void AudioPluginAudioProcessor::playAudio(juce::AudioBuffer<float>& buffer, int 
 }
 
 void AudioPluginAudioProcessor::stopAudio(){
-    m_AudioContainer.sampleIndex.clear();
-    m_AudioContainer.playAudio = false;
+    m_AudioContainer.m_SampleIndex.clear();
+    m_AudioContainer.m_PlayAudio = false;
 }
 
 void AudioPluginAudioProcessor::playSample(){
-    m_AudioContainer.sampleIndex.clear();
-    m_AudioContainer.playAudio = true;
+    m_AudioContainer.m_SampleIndex.clear();
+    m_AudioContainer.m_PlayAudio = true;
 }
 
 void AudioPluginAudioProcessor::addSample(juce::ValueTree node){
-    m_AudioContainer.audio.clear();
+    m_AudioContainer.m_Audio.clear();
 
     juce::Array<float> sample;
-    sample.ensureStorageAllocated(AudioContainer::NUM_SAMPLES);
+    sample.ensureStorageAllocated(AudioContainer::M_NUM_SAMPLES);
 
     juce::Array<var>* values = node.getProperty(Parameters::sampleProp).getArray();
-    for(int i = 0; i < AudioContainer::NUM_SAMPLES; i++)
+    for(int i = 0; i < AudioContainer::M_NUM_SAMPLES; i++)
         sample.insert(i, (*values)[i]);
 
-    m_AudioContainer.audio.addArray(sample);
+    m_AudioContainer.m_Audio.addArray(sample);
 }
 
 //------------------------------------------------------------//

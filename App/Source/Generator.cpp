@@ -67,12 +67,12 @@ juce::var Generator::generateSample(at::Tensor& latents){
     at::Tensor output = m_GeneratorModule.forward(inputs).toTensor();
 
     juce::var sample;
-    sample.resize(AudioContainer::NUM_SAMPLES);
+    sample.resize(AudioContainer::M_NUM_SAMPLES);
 
     float* data =  output.contiguous().data_ptr<float>();
 
     // Copy tensor to array.
-    for(int i = 0; i < AudioContainer::NUM_SAMPLES; i++){
+    for(int i = 0; i < AudioContainer::M_NUM_SAMPLES; i++){
         sample[i] = data[i];
     }
 
