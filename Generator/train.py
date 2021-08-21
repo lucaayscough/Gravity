@@ -362,7 +362,12 @@ class Train:
 # ------------------------------------------------------------
 # WGAN-GP loss.
     
-    def _train_discriminator_wgangp(self, real, gamma=10):
+    def _train_discriminator_wgangp(self,
+        real,
+        gamma           = 10,
+        drift_gamma     = 0.001,
+        constraint      = 1
+    ):
         self.netD.requires_grad_(True)
 
         noise = torch.randn((self.batch_size, self.z_dim), device=self.device)
@@ -371,32 +376,37 @@ class Train:
         disc_real = self.netD(real)
         disc_fake = self.netD(fake)
 
-        # Calculate gradient penalty.
-        batch_size, channels, kf, kt = real.shape
-        epsilon = torch.rand((batch_size, 1, 1, 1), device=self.device).repeat(1, channels, kf, kt)
-        epsilon = (epsilon - 0.5) * 2
+        self.loss_disc = -(disc_real.mean() - disc_fake.mean()) + (drift_gamma * torch.mean(disc_real ** 2))
 
-        real.requires_grad = True
+        self.loss_disc.backward()
+        self.netD.requires_grad_(False)
+        self.opt_dis.step()
+        self.opt_dis.zero_grad(set_to_none=True)
+
+        # Calculate gradient penalty.
+        self.netD.requires_grad_(True)
+
+        batch_size, channels, kf, kt = real.shape
+        alpha = torch.empty(batch_size, device=self.device).uniform_()
+        alpha = alpha.view(-1, *[1] * (real.dim() - 1))
         
-        interpolated_sounds = real * epsilon + fake * (1 - epsilon)
+        interpolated_sounds = torch.lerp(real, fake, alpha).requires_grad_(True)
         mixed_scores = self.netD(interpolated_sounds)
 
         gradient = torch.autograd.grad(
-            inputs = interpolated_sounds,
-            outputs = mixed_scores,
-            grad_outputs = torch.ones_like(mixed_scores),
-            create_graph = True,
-            retain_graph = True,
+            mixed_scores.sum(),
+            interpolated_sounds,
+            only_inputs=True,
+            create_graph=True,
+            retain_graph=True,
         )[0]
 
-        gradient = gradient.view(gradient.shape[0], -1)
+        gradient = gradient.view(gradient.size(0), -1)
         gradient_norm = gradient.norm(2, dim=1)
-        gradient_penalty = torch.mean((gradient_norm - 1) ** 2)
+        gradient_penalty = (gradient_norm - constraint) ** 2
+        gradient_penalty = gradient_penalty.mean() * gamma
 
-        # Backpropagate and optimize.
-        self.loss_disc = -(torch.mean(disc_real) - torch.mean(disc_fake)) + gamma * gradient_penalty
-        self.loss_disc.backward()
-
+        gradient_penalty.backward()
         self.netD.requires_grad_(False)
         self.opt_dis.step()
         self.opt_dis.zero_grad(set_to_none=True)
