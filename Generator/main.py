@@ -8,10 +8,10 @@ from misc.utils import build_folder_structure, get_iter
 # Add profiler.
 
 config_dict = {
-    'program_version': 0.75,
+    'program_version': 0.9,
 
     # Iterarion
-    'iter_num': 36,
+    'iter_num': None,
     'epochs': 500,
     'datadir': 'datasets/dataset_3/',
 

@@ -56,8 +56,9 @@ def setup_filter(gain: int=1):
 def conv_resample(x: Tensor, f: Tensor, up: int=1, down: int=1, padding: int=7) -> Tensor:
     batch_size, num_channels, in_samples = x.shape
     if up > 1:
-        x = torch.nn.functional.interpolate(x, scale_factor=float(up), mode="nearest")
-
+        x = torch.nn.functional.interpolate(x, scale_factor=float(up), mode="linear")
+    
+    """
     # Setup filter.
     gain = 1.0 if up==1 else up**2.0
     f = f * (gain ** (f.ndim / 2))
@@ -65,9 +66,11 @@ def conv_resample(x: Tensor, f: Tensor, up: int=1, down: int=1, padding: int=7) 
 
     # Convolve with the filter.
     x = torch.nn.functional.conv1d(input=x, weight=f, padding=padding, groups=num_channels)
+    """
 
     if down > 1:
-        x = torch.nn.functional.interpolate(x, scale_factor=1/float(down), mode="nearest")
+        #x = torch.nn.functional.interpolate(x, scale_factor=1/float(down), mode="nearest")
+        x = torch.nn.functional.avg_pool1d(x, kernel_size=down)
     return x
 
 # ------------------------------------------------------------
@@ -300,8 +303,8 @@ class SynthesisBlock(torch.nn.Module):
 
         self.register_buffer("resample_filter", setup_filter())
 
-        self.block_1 = Conv1dLayer(in_channels=in_channels, out_channels=in_channels, kernel_size=25, padding=12, apply_style=True, apply_noise=True, up=scale_factor, resample_filter=self.resample_filter)
-        self.block_2 = Conv1dLayer(in_channels=in_channels, out_channels=out_channels, kernel_size=25, padding=12, apply_style=True, apply_noise=True, resample_filter=self.resample_filter)
+        self.block_1 = Conv1dLayer(in_channels=in_channels, out_channels=in_channels, kernel_size=9, padding=4, apply_style=True, apply_noise=True, up=scale_factor, resample_filter=self.resample_filter)
+        self.block_2 = Conv1dLayer(in_channels=in_channels, out_channels=out_channels, kernel_size=9, padding=4, apply_style=True, apply_noise=True, resample_filter=self.resample_filter)
 
         self.converter = Conv1dLayer(in_channels=out_channels, out_channels=num_channels, bias=True, apply_style=True, to_sound=True)
 
@@ -412,8 +415,8 @@ class DicriminatorBlock(torch.nn.Module):
     ):
         super().__init__()
         
-        self.conv_block_1 = Conv1dLayer(in_channels=in_channels, out_channels=out_channels, kernel_size=25, padding=12, down=scale_factor, resample_filter=resample_filter)
-        self.conv_block_2 = Conv1dLayer(in_channels=out_channels, out_channels=out_channels, kernel_size=25, padding=12)
+        self.conv_block_1 = Conv1dLayer(in_channels=in_channels, out_channels=out_channels, kernel_size=9, padding=4, down=scale_factor, resample_filter=resample_filter)
+        self.conv_block_2 = Conv1dLayer(in_channels=out_channels, out_channels=out_channels, kernel_size=9, padding=4)
         self.residual = Conv1dLayer(in_channels=in_channels, out_channels=out_channels, bias=False, down=scale_factor, resample_filter=resample_filter)
 
     def forward(self, x: Tensor) -> Tensor:
@@ -441,16 +444,23 @@ class DiscriminatorEpilogue(torch.nn.Module):
         
         in_channels += 1
 
-        self.conv_block = Conv1dLayer(in_channels=in_channels, out_channels=out_channels, kernel_size=25, padding=12, down=scale_factor, resample_filter=resample_filter)
+        self.conv_block_1 = Conv1dLayer(in_channels=in_channels, out_channels=in_channels, kernel_size=9, padding=4, down=scale_factor, resample_filter=resample_filter)
+        self.conv_block_2 = Conv1dLayer(in_channels=in_channels, out_channels=out_channels, kernel_size=9, padding=4, resample_filter=resample_filter)
+
+        self.conv_block_3 = Conv1dLayer(in_channels=out_channels, out_channels=out_channels, kernel_size=1, padding=0, down=start_size, resample_filter=resample_filter)
         
-        self.fc = FullyConnectedLayer(in_channels=out_channels*start_size, out_channels=out_channels, activation="lrelu")
+        #self.fc = FullyConnectedLayer(in_channels=out_channels*start_size, out_channels=out_channels, activation="lrelu")
         self.out_fc = FullyConnectedLayer(in_channels=out_channels, out_channels=num_channels, activation="lrelu")
     
     def forward(self, x: Tensor, group_size: int=4) -> Tensor:
         x = mini_batch_std_dev(x, group_size)
-        x = self.conv_block(x)
-        x = self.fc(x.flatten(1))
-        x = self.out_fc(x)
+        x = self.conv_block_1(x)
+        x = self.conv_block_2(x)
+
+        x = self.conv_block_3(x)
+
+        #x = self.fc(x.flatten(1))
+        x = self.out_fc(x.flatten(1))
         return x
 
 # ------------------------------------------------------------
