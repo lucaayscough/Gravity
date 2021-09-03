@@ -21,5 +21,8 @@ void TopBar::paint(juce::Graphics& g){
 }
 
 void TopBar::resized(){
+    // TODO:
+    // Add variables for values.
+    
     m_LogoImage.setBounds(getLocalBounds().withTrimmedLeft(6).withTrimmedTop(6).withTrimmedBottom(6));
 }
