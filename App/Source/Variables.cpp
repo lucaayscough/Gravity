@@ -7,7 +7,7 @@ const std::string Variables::WINDOWS_MAPPER_MODULE_PATH = "C:\\Program Files\\Gr
 const std::string Variables::MAC_GENERATOR_MODULE_PATH = "/Users/lucaayscough/dev/Gravity/Generator/scripted_modules/generator_module.pt";
 const std::string Variables::MAC_MAPPER_MODULE_PATH = "/Users/lucaayscough/dev/Gravity/Generator/scripted_modules/mapper_module.pt";
 const std::string Variables::WINDOWS_LOGO_PATH = "";
-const std::string Variables::MAC_LOGO_PATH = "";
+const std::string Variables::MAC_LOGO_PATH = "~/Library/Application Support/Gravity/assets/logo_white.png";
 
 // Window variables.
 const int Variables::WINDOW_WIDTH = 1080;

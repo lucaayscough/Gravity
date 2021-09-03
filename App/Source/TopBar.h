@@ -14,6 +14,7 @@ private:
 
 private:
     // Member variables.
+    juce::ImageComponent m_LogoImage;
 
     JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR(TopBar)
 };
