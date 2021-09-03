@@ -8,7 +8,7 @@ from misc.utils import build_folder_structure, get_iter
 # Add profiler.
 
 config_dict = {
-    'program_version': 0.9,
+    'program_version': 0.91,
 
     # Iterarion
     'iter_num': None,
@@ -16,8 +16,8 @@ config_dict = {
     'datadir': 'datasets/dataset_3/',
 
     # Training
-    'batch_size': 8,
-    'learning_rate': 0.002,
+    'batch_size': 16,
+    'learning_rate': 0.003,
     'g_loss': 'wgan',
     'd_loss': 'wgangp',
 
