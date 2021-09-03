@@ -58,7 +58,6 @@ def conv_resample(x: Tensor, f: Tensor, up: int=1, down: int=1, padding: int=7) 
     if up > 1:
         x = torch.nn.functional.interpolate(x, scale_factor=float(up), mode="linear")
     
-    """
     # Setup filter.
     gain = 1.0 if up==1 else up**2.0
     f = f * (gain ** (f.ndim / 2))
@@ -66,7 +65,6 @@ def conv_resample(x: Tensor, f: Tensor, up: int=1, down: int=1, padding: int=7) 
 
     # Convolve with the filter.
     x = torch.nn.functional.conv1d(input=x, weight=f, padding=padding, groups=num_channels)
-    """
 
     if down > 1:
         #x = torch.nn.functional.interpolate(x, scale_factor=1/float(down), mode="nearest")
