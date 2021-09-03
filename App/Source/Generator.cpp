@@ -9,17 +9,17 @@ Generator::Generator(){
 
     m_GeneratorModule = torch::jit::load(
         #ifdef _WIN64
-            "C:\\Program Files\\Gravity\\Generators\\generator_module.pt"
+            Variables::WINDOWS_GENERATOR_MODULE_PATH
         #else
-            "/Users/lucaayscough/dev/Gravity/Generator/scripted_modules/generator_module.pt"
+            Variables::MAC_GENERATOR_MODULE_PATH
         #endif
     );
 
     m_MapperModule = torch::jit::load(
         #ifdef _WIN64
-            "C:\\Program Files\\Gravity\\Generators\\mapper_module.pt"
+            Variables::WINDOWS_MAPPER_MODULE_PATH
         #else
-            "/Users/lucaayscough/dev/Gravity/Generator/scripted_modules/mapper_module.pt"
+            Variables::MAC_MAPPER_MODULE_PATH
         #endif
     );
     

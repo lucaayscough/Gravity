@@ -2,6 +2,14 @@
 
 
 struct Variables{
+    // File path variables.
+    static const std::string WINDOWS_GENERATOR_MODULE_PATH;
+    static const std::string WINDOWS_MAPPER_MODULE_PATH;
+    static const std::string MAC_GENERATOR_MODULE_PATH;
+    static const std::string MAC_MAPPER_MODULE_PATH;
+    static const std::string WINDOWS_LOGO_PATH;
+    static const std::string MAC_LOGO_PATH;
+
     // Window variables.
     static const int WINDOW_WIDTH;
     static const int WINDOW_HEIGHT;

@@ -1,6 +1,14 @@
 #include "Headers.h"
 
 
+// File path variables.
+const std::string Variables::WINDOWS_GENERATOR_MODULE_PATH = "C:\\Program Files\\Gravity\\Generators\\generator_module.pt";
+const std::string Variables::WINDOWS_MAPPER_MODULE_PATH = "C:\\Program Files\\Gravity\\Generators\\mapper_module.pt";
+const std::string Variables::MAC_GENERATOR_MODULE_PATH = "/Users/lucaayscough/dev/Gravity/Generator/scripted_modules/generator_module.pt";
+const std::string Variables::MAC_MAPPER_MODULE_PATH = "/Users/lucaayscough/dev/Gravity/Generator/scripted_modules/mapper_module.pt";
+const std::string Variables::WINDOWS_LOGO_PATH = "";
+const std::string Variables::MAC_LOGO_PATH = "";
+
 // Window variables.
 const int Variables::WINDOW_WIDTH = 1080;
 const int Variables::WINDOW_HEIGHT = 610;
