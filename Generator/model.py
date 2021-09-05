@@ -52,7 +52,7 @@ def setup_filter(gain: int=1):
 
     return f.to("cuda")
 
-#@torch.jit.script
+@torch.jit.script
 def conv_resample(x: Tensor, f: Tensor, up: int=1, down: int=1, padding: int=7) -> Tensor:
     batch_size, num_channels, in_samples = x.shape
     if up > 1:

@@ -16,7 +16,7 @@ config_dict = {
     'datadir': 'datasets/dataset_3/',
 
     # Training
-    'batch_size': 16,
+    'batch_size': 8,
     'learning_rate': 0.003,
     'g_loss': 'wgan',
     'd_loss': 'wgangp',
