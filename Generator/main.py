@@ -8,7 +8,7 @@ from misc.utils import build_folder_structure, get_iter
 # Add profiler.
 
 config_dict = {
-    'program_version': 0.8,
+    'program_version': 0.81,
 
     # Iterarion
     'iter_num': None,

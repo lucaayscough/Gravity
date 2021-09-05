@@ -53,7 +53,7 @@ def setup_filter(gain: int=1):
 
     return f.to("cuda")
 
-#@torch.jit.script
+@torch.jit.script
 def conv_resample(x: Tensor, f: Tensor, up: int=1, down: int=1, padding: int=7) -> Tensor:
     #batch_size, num_channels, in_samples,  = x.shape
     if up > 1:
@@ -447,15 +447,20 @@ class DiscriminatorEpilogue(torch.nn.Module):
         
         in_channels += 1
 
-        self.conv_block = Conv2dLayer(in_channels=in_channels, out_channels=out_channels, kernel_size=3, padding=1, down=scale_factor, resample_filter=resample_filter)
+        self.conv_block_1 = Conv2dLayer(in_channels=in_channels, out_channels=out_channels, kernel_size=3, padding=1, down=scale_factor, resample_filter=resample_filter)
+        self.conv_block_2 = Conv2dLayer(in_channels=out_channels, out_channels=out_channels, kernel_size=3, padding=1, resample_filter=resample_filter)
+
+        self.down_sample = torch.nn.AvgPool1d(start_size)
         
-        self.fc = FullyConnectedLayer(in_channels=out_channels*start_size, out_channels=out_channels, activation="lrelu")
+        #self.fc = FullyConnectedLayer(in_channels=out_channels*start_size, out_channels=out_channels, activation="lrelu")
         self.out_fc = FullyConnectedLayer(in_channels=out_channels, out_channels=1, activation="lrelu")
     
     def forward(self, x: Tensor, group_size: int=4) -> Tensor:
         x = mini_batch_std_dev(x, group_size)
-        x = self.conv_block(x)
-        x = self.fc(x.flatten(1))
+        x = self.conv_block_1(x)
+        x = self.conv_block_2(x).squeeze(3)
+        x = self.down_sample(x).squeeze(2)
+        #x = self.fc(x.flatten(1))
         x = self.out_fc(x)
         return x
 
