@@ -5,7 +5,7 @@
 // Constructors and destructors.
 
 TopBar::TopBar(){
-    juce::File img(Variables::MAC_LOGO_PATH);
+    juce::File img(Variables::getLogoPath());
     juce::Image imgFromFile = ImageFileFormat::loadFrom(img);
     m_LogoImage.setImage(imgFromFile, juce::RectanglePlacement::xLeft);
     addAndMakeVisible(m_LogoImage);

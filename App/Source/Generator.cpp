@@ -7,21 +7,8 @@
 
 Generator::Generator(){
 
-    m_GeneratorModule = torch::jit::load(
-        #ifdef _WIN64
-            Variables::WINDOWS_GENERATOR_MODULE_PATH
-        #else
-            Variables::MAC_GENERATOR_MODULE_PATH
-        #endif
-    );
-
-    m_MapperModule = torch::jit::load(
-        #ifdef _WIN64
-            Variables::WINDOWS_MAPPER_MODULE_PATH
-        #else
-            Variables::MAC_MAPPER_MODULE_PATH
-        #endif
-    );
+    m_GeneratorModule = torch::jit::load(Variables::getGeneratorModulePath());
+    m_MapperModule = torch::jit::load(Variables::getMapperModulePath());
     
     m_MapperModule.to(torch::kCPU);
     m_GeneratorModule.to(torch::kCPU);
