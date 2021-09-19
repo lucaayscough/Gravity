@@ -7,6 +7,7 @@
 MapButton::MapButton(juce::OwnedArray<Map>& maps, const juce::String& id)
     :   m_MapsRef(maps){
     setComponentID(id);
+    Logger::writeToLog(id);
     m_MapImage.setInterceptsMouseClicks(false, false);
     addAndMakeVisible(m_MapImage);
 }
