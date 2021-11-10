@@ -126,7 +126,7 @@ target_link_libraries(AudioPluginExample
 
 # Libtorch
 
-set(CMAKE_PREFIX_PATH "../Dependencies/libtorch_deb/share/cmake/Torch")
+set(CMAKE_PREFIX_PATH "../Dependencies/libtorch/share/cmake/Torch")
 #set(CMAKE_PREFIX_PATH "../Dependencies/libtorch_rel/share/cmake/Torch")
 
 find_package(Torch REQUIRED)
