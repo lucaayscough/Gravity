@@ -11,7 +11,7 @@ config_dict = {
     'program_version': 0.92,
 
     # Iterarion
-    'iter_num': 105,
+    'iter_num': None,
     'epochs': 500,
     'datadir': 'datasets/dataset_3/',
 
@@ -32,7 +32,7 @@ config_dict = {
     'sample_rate': 44100,
     'save_every': 1,
     'num_workers': 1,
-    'device': 'cuda',
+    'device': 'cpu',
 }
 
 def suppress_warnings():
