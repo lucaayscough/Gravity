@@ -52,15 +52,12 @@ void Map::paint(Graphics& g){
     g.fillRect(0, 0, getWidth(), getHeight() / 2);
     g.fillRoundedRectangle(0, getHeight() / 2 - rect_overlap, getWidth(), getHeight() / 2 + rect_overlap, 5.0f);
 
-    /*
-
     // TODO:
     // This causes program to lock up on windows.
     
-    //paintOrbits(g);
+    paintOrbits(g);
     paintForceVectors(g);
     updateImage();
-    */
 }
 
 void Map::paintOrbits(Graphics& g){

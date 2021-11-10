@@ -216,6 +216,5 @@ void Astro::Animator::timerCallback(){
 
     if(!m_IsCreated)
         animateCreation();
-    
     animate();
 }
