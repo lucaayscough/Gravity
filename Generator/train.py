@@ -245,6 +245,7 @@ class Train:
                     self._train_discriminator_r1(real, idx)
                 elif self.d_loss == "wgangp":
                     self._train_discriminator_wgangp(real)
+                    
 
                 self._update_average(beta = self.ema_beta)
 
