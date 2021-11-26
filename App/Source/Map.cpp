@@ -88,11 +88,11 @@ void Map::paintForceVectors(Graphics& g){
                 }
 
                 auto planet_node_b = getRootPlanetNode().getChildWithProperty(Parameters::idProp, planet_b->getComponentID());
-                float force_vector = m_ParametersRef.getForceVector(planet_node_a, planet_node_b);
+                float force_vector = m_ParametersRef.getWeightedForceVector(planet_node_a, planet_node_b);
                 drawForceVector(*planet_a, *planet_b, force_vector, g);
             }
 
-            float force_vector = m_ParametersRef.getForceVector(getSunNode(), planet_node_a);
+            float force_vector = m_ParametersRef.getWeightedForceVector(getSunNode(), planet_node_a);
             drawForceVector(*planet_a, m_Sun, force_vector, g);
         }
     }
@@ -101,7 +101,7 @@ void Map::paintForceVectors(Graphics& g){
     if((bool)m_Sun.m_ShowForceVectors.getValue() == true){
         for(Planet* planet : m_Planets){
             auto planet_node = getRootPlanetNode().getChildWithProperty(Parameters::idProp, planet->getComponentID());
-            auto force_vector = m_ParametersRef.getForceVector(getSunNode(), planet_node);
+            auto force_vector = m_ParametersRef.getWeightedForceVector(getSunNode(), planet_node);
             drawForceVector(*planet, m_Sun, force_vector, g);
         }
     }
@@ -109,7 +109,9 @@ void Map::paintForceVectors(Graphics& g){
 
 void Map::drawForceVector(Astro& astro_a, Astro& astro_b, float force_vector, Graphics& g){
     g.setColour(juce::Colours::white);
-    g.setOpacity(force_vector);
+
+    Logger::writeToLog(std::to_string(force_vector));
+    //g.setOpacity(force_vector);
     g.drawLine(astro_a.getCentreX(), astro_a.getCentreY(), astro_b.getCentreX(), astro_b.getCentreY(), Variables::FORCE_VECTOR_SIZE);
 }
 

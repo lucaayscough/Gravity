@@ -25,6 +25,7 @@ void Parameters::addMapNodes(){
         // Create map node.
         juce::ValueTree mapNode(mapType);
         mapNode.setProperty(idProp, juce::String(i), nullptr);
+        mapNode.setProperty(forceVectorSumProp, 1.0f, nullptr);
 
         bool isActive;
         if(i == 0) isActive = true;
@@ -145,7 +146,12 @@ void Parameters::generateNewSample(juce::ValueTree node){
 }
 
 void Parameters::mixLatents(juce::ValueTree mapNode){
+    // TODO:
+    // Write more efficient way of doing same operation.
+
+    setForceVectorSum(mapNode);
     float forceVector;
+    float forceVectorSum = getForceVectorSum(mapNode);
     auto sunNode = getSunNode(mapNode);
     auto rootPlanetNode = getRootPlanetNode(mapNode);
 
@@ -156,21 +162,26 @@ void Parameters::mixLatents(juce::ValueTree mapNode){
         generateLerpLatents(planet_a);
 
         for(int j = 0; j < rootPlanetNode.getNumChildren(); j++){
+            // TODO:
+            // try fast matrix multiplication.
+
             if(i == j){continue;}
 
             auto planet_b = rootPlanetNode.getChild(j);
             if(getID(planet_a) == getID(planet_b)){continue;}
-            
-            forceVector = getForceVector(planet_a, planet_b);
+
+            forceVector = getForceVector(planet_a, planet_b) / forceVectorSum;
+            Logger::writeToLog(std::to_string(forceVector));
             at::Tensor newLatents = at::lerp(getLatents(planet_a, lerpLatentsProp), getLatents(planet_b, latentsProp), forceVector);
             setLatents(planet_a, lerpLatentsProp, newLatents);
         }
-    }
+    }   
 
     for(int i = 0; i < rootPlanetNode.getNumChildren(); i++){
         auto planet = rootPlanetNode.getChild(i);
 
-        forceVector = getForceVector(sunNode, planet);
+        forceVector = getForceVector(sunNode, planet) / forceVectorSum;
+        Logger::writeToLog(std::to_string(forceVector));
         at::Tensor newLatents = at::lerp(getLatents(sunNode, lerpLatentsProp), getLatents(planet, lerpLatentsProp), forceVector);
         setLatents(sunNode, lerpLatentsProp, newLatents);
     }
@@ -224,6 +235,9 @@ float Parameters::getDistance(juce::ValueTree node_a, juce::ValueTree node_b){
 }
 
 float Parameters::getForceVector(juce::ValueTree node_a, juce::ValueTree node_b){
+    // TODO:
+    // Calculate with respect to the sum of the vectors.
+
     float mass_a, mass_b;
 
     if(node_a.getType() == sunType){
@@ -243,16 +257,19 @@ float Parameters::getForceVector(juce::ValueTree node_a, juce::ValueTree node_b)
     float m = mass_a * mass_b;
     float r = getDistance(node_a, node_b);
 
-    float min_distance = sqrt(Variables::MAX_PLANET_AREA / Variables::PI) + sqrt(Variables::SUN_AREA / Variables::PI);
-    float max_mass = Variables::SUN_AREA * Variables::MAX_PLANET_AREA;
-    float max_value = max_mass / pow(min_distance, 2.0f);
+    float result = m / (r * r);
 
-    float result = (m / pow(r, 2.0f)) / max_value;
+    return result;
+}
 
-    if(result > 1.0f)
-        result = 1.0f;
+float Parameters::getForceVectorSum(juce::ValueTree mapNode){
+    return mapNode.getProperty(forceVectorSumProp);
+}
 
-    return sqrt(sin(((result * 90.0f) * Variables::PI) / 180.0f));
+float Parameters::getWeightedForceVector(juce::ValueTree node_a, juce::ValueTree node_b){
+    float forceVector = getForceVector(node_a, node_b);
+    float vectorSum = getForceVectorSum(getMapNode(node_a));
+    return forceVector / vectorSum;
 }
 
 void Parameters::setActivePlanet(juce::ValueTree node){
@@ -295,6 +312,38 @@ void Parameters::setLatents(juce::ValueTree node, juce::Identifier& id, at::Tens
     ReferenceCountedTensor::Ptr lerpLatents = new ReferenceCountedTensor(latents);
     node.setProperty(lerpLatentsProp, juce::var(lerpLatents), nullptr);
     node.setProperty(id, juce::var(lerpLatents), nullptr);
+}
+
+void Parameters::setForceVectorSum(juce::ValueTree mapNode){
+    float forceVectorSum;
+    auto sunNode = getSunNode(mapNode);
+    auto rootPlanetNode = getRootPlanetNode(mapNode);
+
+    for(int i = 0; i < rootPlanetNode.getNumChildren(); i++){
+        auto planet_a = rootPlanetNode.getChild(i);
+
+        for(int j = 0; j < rootPlanetNode.getNumChildren(); j++){
+            // TODO:
+            // try fast matrix multiplication.
+
+            if(i == j)
+                continue;
+
+            auto planet_b = rootPlanetNode.getChild(j);
+
+            if(getID(planet_a) == getID(planet_b))
+                continue;
+
+            forceVectorSum += getForceVector(planet_a, planet_b);
+        }
+    }
+
+    for(int i = 0; i < rootPlanetNode.getNumChildren(); i++){
+        auto planet = rootPlanetNode.getChild(i);
+        forceVectorSum += getForceVector(sunNode, planet);
+    }
+
+    mapNode.setProperty(forceVectorSumProp, forceVectorSum, nullptr);
 }
 
 //------------------------------------------------------------//
@@ -342,6 +391,7 @@ juce::Identifier Parameters::seedProp("Seed");
 juce::Identifier Parameters::latentsProp("Latents");
 juce::Identifier Parameters::lerpLatentsProp("Interpolated_Latents");
 juce::Identifier Parameters::sampleProp("Sample");
+juce::Identifier Parameters::forceVectorSumProp("Force_Vector_Sum");
 
 //------------------------------------------------------------//
 // Callback signalers.

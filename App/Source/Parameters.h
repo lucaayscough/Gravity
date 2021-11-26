@@ -33,11 +33,14 @@ struct Parameters: public juce::ValueTree::Listener{
     juce::String getID(juce::ValueTree);
     float getDistance(juce::ValueTree, juce::ValueTree);
     float getForceVector(juce::ValueTree, juce::ValueTree);
+    float getForceVectorSum(juce::ValueTree);
+    float getWeightedForceVector(juce::ValueTree, juce::ValueTree);
 
     void setActivePlanet(juce::ValueTree);
     void setRandomID(juce::ValueTree);
     void setRandomSeed(juce::ValueTree);
     void setLatents(juce::ValueTree, juce::Identifier&, at::Tensor&);
+    void setForceVectorSum(juce::ValueTree);
 
     // Callback methods.
     void sendMapUpdate();
@@ -69,6 +72,7 @@ struct Parameters: public juce::ValueTree::Listener{
     static juce::Identifier latentsProp;
     static juce::Identifier lerpLatentsProp;
     static juce::Identifier sampleProp;
+    static juce::Identifier forceVectorSumProp;
 
     // Callback signalers.
     static juce::Identifier generateSampleSignal;

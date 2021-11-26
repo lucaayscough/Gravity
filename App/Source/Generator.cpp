@@ -36,7 +36,7 @@ at::Tensor Generator::generateLatents(std::int64_t seed){
     auto finish = std::chrono::high_resolution_clock::now();
     std::chrono::duration<double> elapsed = finish - start;
 
-    Logger::writeToLog("Mapper network time: " + std::to_string(elapsed.count()));
+    //Logger::writeToLog("Mapper network time: " + std::to_string(elapsed.count()));
 
     return output;
 }
@@ -65,8 +65,7 @@ juce::var Generator::generateSample(at::Tensor& latents){
 
     auto finish = std::chrono::high_resolution_clock::now();
     std::chrono::duration<double> elapsed = finish - start;
-    Logger::writeToLog("Synthesis network time: " + std::to_string(elapsed.count()));
-    
+    //Logger::writeToLog("Synthesis network time: " + std::to_string(elapsed.count()));
 
     return sample;
 }
