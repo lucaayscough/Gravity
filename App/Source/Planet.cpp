@@ -109,9 +109,9 @@ juce::ValueTree Planet::getState(){
 //--------------------------------------------------//
 // Controller methods.
 
-void Planet::mouseDown(const MouseEvent& e){m_Dragger.startDraggingComponent(this, e);}
+void Planet::mouseDown(const juce::MouseEvent& e){m_Dragger.startDraggingComponent(this, e);}
 
-void Planet::mouseUp(const MouseEvent& e){
+void Planet::mouseUp(const juce::MouseEvent& e){
     if(e.mods.isLeftButtonDown()){
         // Generates new sample if double clicked with left mouse button.
         if(e.getNumberOfClicks() > 1)
@@ -131,14 +131,14 @@ void Planet::mouseUp(const MouseEvent& e){
         m_ParametersRef.removePlanetNode(getState());
 }
 
-void Planet::mouseDrag(const MouseEvent& e){
+void Planet::mouseDrag(const juce::MouseEvent& e){
     m_Dragger.dragComponent(this, e, nullptr);
     checkCollision();
     checkBounds();
     setPosXY(getX(), getY());
 }
 
-void Planet::mouseWheelMove(const MouseEvent& e, const MouseWheelDetails& w){
+void Planet::mouseWheelMove(const juce::MouseEvent& e, const juce::MouseWheelDetails& w){
     juce::ignoreUnused(e);
 
     if(w.deltaY > 0.0f && getArea() + Variables::AREA_MODIFIER <= Variables::MAX_PLANET_AREA)

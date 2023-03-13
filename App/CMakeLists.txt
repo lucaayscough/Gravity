@@ -1,8 +1,7 @@
 cmake_minimum_required(VERSION 3.10)
+project(Gravity VERSION 0.0.1)
 
-# Project name.
-project(Gravity)
+add_definitions(-DDONT_SET_USING_JUCE_NAMESPACE)
 
-# Juce and Source.
 add_subdirectory(Dependencies/JUCE)
 add_subdirectory(Source)

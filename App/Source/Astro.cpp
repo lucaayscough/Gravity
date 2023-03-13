@@ -32,7 +32,7 @@ void Astro::setGradients(){
 //--------------------------------------------------//
 // View methods.
 
-void Astro::paint(Graphics& g){
+void Astro::paint(juce::Graphics& g){
     if(m_Animator.m_IsCreated){
         float shift = m_Animator.getDiameterShift(getArea());
 
@@ -49,7 +49,7 @@ void Astro::paint(Graphics& g){
     }
 }
 
-void Astro::paintCircle(float boundary_shift, float diameter, Graphics& g){
+void Astro::paintCircle(float boundary_shift, float diameter, juce::Graphics& g){
     g.setColour(Variables::MAP_BG_COLOUR);
     g.fillEllipse(
         boundary_shift - Variables::DISTANCE_BOUNDARY / 2.0f,
@@ -137,7 +137,7 @@ bool Astro::hitTest(const int x, const int y){
     return sqrt(a + b) <= getRadius();
 }
 
-void Astro::mouseEnter(const MouseEvent& e){
+void Astro::mouseEnter(const juce::MouseEvent& e){
     juce::ignoreUnused(e);
 
     m_ShowForceVectors = true;
@@ -146,7 +146,7 @@ void Astro::mouseEnter(const MouseEvent& e){
     getParentComponent()->repaint();
 }
 
-void Astro::mouseExit(const MouseEvent& e){
+void Astro::mouseExit(const juce::MouseEvent& e){
     juce::ignoreUnused(e);
 
     m_ShowForceVectors = false;

@@ -171,7 +171,7 @@ void Parameters::mixLatents(juce::ValueTree mapNode){
             if(getID(planet_a) == getID(planet_b)){continue;}
 
             forceVector = getForceVector(planet_a, planet_b) / forceVectorSum;
-            Logger::writeToLog(std::to_string(forceVector));
+            juce::Logger::writeToLog(std::to_string(forceVector));
             at::Tensor newLatents = at::lerp(getLatents(planet_a, lerpLatentsProp), getLatents(planet_b, latentsProp), forceVector);
             setLatents(planet_a, lerpLatentsProp, newLatents);
         }
@@ -181,7 +181,7 @@ void Parameters::mixLatents(juce::ValueTree mapNode){
         auto planet = rootPlanetNode.getChild(i);
 
         forceVector = getForceVector(sunNode, planet) / forceVectorSum;
-        Logger::writeToLog(std::to_string(forceVector));
+        juce::Logger::writeToLog(std::to_string(forceVector));
         at::Tensor newLatents = at::lerp(getLatents(sunNode, lerpLatentsProp), getLatents(planet, lerpLatentsProp), forceVector);
         setLatents(sunNode, lerpLatentsProp, newLatents);
     }

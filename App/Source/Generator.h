@@ -1,11 +1,11 @@
 #pragma once
 
 
-struct ReferenceCountedTensor: public ReferenceCountedObject{
+struct ReferenceCountedTensor: public juce::ReferenceCountedObject{
     ReferenceCountedTensor(at::Tensor t)
     :   tensor(t){}
     at::Tensor tensor;
-    using Ptr = ReferenceCountedObjectPtr<ReferenceCountedTensor>;
+    using Ptr = juce::ReferenceCountedObjectPtr<ReferenceCountedTensor>;
     at::Tensor& getTensor(){return tensor;}
 };
 

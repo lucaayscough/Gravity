@@ -45,7 +45,7 @@ void Map::removeListeners(){
 //--------------------------------------------------//
 // View methods.
 
-void Map::paint(Graphics& g){
+void Map::paint(juce::Graphics& g){
     int rect_overlap = 25;
 
     g.setColour(Variables::MAP_BG_COLOUR);
@@ -60,7 +60,7 @@ void Map::paint(Graphics& g){
     updateImage();
 }
 
-void Map::paintOrbits(Graphics& g){
+void Map::paintOrbits(juce::Graphics& g){
     auto rootPlanetNode = getRootPlanetNode();
     auto sunNode = getSunNode();
 
@@ -76,7 +76,7 @@ void Map::paintOrbits(Graphics& g){
     }
 }
 
-void Map::paintForceVectors(Graphics& g){
+void Map::paintForceVectors(juce::Graphics& g){
     // Draw planet vectors.
     for(Planet* planet_a : m_Planets){
         if((bool)planet_a->m_ShowForceVectors.getValue() == true){
@@ -107,10 +107,10 @@ void Map::paintForceVectors(Graphics& g){
     }
 }
 
-void Map::drawForceVector(Astro& astro_a, Astro& astro_b, float force_vector, Graphics& g){
+void Map::drawForceVector(Astro& astro_a, Astro& astro_b, float force_vector, juce::Graphics& g){
     g.setColour(juce::Colours::white);
 
-    Logger::writeToLog(std::to_string(force_vector));
+    juce::Logger::writeToLog(std::to_string(force_vector));
     //g.setOpacity(force_vector);
     g.drawLine(astro_a.getCentreX(), astro_a.getCentreY(), astro_b.getCentreX(), astro_b.getCentreY(), Variables::FORCE_VECTOR_SIZE);
 }
@@ -203,9 +203,9 @@ juce::ValueTree Map::getRootPlanetNode(){return m_ParametersRef.getRootPlanetNod
 //--------------------------------------------------//
 // Controller methods.
 
-void Map::mouseUp(const MouseEvent& e){juce::ignoreUnused(e);}
+void Map::mouseUp(const juce::MouseEvent& e){juce::ignoreUnused(e);}
 
-void Map::mouseDoubleClick(const MouseEvent& e){
+void Map::mouseDoubleClick(const juce::MouseEvent& e){
     if(e.mods.isLeftButtonDown()){
         int eventX = e.getMouseDownX();
         int eventY = e.getMouseDownY();

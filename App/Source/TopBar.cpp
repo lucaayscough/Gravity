@@ -6,7 +6,7 @@
 
 TopBar::TopBar(){
     juce::File img(Variables::getLogoPath());
-    juce::Image imgFromFile = ImageFileFormat::loadFrom(img);
+    juce::Image imgFromFile = juce::ImageFileFormat::loadFrom(img);
     m_LogoImage.setImage(imgFromFile, juce::RectanglePlacement::xLeft);
     addAndMakeVisible(m_LogoImage);
 }

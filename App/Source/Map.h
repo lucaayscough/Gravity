@@ -14,10 +14,10 @@ public:
 
 private:
     // View methods.
-    void paint(Graphics&) override;
-    void paintOrbits(Graphics&);
-    void paintForceVectors(Graphics&);
-    void drawForceVector(Astro&, Astro&, float, Graphics&);
+    void paint(juce::Graphics&) override;
+    void paintOrbits(juce::Graphics&);
+    void paintForceVectors(juce::Graphics&);
+    void drawForceVector(Astro&, Astro&, float, juce::Graphics&);
     void resized() override;
     
     void drawSun();
@@ -34,8 +34,8 @@ private:
     juce::ValueTree getRootPlanetNode();
 
     // Controller methods.
-    void mouseUp(const MouseEvent&) override;
-    void mouseDoubleClick(const MouseEvent&) override;
+    void mouseUp(const juce::MouseEvent&) override;
+    void mouseDoubleClick(const juce::MouseEvent&) override;
 
     // Callback methods.
     void valueChanged(juce::Value&) override;
@@ -49,7 +49,7 @@ public:
 
 private:
     // Member variables.
-    OwnedArray<Planet> m_Planets;
+    juce::OwnedArray<Planet> m_Planets;
     AudioContainer& m_AudioContainerRef;
     Parameters& m_ParametersRef;
     ControlPanel m_ControlPanel;

@@ -14,7 +14,7 @@ ControlPanel::~ControlPanel(){}
 //--------------------------------------------------//
 // View methods.
 
-void ControlPanel::paint(Graphics& g){
+void ControlPanel::paint(juce::Graphics& g){
     g.setColour(juce::Colours::blue);
     float x = (float)m_State.getProperty(Parameters::posXProp) + (m_Component->getWidth() - m_Width) / 2.0f;
     float y = (float)m_State.getProperty(Parameters::posYProp) - 50.0f;

@@ -18,7 +18,7 @@ public:
 
 private:
     // Controller methods.
-    void mouseDown(const MouseEvent& e) override;
+    void mouseDown(const juce::MouseEvent& e) override;
 
     JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR(Sun)
 };

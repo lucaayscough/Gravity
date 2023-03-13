@@ -14,7 +14,7 @@ public:
 
 private:
     // View methods.
-    void paint(Graphics&) override;
+    void paint(juce::Graphics&) override;
     void resized() override;
 
 private:

@@ -20,10 +20,10 @@ public:
 
 private:
     // Controller methods.
-    void mouseDown(const MouseEvent&) override;
-    void mouseUp(const MouseEvent&) override;
-    void mouseDrag(const MouseEvent&) override;
-    void mouseWheelMove(const MouseEvent&, const MouseWheelDetails&) override;
+    void mouseDown(const juce::MouseEvent&) override;
+    void mouseUp(const juce::MouseEvent&) override;
+    void mouseDrag(const juce::MouseEvent&) override;
+    void mouseWheelMove(const juce::MouseEvent&, const juce::MouseWheelDetails&) override;
 
 private:
     // Member variables.

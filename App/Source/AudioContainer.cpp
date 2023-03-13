@@ -5,7 +5,7 @@ AudioContainer::AudioContainer(){
     m_AudioBuffers.ensureStorageAllocated(Variables::NUM_MAPS);
     
     for(int i = 0; i < Variables::NUM_MAPS; i++){
-        m_AudioBuffers.add(new AudioBuffer<float>(M_NUM_CHANNELS, M_NUM_SAMPLES));
+        m_AudioBuffers.add(new juce::AudioBuffer<float>(M_NUM_CHANNELS, M_NUM_SAMPLES));
     }
 }
 

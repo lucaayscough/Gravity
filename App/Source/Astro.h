@@ -14,8 +14,8 @@ public:
 
 public:
     // View methods.
-    void paint(Graphics&) override;
-    virtual void paintCircle(float, float, Graphics&);
+    void paint(juce::Graphics&) override;
+    virtual void paintCircle(float, float, juce::Graphics&);
     virtual void draw();
     virtual void draw(const int, const int, const int);
 
@@ -48,8 +48,8 @@ public:
 protected:
     // Controller methods.
     bool hitTest(const int, const int) override;
-    void mouseEnter(const MouseEvent&) override;
-    void mouseExit(const MouseEvent&) override;
+    void mouseEnter(const juce::MouseEvent&) override;
+    void mouseExit(const juce::MouseEvent&) override;
     void valueChanged(juce::Value&) override;
 
 protected:

@@ -78,7 +78,7 @@ struct Parameters: public juce::ValueTree::Listener{
     static juce::Identifier generateSampleSignal;
 
     // Threads.
-    struct MixerThread: public Thread{
+    struct MixerThread: public juce::Thread{
         MixerThread();
         ~MixerThread() override;
         void run() override;

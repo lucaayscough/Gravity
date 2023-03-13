@@ -19,7 +19,7 @@ LeftBar::~LeftBar(){}
 //------------------------------------------------------------//
 // View methods.
 
-void LeftBar::paint(Graphics& g){
+void LeftBar::paint(juce::Graphics& g){
     g.fillAll(Variables::EDITOR_BG_COLOUR);
 }
 

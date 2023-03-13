@@ -13,7 +13,7 @@ public:
 
 private:
     // View methods.
-    void paint(Graphics&) override;
+    void paint(juce::Graphics&) override;
     void resized() override;
 
 public:
@@ -24,7 +24,7 @@ public:
 
 private:
     // Controller methods.
-    void mouseDown(const MouseEvent&) override;
+    void mouseDown(const juce::MouseEvent&) override;
 
 private:
     // Callback methods.

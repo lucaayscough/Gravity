@@ -34,7 +34,7 @@ juce::ValueTree Sun::getState(){
 //------------------------------------------------------------//
 // Controller methods.
 
-void Sun::mouseDown(const MouseEvent& e){
+void Sun::mouseDown(const juce::MouseEvent& e){
     if(e.getNumberOfClicks() > 1 && e.mods.isLeftButtonDown()){
         generateSample();
     }

@@ -64,8 +64,8 @@ void AudioPluginAudioProcessor::processBlock(juce::AudioBuffer<float>& buffer, j
         buffer.clear(i, 0, buffer.getNumSamples());
 
     // Check for midi data.
-    for(const MidiMessageMetadata metadata : midiMessages){
-        Logger::writeToLog(metadata.getMessage().getDescription());
+    for(const juce::MidiMessageMetadata metadata : midiMessages){
+        juce::Logger::writeToLog(metadata.getMessage().getDescription());
         if(metadata.getMessage().isNoteOn())
             m_AudioContainer.m_PlayAudio = true;
         else if(metadata.getMessage().isNoteOff()){
@@ -215,7 +215,7 @@ void AudioPluginAudioProcessor::addSample(juce::ValueTree node){
     juce::Array<float> sample;
     sample.ensureStorageAllocated(AudioContainer::M_NUM_SAMPLES);
 
-    juce::Array<var>* values = node.getProperty(Parameters::sampleProp).getArray();
+    juce::Array<juce::var>* values = node.getProperty(Parameters::sampleProp).getArray();
     for(int i = 0; i < AudioContainer::M_NUM_SAMPLES; i++)
         sample.insert(i, (*values)[i]);
 

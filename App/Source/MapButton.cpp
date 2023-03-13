@@ -23,7 +23,7 @@ void MapButton::setListeners(){
 //------------------------------------------------------------//
 // View methods.
 
-void MapButton::paint(Graphics& g){
+void MapButton::paint(juce::Graphics& g){
     if(getMap().isVisible())
         g.fillAll(Variables::MAP_BUTTON_BG_COLOUR_1);
     else
@@ -50,7 +50,7 @@ void MapButton::setImage(){
 //------------------------------------------------------------//
 // Controller methods.
 
-void MapButton::mouseDown(const MouseEvent& e){
+void MapButton::mouseDown(const juce::MouseEvent& e){
     juce::ignoreUnused(e);
     
     for(int i = 0; i < Variables::NUM_MAPS; i++){
