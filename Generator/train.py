@@ -226,14 +226,6 @@ class Train:
                 # Fetch real data.
                 real = data[0].to(self.device)
 
-                # Tranform data.
-                real = real.reshape(self.batch_size, -1)
-                real = torch.stft(real, n_fft=1024, hop_length=512, win_length=1024, window=self.window)
-                real = torch.view_as_complex(real)
-                mag = real.abs()
-                ph = real.angle()
-                real = torch.stack((mag, ph), dim=1)
-
                 # Train generator.
                 if self.g_loss == "ns":
                     self._train_generator_ns(idx)
@@ -313,7 +305,7 @@ class Train:
             pl_penalty = (pl_lengths - pl_mean).square()
             loss_Gpl = pl_penalty * self.pl_weight
 
-            (sounds[:, 0, 0, 0] * 0 + loss_Gpl).mean().mul(G_reg).backward()
+            (sounds[:, 0, 0] * 0 + loss_Gpl).mean().mul(G_reg).backward()
             
             self.netG.requires_grad_(False)
             self.opt_gen.step()
@@ -387,7 +379,7 @@ class Train:
         # Calculate gradient penalty.
         self.netD.requires_grad_(True)
 
-        batch_size, channels, kf, kt = real.shape
+        batch_size, channels, ks = real.shape
         alpha = torch.empty(batch_size, device=self.device).uniform_()
         alpha = alpha.view(-1, *[1] * (real.dim() - 1))
         
@@ -416,7 +408,7 @@ class Train:
 # Helper functions.
 
     def _print_examples(self, idx, epoch): 
-        if idx % 200 == 0:
+        if idx % 2 == 0:
             
             # TODO:
             # REMOVE THIS
@@ -427,13 +419,6 @@ class Train:
                     torch.randn((8, self.z_dim), device=self.device),
                     self.depth
                 )
-
-                fake_sample = torch.swapaxes(fake_sample, 0, 1)
-                mag = fake_sample[0]
-                ph = fake_sample[1]
-                fake_sample = mag * torch.exp(1.j * ph)
-                fake_sample = torch.istft(fake_sample, n_fft=1024, hop_length=512, win_length=1024, window=self.window)
-                fake_sample = fake_sample.reshape(fake_sample.size(0), 1, -1)
 
                 for s in range(8):
                     # Print Fake Examples

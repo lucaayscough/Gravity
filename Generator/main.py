@@ -13,23 +13,23 @@ config_dict = {
     # Iterarion
     'iter_num': None,
     'epochs': 500,
-    'datadir': 'datasets/dataset_3/',
+    'datadir': 'datasets/MDLib2.2_/',
 
     # Training
-    'batch_size': 16,
+    'batch_size': 32,
     'learning_rate': 0.002,
     'g_loss': 'wgan',                       # Generator loss function: wgan, ns.
     'd_loss': 'wgangp',                     # Discriminator loss function: wgangp, r1.
 
     # Model
-    'scale_factor': 2,
-    'depth': 5,
+    'scale_factor': 4,
+    'depth': 4,
     'num_filters': 512,
-    'start_size': 16,
+    'start_size': 64,
 
     # Setup
-    'num_channels': 2,
-    'sample_rate': 44100,
+    'num_channels': 1,
+    'sample_rate': 11025,
     'save_every': 1,
     'num_workers': 1,
     'device': 'cpu',

@@ -30,6 +30,7 @@ class AudioFolder(torch.utils.data.Dataset):
     def __len__(self):
         return len(self._walker)
 
+
 def build_folder_structure(iter_num):
     try:
         os.mkdir('runs/')
@@ -56,6 +57,7 @@ def build_folder_structure(iter_num):
     except FileExistsError:
         pass
 
+
 def get_iter():
     if os.path.isdir('runs/'):
         iters = os.listdir('runs/')
@@ -64,6 +66,7 @@ def get_iter():
     else:
         # Returns iter 1 if runs directory doesn't exist
         return 1
+
 
 def profiled_function(fn):
     def decorator(*args, **kwargs):
